@@ -1,0 +1,44 @@
+
+> codex-pdp-maker-local@0.2.0 dev H:\programming\sangpea\pdp-maker-201
+> next dev -p 3000
+
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 11.7s
+ ○ Compiling /pdp-maker ...
+ ✓ Compiled /pdp-maker in 23.8s (712 modules)
+ GET /pdp-maker 200 in 142ms
+ GET /pdp-maker 200 in 79ms
+ ✓ Compiled in 501ms (309 modules)
+ ✓ Compiled in 328ms (309 modules)
+ ✓ Compiled in 255ms (309 modules)
+ ✓ Compiled in 328ms (309 modules)
+ ✓ Compiled in 410ms (309 modules)
+ ✓ Compiled in 243ms (309 modules)
+ ✓ Compiled in 480ms (309 modules)
+ ✓ Compiled in 244ms (309 modules)
+ ✓ Compiled in 1267ms (309 modules)
+ ✓ Compiled in 553ms (309 modules)
+ ✓ Compiled in 528ms (309 modules)
+ ✓ Compiled in 619ms (309 modules)
+ ✓ Compiled in 811ms (309 modules)
+ ✓ Compiled in 644ms (309 modules)
+ ✓ Compiled in 645ms (309 modules)
+ ✓ Compiled in 782ms (318 modules)
+ ✓ Compiled in 407ms (309 modules)
+ ○ Compiling /pdp-maker ...
+ ✓ Compiled /pdp-maker in 933ms (394 modules)
+ GET /pdp-maker 200 in 1240ms
+ ○ Compiling /api/pdp/image-prompt ...
+ ✓ Compiled /api/pdp/image-prompt in 1323ms (115 modules)
+ POST /api/pdp/image-prompt 400 in 1490ms
+ POST /api/pdp/image-prompt 502 in 15ms
+ ✓ Compiled in 455ms (309 modules)
+ ✓ Compiled /api/pdp/image-prompt in 468ms (115 modules)
+ POST /api/pdp/image-prompt 200 in 662ms
+ POST /api/pdp/image-prompt 200 in 9ms
+ ✓ Compiled /pdp-maker in 332ms (486 modules)
+ GET /pdp-maker 200 in 735ms
+ POST /api/pdp/image-prompt 400 in 55ms

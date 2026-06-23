@@ -1,0 +1,327 @@
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⨯ app\pdp-maker\PdpMakerClient.tsx (212:7) @ buildProductInputReadiness
+ ⨯ ReferenceError: buildProductInputReadiness is not defined
+    at eval (./app/pdp-maker/PdpMakerClient.tsx:102:86)
+    at PdpMakerClient (./app/pdp-maker/PdpMakerClient.tsx:102:81)
+digest: "917615647"
+[0m [90m 210 |[39m   [36mconst[39m productInputReadiness [33m=[39m useMemo([0m
+[0m [90m 211 |[39m     () [33m=>[39m[0m
+[0m[31m[1m>[22m[39m[90m 212 |[39m       buildProductInputReadiness({[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 213 |[39m         productImages[33m,[39m[0m
+[0m [90m 214 |[39m         productDescription[33m,[39m[0m
+[0m [90m 215 |[39m         additionalInfo[33m,[39m[0m
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\4.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\4.pack.gz'
+ ⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at loadManifest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-manifest.js:35:27)
+    at DevServer.getNextFontManifest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:745:47)
+    at DevServer.findPageComponents (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:571:43)
+    at async DevServer.renderPageComponent (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1917:24)
+    at async DevServer.renderToResponseImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1969:32)
+    at async DevServer.pipeImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:920:25)
+    at async NextNodeServer.handleCatchallRenderRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:816:17)
+    at async H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:174:21)
+    at async handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:353:24)
+    at async requestHandlerImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:377:13)
+    at async Server.requestListener (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  page: '/pdp-maker'
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/images/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/images/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/images/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\images\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\1.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\1.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\0.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\1.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\1.pack.gz'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving '../../../../../../../.next/server/app/api/pdp/validate-key/route' in H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js', but to 'Error: Can't resolve '../../../../../../../.next/server/app/api/pdp/validate-key/route' in 'H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ../../../../../../../.next/server/app/api/pdp/validate-key/route (expected H:\programming\sangpea\pdp-maker-201\.next\server\app\api\pdp\validate-key\route.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\3.pack.gz_' -> 'H:\programming\sangpea\pdp-maker-201\.next\cache\webpack\client-development\3.pack.gz'

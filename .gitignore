@@ -1,0 +1,23 @@
+node_modules
+.playwright-mcp
+.pnpm-store
+.skill-build
+.next
+.next-prod
+.next-prod-broken-*
+.next_corrupt_*
+.next_mixed_*
+.next_prevercel_backup_*
+dist
+output
+.env
+.env.*
+.local
+.data
+.codex-dev-server*.log
+.codex-reference-image.b64
+coverage
+.DS_Store
+*.tsbuildinfo
+eval "$(ssh-agent -s)"
+eval "$(ssh-agent -s)".pub

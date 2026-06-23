@@ -1,0 +1,251 @@
+  ▲ Next.js 14.2.5
+  - Local:        http://localhost:3002
+
+ ✓ Starting...
+ ✓ Ready in 3.6s
+ ○ Compiling /pdp-maker ...
+ ✓ Compiled /pdp-maker in 1168ms (689 modules)
+ GET /pdp-maker 200 in 1509ms
+ ○ Compiling /api/pdp/analyze ...
+ ✓ Compiled /api/pdp/analyze in 728ms (484 modules)
+ POST /api/pdp/analyze 200 in 1572ms
+ ✓ Compiled in 4.4s (309 modules)
+ ✓ Compiled /api/pdp/analyze in 392ms (113 modules)
+ POST /api/pdp/analyze 200 in 1191ms
+ ✓ Compiled in 804ms (422 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 694ms (605 modules)
+ POST /api/pdp/analyze 404 in 892ms
+ ✓ Compiled /api/config in 211ms (310 modules)
+ GET /api/config 200 in 564ms
+ POST /api/pdp/analyze 200 in 586ms
+ ✓ Compiled in 680ms (425 modules)
+ ✓ Compiled /_not-found in 167ms (606 modules)
+ POST /api/pdp/analyze 404 in 331ms
+ POST /api/pdp/analyze 200 in 565ms
+ ✓ Compiled in 607ms (423 modules)
+ ✓ Compiled /_not-found in 247ms (606 modules)
+ POST /api/pdp/analyze 404 in 363ms
+ POST /api/pdp/analyze 400 in 34ms
+ POST /api/pdp/analyze 200 in 299957ms
+ ✓ Compiled in 346ms (309 modules)
+ ✓ Compiled in 190ms (309 modules)
+ ✓ Compiled /api/config in 214ms (32 modules)
+ GET /api/config 200 in 498ms
+ ✓ Compiled /api/pdp/analyze in 54ms (116 modules)
+ POST /api/pdp/analyze 200 in 90774ms
+ ✓ Compiled in 310ms (309 modules)
+ ✓ Compiled in 201ms (309 modules)
+ ✓ Compiled /api/pdp/analyze in 326ms (114 modules)
+ POST /api/pdp/analyze 200 in 82489ms
+ ✓ Compiled /api/config in 99ms (32 modules)
+ GET /api/config 200 in 410ms
+ ○ Compiling /pdp-maker ...
+ ✓ Compiled /pdp-maker in 577ms (403 modules)
+ GET /pdp-maker 200 in 860ms
+ ✓ Compiled /api/knowledge in 203ms (431 modules)
+ ✓ Compiled (433 modules)
+ GET /pdp-maker/icon.svg 200 in 370ms
+ GET /api/knowledge 200 in 311ms
+ GET /pdp-maker/icon.svg 200 in 31ms
+ GET /api/knowledge 200 in 25ms
+ GET /api/config 200 in 592ms
+ GET /api/config 200 in 188ms
+ ✓ Compiled in 576ms (703 modules)
+ ✓ Compiled /_not-found in 484ms (692 modules)
+ GET /_next/static/webpack/d82d1a8ab09a5bb7.webpack.hot-update.json 404 in 596ms
+ GET /pdp-maker 200 in 156ms
+ ✓ Compiled /api/knowledge in 106ms (425 modules)
+ ✓ Compiled (434 modules)
+ GET /pdp-maker/icon.svg 200 in 673ms
+ GET /api/knowledge 200 in 680ms
+ GET /pdp-maker/icon.svg 200 in 90ms
+ GET /api/knowledge 200 in 97ms
+ GET /pdp-maker/icon.svg 200 in 18ms
+ GET /pdp-maker/icon.svg 200 in 8ms
+ GET /pdp-maker/icon.svg 200 in 10ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 1184ms (954 modules)
+ GET /api/config 500 in 2287ms
+ GET /api/config 500 in 144ms
+ ✓ Compiled in 477ms (968 modules)
+ ✓ Compiled in 519ms (924 modules)
+ ✓ Compiled in 307ms (491 modules)
+ ✓ Compiled in 257ms (491 modules)
+ ✓ Compiled in 181ms (491 modules)
+ ✓ Compiled in 286ms (491 modules)
+ ✓ Compiled in 378ms (491 modules)
+ ✓ Compiled in 262ms (491 modules)
+ ✓ Compiled in 280ms (491 modules)
+ ✓ Compiled in 289ms (491 modules)
+ ✓ Compiled in 294ms (491 modules)
+ ✓ Compiled in 270ms (491 modules)
+ ○ Compiling /api/redesign/edit-section ...
+ ✓ Compiled /api/redesign/edit-section in 972ms (525 modules)
+ ✓ Compiled in 0ms (530 modules)
+ ✓ Compiled in 0ms (530 modules)
+ ✓ Compiled in 0ms (530 modules)
+ POST /api/pdp/analyze 400 in 1456ms
+ POST /api/redesign/edit-section 400 in 1378ms
+ POST /api/redesign/generate 400 in 1382ms
+ POST /api/pdp/analyze 200 in 91548ms
+ GET /pdp-maker 200 in 155ms
+ ✓ Compiled /api/knowledge in 181ms (442 modules)
+ ✓ Compiled in 1ms (444 modules)
+ ✓ Compiled in 0ms (444 modules)
+ ✓ Compiled in 0ms (444 modules)
+ GET /api/knowledge 200 in 627ms
+ GET /api/knowledge 200 in 16ms
+ GET /api/config 200 in 697ms
+ GET /api/config 200 in 152ms
+ ✓ Compiled in 974ms (924 modules)
+ ✓ Compiled /api/knowledge in 842ms (933 modules)
+ ✓ Compiled in 0ms (444 modules)
+ GET /api/knowledge 200 in 432ms
+ GET /api/config 200 in 1619ms
+ ✓ Compiled in 594ms (491 modules)
+ ✓ Compiled in 162ms (491 modules)
+ ✓ Compiled in 147ms (491 modules)
+ ✓ Compiled in 185ms (491 modules)
+ ✓ Compiled in 852ms (924 modules)
+ ✓ Compiled in 220ms (491 modules)
+ ○ Compiling /api/pdp/analyze ...
+ ✓ Compiled /api/pdp/analyze in 589ms (525 modules)
+ POST /api/pdp/analyze 400 in 793ms
+ GET /pdp-maker 200 in 906ms
+ ✓ Compiled /api/config in 76ms (527 modules)
+ GET /api/config 200 in 370ms
+ POST /api/pdp/analyze 200 in 118804ms
+ ✓ Compiled in 430ms (924 modules)
+ ✓ Compiled in 202ms (491 modules)
+ ✓ Compiled /api/pdp/analyze in 308ms (525 modules)
+ POST /api/pdp/analyze 200 in 89789ms
+ ✓ Compiled in 695ms (924 modules)
+ ✓ Compiled in 166ms (491 modules)
+ ✓ Compiled in 346ms (491 modules)
+ ✓ Compiled in 243ms (491 modules)
+ ✓ Compiled in 276ms (491 modules)
+ ✓ Compiled in 266ms (491 modules)
+ ✓ Compiled /api/pdp/analyze in 263ms (525 modules)
+ POST /api/pdp/analyze 200 in 68363ms
+ ✓ Compiled in 489ms (924 modules)
+ ✓ Compiled /api/pdp/analyze in 222ms (525 modules)
+ POST /api/pdp/analyze 200 in 97943ms
+ ✓ Compiled /api/pdp/images in 173ms (525 modules)
+ POST /api/pdp/images 200 in 96319ms
+ ✓ Compiled in 529ms (924 modules)
+ ✓ Compiled in 233ms (491 modules)
+ ✓ Compiled in 285ms (491 modules)
+ ✓ Compiled in 233ms (491 modules)
+ ✓ Compiled /_error in 277ms (912 modules)
+ GET /pdp-maker 200 in 163ms
+ ✓ Compiled /api/knowledge in 144ms (443 modules)
+ ✓ Compiled (445 modules)
+ GET /api/knowledge 200 in 415ms
+ GET /api/knowledge 200 in 20ms
+ GET /api/config 200 in 1481ms
+ GET /api/config 200 in 868ms
+ ✓ Compiled in 260ms (492 modules)
+ ✓ Compiled /api/pdp/images in 420ms (525 modules)
+ POST /api/pdp/images 200 in 222403ms
+ ✓ Compiled in 476ms (924 modules)
+ ✓ Compiled /api/pdp/images in 254ms (525 modules)
+ POST /api/pdp/images 200 in 363597ms
+ GET /pdp-maker 200 in 144ms
+ ✓ Compiled /api/knowledge in 170ms (442 modules)
+ ✓ Compiled (444 modules)
+ GET /api/knowledge 200 in 391ms
+ GET /api/knowledge 200 in 21ms
+ GET /api/config 200 in 758ms
+ GET /api/config 200 in 290ms
+ GET /pdp-maker 200 in 149ms
+ GET /api/knowledge 200 in 42ms
+ GET /api/knowledge 200 in 23ms
+ GET /api/config 200 in 302ms
+ GET /api/config 200 in 240ms
+ ✓ Compiled in 691ms (924 modules)
+ ✓ Compiled in 209ms (491 modules)
+ ✓ Compiled /api/knowledge in 805ms (924 modules)
+ ✓ Compiled in 0ms (444 modules)
+ GET /api/knowledge 200 in 806ms
+ GET /api/knowledge 200 in 808ms
+ GET /api/config 200 in 1482ms
+ GET /api/config 200 in 1665ms
+ ✓ Compiled in 570ms (935 modules)
+ ✓ Compiled in 0ms (444 modules)
+ ✓ Compiled in 0ms (444 modules)
+ ✓ Compiled in 0ms (444 modules)
+ GET /api/knowledge 200 in 574ms
+ GET /api/knowledge 200 in 576ms
+ GET /api/config 200 in 833ms
+ GET /api/config 200 in 880ms
+ GET /pdp-maker 200 in 146ms
+ ○ Compiling /api/pdp/analyze ...
+ ✓ Compiled /api/pdp/analyze in 586ms (525 modules)
+ POST /api/pdp/analyze 200 in 74584ms
+ GET /pdp-maker 200 in 121ms
+ ✓ Compiled /api/knowledge in 166ms (442 modules)
+ ✓ Compiled (444 modules)
+ GET /api/knowledge 200 in 315ms
+ GET /api/knowledge 200 in 19ms
+ GET /api/config 200 in 736ms
+ GET /api/config 200 in 213ms
+ ✓ Compiled in 239ms (491 modules)
+ ✓ Compiled /_not-found in 333ms (913 modules)
+ GET /_next/static/webpack/7dd18ce8c4b06868.webpack.hot-update.json 404 in 454ms
+ GET /pdp-maker 200 in 116ms
+ ✓ Compiled /api/knowledge in 113ms (443 modules)
+ ✓ Compiled (445 modules)
+ GET /api/knowledge 200 in 236ms
+ GET /api/knowledge 200 in 18ms
+ GET /api/config 200 in 1128ms
+ GET /api/config 200 in 898ms
+ ✓ Compiled in 207ms (493 modules)
+ ✓ Compiled in 144ms (493 modules)
+ ✓ Compiled in 205ms (491 modules)
+ ✓ Compiled in 163ms (491 modules)
+ ✓ Compiled in 792ms (924 modules)
+ GET /pdp-maker 200 in 171ms
+ ✓ Compiled /api/knowledge in 151ms (442 modules)
+ ✓ Compiled (444 modules)
+ GET /api/knowledge 200 in 313ms
+ GET /api/knowledge 200 in 23ms
+ GET /api/config 200 in 1214ms
+ GET /api/config 200 in 870ms
+ ✓ Compiled /api/pdp/analyze in 448ms (525 modules)
+ POST /api/pdp/analyze 400 in 533ms
+ ✓ Compiled /api/pdp/images in 182ms (527 modules)
+ POST /api/pdp/images 400 in 269ms
+ ✓ Compiled /api/redesign/edit-section in 183ms (530 modules)
+ POST /api/redesign/edit-section 400 in 247ms
+ POST /api/redesign/edit-section 400 in 32ms
+ ✓ Compiled /api/redesign/generate in 81ms (532 modules)
+ POST /api/redesign/generate 400 in 119ms
+ POST /api/pdp/analyze 200 in 82187ms
+ ✓ Compiled /_not-found in 1039ms (913 modules)
+ GET /_next/static/webpack/96512d2094c9a83c.webpack.hot-update.json 404 in 524ms
+ GET /pdp-maker 200 in 112ms
+ ✓ Compiled /api/knowledge in 144ms (464 modules)
+ ✓ Compiled (473 modules)
+ GET /pdp-maker/icon.svg 200 in 441ms
+ GET /api/knowledge 200 in 464ms
+ GET /pdp-maker/icon.svg 200 in 28ms
+ GET /api/knowledge 200 in 26ms
+ GET /api/config 200 in 929ms
+ GET /api/config 200 in 287ms
+ ✓ Compiled in 855ms (966 modules)
+ GET /pdp-maker/icon.svg 200 in 28ms
+ GET /pdp-maker/icon.svg 200 in 25ms
+ GET /pdp-maker/icon.svg 200 in 13ms
+ ✓ Compiled in 725ms (491 modules)
+ ✓ Compiled in 279ms (491 modules)
+ ✓ Compiled in 210ms (491 modules)
+ ✓ Compiled /api/knowledge in 738ms (924 modules)
+ ✓ Compiled in 0ms (444 modules)
+ GET /api/knowledge 200 in 602ms
+ GET /api/knowledge 200 in 602ms
+ GET /api/config 200 in 1964ms
+ GET /api/config 200 in 2046ms
+ ✓ Compiled in 251ms (491 modules)
+ ✓ Compiled in 205ms (491 modules)
+ ✓ Compiled in 169ms (491 modules)

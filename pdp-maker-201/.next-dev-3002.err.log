@@ -1,0 +1,124 @@
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ lib\codex-oauth.ts (15:42) @ readPositiveNumber
+ ⨯ ReferenceError: readPositiveNumber is not defined
+    at eval (webpack-internal:///(rsc)/./lib/codex-oauth.ts:31:42)
+    at (rsc)/./lib/codex-oauth.ts (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:92:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./app/api/config/route.ts:7:74)
+    at (rsc)/./app/api/config/route.ts (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:82:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./node_modules/.pnpm/next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fconfig%2Froute&page=%2Fapi%2Fconfig%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fconfig%2Froute.ts&appDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!:15:117)
+    at (rsc)/./node_modules/.pnpm/next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fconfig%2Froute&page=%2Fapi%2Fconfig%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fconfig%2Froute.ts&appDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D! (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:72:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at __webpack_exec__ (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:112:39)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:113:134
+    at __webpack_require__.X (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:183:21)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:113:47
+    at Object.<anonymous> (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:116:3)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1311:12)
+    at mod.require (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:136:16)
+    at requirePage (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js:109:84)
+    at H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:84
+    at async loadComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:26)
+    at async DevServer.findPageComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:710:36)
+    at async DevServer.findPageComponents (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:577:20)
+    at async DevServer.renderPageComponent (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1917:24)
+    at async DevServer.renderToResponseImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1969:32)
+    at async DevServer.pipeImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:920:25)
+    at async NextNodeServer.handleCatchallRenderRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:816:17)
+    at async H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:174:21)
+    at async handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:353:24)
+    at async requestHandlerImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:377:13)
+    at async Server.requestListener (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  page: '/api/config'
+}
+[0m [90m 13 |[39m [36mexport[39m [36mconst[39m [33mCODEX_TEXT_MODEL[39m [33m=[39m process[33m.[39menv[33m.[39m[33mCODEX_TEXT_MODEL[39m [33m||[39m [32m"gpt-5.4-mini"[39m[33m;[39m[0m
+[0m [90m 14 |[39m [36mexport[39m [36mconst[39m [33mCODEX_IMAGE_MODEL[39m [33m=[39m process[33m.[39menv[33m.[39m[33mCODEX_IMAGE_MODEL[39m [33m||[39m [32m"openai/gpt-image-2"[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 15 |[39m [36mconst[39m [33mDEFAULT_TEXT_RESPONSE_TIMEOUT_MS[39m [33m=[39m readPositiveNumber(process[33m.[39menv[33m.[39m[33mCODEX_TEXT_RESPONSE_TIMEOUT_MS[39m[33m,[39m [35m150[39m_000)[33m;[39m[0m
+[0m [90m    |[39m                                          [31m[1m^[22m[39m[0m
+[0m [90m 16 |[39m [36mconst[39m [33mDEFAULT_IMAGE_RESPONSE_TIMEOUT_MS[39m [33m=[39m readPositiveNumber(process[33m.[39menv[33m.[39m[33mCODEX_IMAGE_RESPONSE_TIMEOUT_MS[39m[33m,[39m [35m270[39m_000)[33m;[39m[0m
+[0m [90m 17 |[39m[0m
+[0m [90m 18 |[39m [36mexport[39m type [33mCodexAuthStatus[39m [33m=[39m[0m
+ ⨯ lib\codex-oauth.ts (15:42) @ readPositiveNumber
+ ⨯ ReferenceError: readPositiveNumber is not defined
+    at eval (webpack-internal:///(rsc)/./lib/codex-oauth.ts:31:42)
+    at (rsc)/./lib/codex-oauth.ts (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:92:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./app/api/config/route.ts:7:74)
+    at (rsc)/./app/api/config/route.ts (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:82:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at eval (webpack-internal:///(rsc)/./node_modules/.pnpm/next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fconfig%2Froute&page=%2Fapi%2Fconfig%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fconfig%2Froute.ts&appDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!:15:117)
+    at (rsc)/./node_modules/.pnpm/next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fconfig%2Froute&page=%2Fapi%2Fconfig%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fconfig%2Froute.ts&appDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=H%3A%5Cprogramming%5Csangpea%5Cpdp-maker-201&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D! (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:72:1)
+    at __webpack_require__ (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:33:42)
+    at __webpack_exec__ (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:112:39)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:113:134
+    at __webpack_require__.X (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:183:21)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:113:47
+    at Object.<anonymous> (H:\programming\sangpea\pdp-maker-201\.next\server\app\api\config\route.js:116:3)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1311:12)
+    at mod.require (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:136:16)
+    at requirePage (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js:109:84)
+    at H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:84
+    at async loadComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:26)
+    at async DevServer.findPageComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:710:36)
+    at async DevServer.findPageComponents (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:577:20)
+    at async DevServer.renderPageComponent (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1917:24)
+    at async DevServer.renderToResponseImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1969:32)
+    at async DevServer.pipeImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:920:25)
+    at async NextNodeServer.handleCatchallRenderRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:816:17)
+    at async H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:174:21)
+    at async handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:353:24)
+    at async requestHandlerImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:377:13)
+    at async Server.requestListener (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  page: '/api/config'
+}
+[0m [90m 13 |[39m [36mexport[39m [36mconst[39m [33mCODEX_TEXT_MODEL[39m [33m=[39m process[33m.[39menv[33m.[39m[33mCODEX_TEXT_MODEL[39m [33m||[39m [32m"gpt-5.4-mini"[39m[33m;[39m[0m
+[0m [90m 14 |[39m [36mexport[39m [36mconst[39m [33mCODEX_IMAGE_MODEL[39m [33m=[39m process[33m.[39menv[33m.[39m[33mCODEX_IMAGE_MODEL[39m [33m||[39m [32m"openai/gpt-image-2"[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 15 |[39m [36mconst[39m [33mDEFAULT_TEXT_RESPONSE_TIMEOUT_MS[39m [33m=[39m readPositiveNumber(process[33m.[39menv[33m.[39m[33mCODEX_TEXT_RESPONSE_TIMEOUT_MS[39m[33m,[39m [35m150[39m_000)[33m;[39m[0m
+[0m [90m    |[39m                                          [31m[1m^[22m[39m[0m
+[0m [90m 16 |[39m [36mconst[39m [33mDEFAULT_IMAGE_RESPONSE_TIMEOUT_MS[39m [33m=[39m readPositiveNumber(process[33m.[39menv[33m.[39m[33mCODEX_IMAGE_RESPONSE_TIMEOUT_MS[39m[33m,[39m [35m270[39m_000)[33m;[39m[0m
+[0m [90m 17 |[39m[0m
+[0m [90m 18 |[39m [36mexport[39m type [33mCodexAuthStatus[39m [33m=[39m[0m
+ ⨯ SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at loadManifest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-manifest.js:35:27)
+    at DevServer.getNextFontManifest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:745:47)
+    at DevServer.findPageComponents (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:571:43)
+    at async DevServer.renderPageComponent (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1917:24)
+    at async DevServer.renderToResponseImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1969:32)
+    at async DevServer.pipeImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:920:25)
+    at async NextNodeServer.handleCatchallRenderRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:816:17)
+    at async H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:174:21)
+    at async handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:353:24)
+    at async requestHandlerImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:377:13)
+    at async Server.requestListener (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  page: '/pdp-maker'
+}
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
