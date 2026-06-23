@@ -1,15 +1,21 @@
 import type {
   AspectRatio,
   GeneratedResult,
+  ImageProviderId,
   LandingPageBlueprint,
+  PdpEditableLayer,
   PdpImageQualityReport,
+  PdpLayoutTemplate,
   PdpQualityIssue,
+  PdpQualityMetric,
+  PdpQualityMetricKey,
   PdpQualityStatus,
   PdpReferenceImage,
   ProviderProof,
   SectionBlueprint
 } from "./shared";
-import { CodexProviderError, extractJsonObject, generateImageWithCodex, generateTextWithCodex } from "./codex-oauth";
+import { CodexProviderError, extractJsonObject, generateTextWithCodex } from "./codex-oauth";
+import { getImageProvider, type ImageProvider } from "./image-providers";
 import { hasExpectedImageSignature } from "./image-validation";
 import { buildKnowledgeContext } from "./local-rag";
 
@@ -73,7 +79,7 @@ export type RedesignProject = {
   id: string;
   title: string;
   channel: string;
-  model: "openai-codex-oauth";
+  model: ImageProviderId;
   modelLabel: string;
   modelId: string;
   count: number;
@@ -114,6 +120,7 @@ export async function generateRedesignProject(input: {
   count: number;
   startSection?: number;
 }) {
+  const imageProvider = getImageProvider();
   const references = await prepareReferenceImages(input.files);
   if (!references.length) {
     throw new RedesignServiceError("INVALID_IMAGE_PAYLOAD", "이미지 생성에 사용할 참조 이미지가 없습니다. PDF는 브라우저에서 PNG로 변환한 뒤 전송해야 합니다.");
@@ -190,6 +197,7 @@ export async function generateRedesignProject(input: {
 
       const candidates: RedesignImageCandidate[] = [
         await generateAndEvaluateRedesignImage({
+          imageProvider,
           prompt: promptText,
           references,
           section,
@@ -209,6 +217,7 @@ export async function generateRedesignProject(input: {
           });
           candidates.push(
             await generateAndEvaluateRedesignImage({
+              imageProvider,
               prompt: repairPrompt,
               references,
               section,
@@ -255,9 +264,9 @@ export async function generateRedesignProject(input: {
     id: `redesign-${Date.now()}-${crypto.randomUUID()}`,
     title: inferProjectTitle(analysis, input.channel),
     channel: input.channel,
-    model: "openai-codex-oauth",
-    modelLabel: "Codex OAuth / OpenAI gpt-image-2",
-    modelId: "openai/gpt-image-2",
+    model: imageProvider.id,
+    modelLabel: imageProvider.label,
+    modelId: imageProvider.defaultModel,
     count: generatedSections.length,
     ratio: input.aspectRatio,
     status: isCompleteProject ? "완료" : "부분완료",
@@ -344,6 +353,7 @@ export async function evaluateRedesignImageQuality(input: {
       status: "needs_review",
       summary: `자동 이미지 품질 검수를 완료하지 못했습니다. 고객 제공 전 수동 확인이 필요합니다: ${error instanceof Error ? error.message : "unknown"}`,
       checks: [],
+      pdpChecks: buildFallbackPdpChecks(70, "needs_review", []),
       issues: [
         {
           sectionId: input.section.section_id,
@@ -359,6 +369,7 @@ export async function evaluateRedesignImageQuality(input: {
 }
 
 async function generateAndEvaluateRedesignImage(input: {
+  imageProvider: ImageProvider;
   prompt: string;
   references: ReferenceImage[];
   section: RedesignProjectSection;
@@ -367,7 +378,7 @@ async function generateAndEvaluateRedesignImage(input: {
   requestText: string;
   analysis: RedesignAnalysis;
 }): Promise<RedesignImageCandidate> {
-  const image = await generateImageWithCodex({
+  const image = await input.imageProvider.generate({
     prompt: input.prompt,
     referenceImages: input.references.map(({ base64, mimeType }) => ({ base64, mimeType })),
     aspectRatio: input.aspectRatio
@@ -408,6 +419,7 @@ function buildRedesignImageQualityPrompt(input: {
     "For software/SaaS/app sources, penalize fictional UI, generic game-like panels, fake dashboards, smeared text, and source-unfaithful screens.",
     "For physical product sources, penalize changed product shape, color, package, material, components, or unsupported product-function usage claims.",
     "Use blocked for images that should not be delivered to a paying customer. Use needs_review for usable images requiring human confirmation.",
+    "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw redesign backgrounds, score text/CTA based on whether there are safe editable zones.",
     `Aspect ratio: ${input.aspectRatio}`,
     `Channel: ${input.channel || "한국 모바일 커머스"}`,
     `Section:\n${JSON.stringify(input.section, null, 2)}`,
@@ -420,6 +432,14 @@ function buildRedesignImageQualityPrompt(input: {
         status: "needs_review",
         summary: "",
         checks: [],
+        pdpChecks: {
+          textReadability: { score: 70, status: "needs_review", note: "" },
+          ctaVisibility: { score: 70, status: "needs_review", note: "" },
+          mobileReadability: { score: 70, status: "needs_review", note: "" },
+          productExposure: { score: 70, status: "needs_review", note: "" },
+          whitespaceBalance: { score: 70, status: "needs_review", note: "" },
+          layerEditability: { score: 70, status: "needs_review", note: "" }
+        },
         issues: [{ category: "visual", severity: "minor", message: "", fix: "" }],
         nextActions: []
       },
@@ -603,9 +623,11 @@ function buildSections(input: {
 
 function projectSectionToBlueprint(section: RedesignProjectSection, index: number, aspectRatio: AspectRatio): SectionBlueprint {
   const template = sectionTemplates()[sectionNumber(section.section_id) - 1] ?? sectionTemplates()[index] ?? sectionTemplates()[0];
+  const layoutTemplate = layoutTemplateForSectionNumber(sectionNumber(section.section_id) || index + 1);
   return {
     section_id: section.section_id || `S${index + 1}`,
     section_name: section.name || template.name,
+    layout_template: layoutTemplate,
     goal: section.purpose || template.purpose,
     headline: section.headline || template.headline,
     headline_en: section.headline || template.headline,
@@ -626,10 +648,71 @@ function projectSectionToBlueprint(section: RedesignProjectSection, index: numbe
     negative_prompt: "fake product functions, fake logos, fake software features, fake pricing, unreadable text, dense paragraphs, distorted product or UI",
     style_guide: "Korean mobile commerce or software promotional PDP, trustworthy, clear, conversion-focused, varied layouts",
     reference_usage: "기존 상세페이지 이미지 또는 서비스 화면을 제품/서비스 사실과 시각 기준으로 사용",
+    editableLayers: buildDefaultEditableLayers(section.section_id || `S${index + 1}`, layoutTemplate),
     generatedImage: section.imageUrl,
     imageQualityReport: section.imageQualityReport,
     providerProof: section.providerProof
   };
+}
+
+function layoutTemplateForSectionNumber(value: number): PdpLayoutTemplate {
+  const templates: PdpLayoutTemplate[] = ["hero", "problem", "benefit", "proof", "spec", "demo", "use-case", "faq-cta"];
+  return templates[Math.max(0, Math.min(templates.length - 1, value - 1))] ?? "benefit";
+}
+
+function buildDefaultEditableLayers(sectionId: string, layoutTemplate: PdpLayoutTemplate): PdpEditableLayer[] {
+  const isHero = layoutTemplate === "hero";
+  const isFaq = layoutTemplate === "faq-cta";
+  return [
+    {
+      id: `${sectionId}-background`,
+      kind: "background",
+      name: "Background artwork",
+      sectionId,
+      editable: false,
+      zIndex: 0,
+      bounds: { x: 0, y: 0, width: 100, height: 100, unit: "percent" }
+    },
+    {
+      id: `${sectionId}-product`,
+      kind: "product",
+      name: "Product or software visual",
+      sectionId,
+      editable: false,
+      zIndex: 10,
+      bounds: { x: isHero ? 12 : 10, y: isHero ? 26 : 20, width: isHero ? 76 : 80, height: isFaq ? 34 : 48, unit: "percent" }
+    },
+    {
+      id: `${sectionId}-headline`,
+      kind: "text",
+      name: "Headline text",
+      sectionId,
+      editable: true,
+      role: "headline",
+      zIndex: 20,
+      bounds: { x: 8, y: isHero ? 8 : 7, width: 84, height: 14, unit: "percent" }
+    },
+    {
+      id: `${sectionId}-support-copy`,
+      kind: "text",
+      name: "Support copy and bullets",
+      sectionId,
+      editable: true,
+      role: "body",
+      zIndex: 21,
+      bounds: { x: 8, y: isHero ? 70 : 68, width: 84, height: isFaq ? 17 : 20, unit: "percent" }
+    },
+    {
+      id: `${sectionId}-cta`,
+      kind: "cta",
+      name: "CTA button",
+      sectionId,
+      editable: true,
+      role: "cta",
+      zIndex: 22,
+      bounds: { x: 24, y: 90, width: 52, height: 7, unit: "percent" }
+    }
+  ];
 }
 
 function normalizeRedesignImageQualityReport(raw: Record<string, unknown>, sectionId?: string): PdpImageQualityReport {
@@ -656,6 +739,7 @@ function normalizeRedesignImageQualityReport(raw: Record<string, unknown>, secti
           ? "리디자인 이미지를 고객에게 제공하기 전에 다시 생성해야 합니다."
           : "리디자인 이미지는 사용 가능하지만 고객 제공 전 수동 검수가 필요합니다."),
     checks: normalizeStringArray(raw.checks).slice(0, 8),
+    pdpChecks: normalizePdpChecks(readRawPdpChecks(raw), score, status, normalizedIssues),
     issues: normalizedIssues,
     nextActions: normalizeStringArray(raw.nextActions ?? raw.next_actions ?? raw.actions).length
       ? normalizeStringArray(raw.nextActions ?? raw.next_actions ?? raw.actions).slice(0, 4)
@@ -681,8 +765,98 @@ function normalizeRedesignQualityIssue(raw: Record<string, unknown>, sectionId?:
   };
 }
 
+function readRawPdpChecks(raw: Record<string, unknown>) {
+  const value = raw.pdpChecks ?? raw.pdp_checks;
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+}
+
+function normalizePdpChecks(
+  checks: Record<string, unknown> | undefined,
+  fallbackScore: number,
+  fallbackStatus: PdpQualityStatus,
+  issues: PdpQualityIssue[]
+): Partial<Record<PdpQualityMetricKey, PdpQualityMetric>> {
+  const keys: PdpQualityMetricKey[] = [
+    "textReadability",
+    "ctaVisibility",
+    "mobileReadability",
+    "productExposure",
+    "whitespaceBalance",
+    "layerEditability"
+  ];
+  return Object.fromEntries(
+    keys.map((key) => {
+      const metric = checks?.[key] && typeof checks[key] === "object" && !Array.isArray(checks[key]) ? (checks[key] as Record<string, unknown>) : {};
+      const relatedIssue = findRelatedPdpIssue(key, issues);
+      const score = clamp(Number(metric.score ?? (relatedIssue ? Math.min(fallbackScore, relatedIssue.severity === "critical" ? 45 : 68) : fallbackScore)), 0, 100);
+      const status = normalizePdpMetricStatus(String(metric.status || ""), score, relatedIssue, fallbackStatus);
+      return [
+        key,
+        {
+          score,
+          status,
+          note: String(metric.note || relatedIssue?.message || defaultPdpCheckNote(key))
+        }
+      ];
+    })
+  );
+}
+
+function buildFallbackPdpChecks(
+  score: number,
+  status: PdpQualityStatus,
+  issues: PdpQualityIssue[]
+): Partial<Record<PdpQualityMetricKey, PdpQualityMetric>> {
+  return normalizePdpChecks(undefined, score, status, issues);
+}
+
+function normalizePdpMetricStatus(rawStatus: string, score: number, issue: PdpQualityIssue | undefined, fallbackStatus: PdpQualityStatus): PdpQualityStatus {
+  const normalized = rawStatus.toLowerCase();
+  if (normalized === "blocked" || normalized === "needs_review" || normalized === "ready") return normalized;
+  if (issue?.severity === "critical" || score < 55) return "blocked";
+  if (issue?.severity === "major" || score < 82 || fallbackStatus === "blocked") return "needs_review";
+  return "ready";
+}
+
+function findRelatedPdpIssue(key: PdpQualityMetricKey, issues: PdpQualityIssue[]) {
+  const patterns: Record<PdpQualityMetricKey, RegExp> = {
+    textReadability: /(readability|legibility|text|copy|contrast|font|가독|문구|텍스트)/i,
+    ctaVisibility: /(cta|button|call.?to.?action|action|버튼|클릭|구매|CTA)/i,
+    mobileReadability: /(mobile|viewport|small|overflow|clip|모바일|작게|잘림|이탈)/i,
+    productExposure: /(product|subject|package|screen|ui|exposure|제품|상품|화면|가림|노출)/i,
+    whitespaceBalance: /(space|spacing|padding|balance|composition|clutter|여백|간격|혼잡|구도)/i,
+    layerEditability: /(layer|editable|safe.?zone|overlay|baked|pixel|레이어|편집|합성|픽셀)/i
+  };
+  const pattern = patterns[key];
+  return issues.find((issue) => pattern.test(`${issue.category} ${issue.message} ${issue.fix}`));
+}
+
+function defaultPdpCheckNote(key: PdpQualityMetricKey) {
+  switch (key) {
+    case "textReadability":
+      return "헤드라인/본문 카피 가독성 기준";
+    case "ctaVisibility":
+      return "CTA 위치와 시선 유도 기준";
+    case "mobileReadability":
+      return "모바일 화면에서의 크기, 대비, 잘림 기준";
+    case "productExposure":
+      return "상품 또는 SW 화면 노출 비율 기준";
+    case "whitespaceBalance":
+      return "여백, 패딩, 정보 밀도 균형 기준";
+    case "layerEditability":
+      return "텍스트/CTA를 재생성 없이 수정할 수 있는 레이어 안전영역 기준";
+    default:
+      return "PDP 품질 기준";
+  }
+}
+
 function normalizeQualityCategory(value: string): PdpQualityIssue["category"] {
   const normalized = value.toLowerCase().replace(/[\s_-]+/g, "");
+  if (/(cta|button|calltoaction)/.test(normalized)) return "cta";
+  if (/(mobile|viewport|smallscreen)/.test(normalized)) return "mobile";
+  if (/(readability|legibility|contrast|fontsize|type)/.test(normalized)) return "readability";
+  if (/(product|exposure|subject|package|screen|ui)/.test(normalized)) return "product";
+  if (/(composition|layout|whitespace|balance|safezone|overlay)/.test(normalized)) return "composition";
   if (/(story|flow|conversion|composition|layout)/.test(normalized)) return "story";
   if (/(copy|text|headline|readability|safezone|overlay)/.test(normalized)) return "copy";
   if (/(proof|trust|truth|source|factual|producttruthfulness|claim)/.test(normalized)) return "proof";

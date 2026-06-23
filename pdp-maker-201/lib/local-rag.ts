@@ -5,16 +5,21 @@ const KNOWLEDGE_DIR = path.join(process.cwd(), ".data", "knowledge");
 const KNOWLEDGE_FILE = path.join(KNOWLEDGE_DIR, "documents.json");
 const MAX_CHUNKS_PER_DOCUMENT = 2;
 
+export type KnowledgeSourceKind = "seed" | "product_data" | "competitor_pdp" | "review" | "category" | "general";
+
 export type KnowledgeDocument = {
   id: string;
   name: string;
   text: string;
+  sourceKind: KnowledgeSourceKind;
+  tags: string[];
   createdAt: string;
 };
 
 export type RetrievedKnowledge = {
   documentId: string;
   sourceName: string;
+  sourceKind: KnowledgeSourceKind;
   content: string;
   score: number;
 };
@@ -35,25 +40,30 @@ export async function getKnowledgeStats() {
 
 export async function listKnowledgeDocuments() {
   const documents = await readDocuments();
-  return documents.map(({ id, name, text, createdAt }) => ({
+  return documents.map(({ id, name, text, sourceKind, tags, createdAt }) => ({
     id,
     name,
+    sourceKind,
+    tags,
     createdAt,
     size: text.length
   }));
 }
 
-export async function indexKnowledgeDocument({ name, text }: { name: string; text: string }) {
+export async function indexKnowledgeDocument({ name, text, sourceKind, tags }: { name: string; text: string; sourceKind?: KnowledgeSourceKind | string; tags?: string[] }) {
   const documents = await readDocuments();
   const cleaned = cleanKnowledgeText(text);
   if (!cleaned) return { indexed: false, chunks: 0, reason: "No text to index." };
   const normalizedName = name.trim() || "knowledge-file";
   const existing = documents.find((document) => document.name === normalizedName);
+  const normalizedSourceKind = normalizeKnowledgeSourceKind(sourceKind);
 
   const document: KnowledgeDocument = {
     id: existing?.id ?? crypto.randomUUID(),
     name: normalizedName,
     text: cleaned.slice(0, 200000),
+    sourceKind: normalizedSourceKind,
+    tags: normalizeKnowledgeTags(tags),
     createdAt: existing?.createdAt ?? new Date().toISOString()
   };
 
@@ -80,7 +90,8 @@ export async function retrieveKnowledge(query: string, limit = 8): Promise<Retri
       if (score > 0) {
         rows.push({
           documentId: document.id,
-          sourceName: document.name,
+          sourceName: sourceLabel(document),
+          sourceKind: document.sourceKind,
           content: chunk.content,
           score
         });
@@ -108,7 +119,7 @@ export async function buildKnowledgeContextWithSources(query: string, fallbackTe
 
   const ragText = retrieved
     .map((item, index) =>
-      [`# RAG search result ${index + 1}: ${item.sourceName}`, `score: ${item.score.toFixed(2)}`, item.content].join("\n")
+      [`# RAG search result ${index + 1}: ${item.sourceName}`, `source_kind: ${item.sourceKind}`, `score: ${item.score.toFixed(2)}`, item.content].join("\n")
     )
     .join("\n\n");
   const fallbackBlock = fallback ? `# Required stage/user context\n${fallback}\n\n` : "";
@@ -124,7 +135,7 @@ async function readDocuments(): Promise<KnowledgeDocument[]> {
     const text = await fs.readFile(KNOWLEDGE_FILE, "utf-8");
     const parsed = JSON.parse(text);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isKnowledgeDocument);
+    return parsed.filter(isKnowledgeDocument).map(normalizeKnowledgeDocument);
   } catch {
     return [];
   }
@@ -279,4 +290,32 @@ function isKnowledgeDocument(value: unknown): value is KnowledgeDocument {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
   const record = value as Record<string, unknown>;
   return typeof record.id === "string" && typeof record.name === "string" && typeof record.text === "string";
+}
+
+function normalizeKnowledgeDocument(document: KnowledgeDocument): KnowledgeDocument {
+  return {
+    ...document,
+    sourceKind: normalizeKnowledgeSourceKind(document.sourceKind),
+    tags: normalizeKnowledgeTags(document.tags)
+  };
+}
+
+function normalizeKnowledgeSourceKind(value: unknown): KnowledgeSourceKind {
+  const normalized = String(value ?? "").trim().toLowerCase().replace(/[-\s]+/g, "_");
+  if (normalized === "seed") return "seed";
+  if (normalized === "product_data" || normalized === "product") return "product_data";
+  if (normalized === "competitor_pdp" || normalized === "competitor" || normalized === "reference_pdp") return "competitor_pdp";
+  if (normalized === "review" || normalized === "reviews") return "review";
+  if (normalized === "category" || normalized === "category_rules") return "category";
+  return "general";
+}
+
+function normalizeKnowledgeTags(values: unknown) {
+  if (!Array.isArray(values)) return [];
+  return Array.from(new Set(values.map((value) => String(value).trim()).filter(Boolean))).slice(0, 12);
+}
+
+function sourceLabel(document: KnowledgeDocument) {
+  const tags = document.tags.length ? ` tags=${document.tags.join(",")}` : "";
+  return `[${document.sourceKind}] ${document.name}${tags}`;
 }

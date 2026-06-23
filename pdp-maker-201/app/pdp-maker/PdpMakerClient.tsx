@@ -1,26 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
-  FileImage,
-  FileText,
-  FolderOpen,
   Loader2,
   Moon,
   RectangleVertical,
-  RefreshCw,
   Sparkles,
-  Sun,
-  Trash2,
-  Upload
+  Sun
 } from "lucide-react";
-import type { AspectRatio, GeneratedResult, PdpAnalyzeResponse, PdpImageQualityReport, ProviderProof, ReferenceImageRole, ReferenceModelUsage, SectionBlueprint } from "@runacademy/shared";
+import type { AspectRatio, GeneratedResult, PdpAnalyzeResponse, ReferenceImageRole, ReferenceModelUsage } from "@runacademy/shared";
 import type { PdpDraftSummary, PdpEditorDraftState, PreparedImageDraft, PreparedReferenceImageDraft } from "./pdp-drafts";
 import { deletePdpDraft, getPdpDraft, listPdpDrafts, savePdpDraft } from "./pdp-drafts";
 import { PdpEditor } from "./PdpEditor";
 import { RATIO_OPTIONS, TONE_OPTIONS, apiJson, prepareImageFile } from "./pdp-utils";
+import { DraftPanel } from "./features/draft/DraftPanel";
+import { ProductInputReadinessPanel } from "./features/generation/ProductInputReadinessPanel";
+import { buildProductInputReadiness } from "./features/generation/product-readiness";
+import { KnowledgePanel, type KnowledgeItem } from "./features/knowledge/KnowledgePanel";
+import { RedesignProjectPanel } from "./features/redesign/RedesignProjectPanel";
+import { ensureSectionRevisions, mergeRedesignProjects, redesignProjectToResult, sectionNumber } from "./features/redesign/redesign-result";
+import {
+  MAX_REDESIGN_REFERENCE_UPLOADS,
+  REDESIGN_SECTION_TOTAL,
+  type RedesignEditResponse,
+  type RedesignGenerateResponse,
+  type RedesignProject
+} from "./features/redesign/types";
+import { ProductUpload, MAX_PRODUCT_REFERENCE_UPLOADS } from "./features/upload/ProductUpload";
+import { RedesignUpload } from "./features/upload/RedesignUpload";
+import { ensurePrimaryReferenceImages, extractKnowledgeText, normalizeFilesForUpload, preventFileDragDefault } from "./features/upload/file-input";
 import styles from "./pdp-maker.module.css";
 
 type SourceMode = "product" | "redesign";
@@ -36,96 +46,6 @@ type ConfigState = {
   imageModel?: string;
   knowledge?: { documents: number; chunks: number };
 };
-
-type KnowledgeItem = {
-  id: string;
-  name: string;
-  size: number;
-  createdAt: string;
-};
-
-type RedesignSectionRevision = {
-  id: string;
-  imageUrl: string;
-  label: string;
-  createdAt: string;
-  request?: string;
-  providerProof?: ProviderProof;
-};
-
-type RedesignSection = {
-  id: string;
-  section_id: string;
-  image_id?: string;
-  name: string;
-  purpose: string;
-  source: string;
-  headline?: string;
-  subheadline?: string;
-  bullets?: string[];
-  trust?: string;
-  cta?: string;
-  prompt: string;
-  promptText?: string;
-  imageUrl?: string;
-  mimeType?: string;
-  imageQualityReport?: PdpImageQualityReport;
-  providerProof?: ProviderProof;
-  error?: string;
-  revisions?: RedesignSectionRevision[];
-};
-
-type RedesignProject = {
-  id: string;
-  title: string;
-  channel: string;
-  model: "openai-codex-oauth";
-  modelLabel: string;
-  modelId: string;
-  count: number;
-  ratio: AspectRatio;
-  status: "완료" | "부분완료";
-  files: string[];
-  request: string;
-  rolloutRequest: string;
-  createdAt: string;
-  analysis?: unknown;
-  sections: RedesignSection[];
-  failedSections?: RedesignSection[];
-  warning?: string;
-  providerProof?: ProviderProof;
-  originalImage: string;
-  referenceImages?: Array<{ id?: string; name?: string; role?: ReferenceImageRole; mimeType: string; base64: string }>;
-};
-
-type RedesignGenerateResponse =
-  | {
-      ok: true;
-      project: RedesignProject;
-      result: GeneratedResult;
-    }
-  | {
-      ok: false;
-      error: string;
-      detail?: string;
-      code?: string;
-    };
-
-type RedesignEditResponse =
-  | {
-      ok: true;
-      imageUrl: string;
-      mimeType?: string;
-      prompt?: string;
-      imageQualityReport?: PdpImageQualityReport;
-      providerProof?: ProviderProof;
-    }
-  | {
-      ok: false;
-      error: string;
-      detail?: string;
-      code?: string;
-    };
 
 type DraftSnapshotInput = {
   mode?: "manual" | "auto";
@@ -144,26 +64,6 @@ type SavedDraftMeta = {
   createdAt: string;
   updatedAt: string;
 };
-
-type ProductInputReadiness = {
-  score: number;
-  status: "ready" | "needs_review" | "blocked";
-  summary: string;
-  strengths: string[];
-  issues: string[];
-  actions: string[];
-};
-
-const REDESIGN_SECTION_TOTAL = 8;
-const MAX_PRODUCT_REFERENCE_UPLOADS = 20;
-const MAX_REDESIGN_REFERENCE_UPLOADS = 6;
-
-const REFERENCE_ROLE_OPTIONS: Array<{ value: ReferenceImageRole; label: string; description: string }> = [
-  { value: "primary", label: "대표", description: "제품/SW 정체성을 판단하는 기준" },
-  { value: "detail", label: "디테일", description: "스펙, 구성, 화면 일부, 사용법" },
-  { value: "proof", label: "증빙", description: "후기, 인증, 리뷰, 근거 자료" },
-  { value: "reference", label: "참조", description: "톤, 구도, 보조 맥락" }
-];
 
 export function PdpMakerClient() {
   const [theme, setTheme] = useState<ThemeMode>("dark");
@@ -187,7 +87,7 @@ export function PdpMakerClient() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [channel, setChannel] = useState("스마트스토어");
   const [redesignCount, setRedesignCount] = useState(1);
-  const [notice, setNotice] = useState("Codex OAuth 로그인 상태를 확인한 뒤 제품 이미지, SW 화면 또는 기존 상세페이지를 업로드하세요.");
+  const [notice, setNotice] = useState("Codex OAuth 로그인 상태를 확인한 뒤 자료를 업로드하세요. 먼저 구조를 만들고, 편집기에서 문구·CTA·색상·배경을 반복 수정합니다.");
   const [errorMessage, setErrorMessage] = useState("");
   const [errorDetail, setErrorDetail] = useState("");
   const [loadingStep, setLoadingStep] = useState("");
@@ -463,12 +363,12 @@ export function PdpMakerClient() {
         analysisFallbackUsed
           ? `AI 분석이 기본 구조로 대체되었습니다. 상품명과 핵심 기능은 반영했지만 고객 납품 전 원본 자료와 카피를 검수하세요. ${qualityLabel || ""}`.trim()
           : qualityLabel
-            ? `${qualityLabel}. ${qualityReport?.nextActions[0] ?? "섹션별 이미지를 생성하거나 편집하세요."}`
+            ? `${qualityLabel}. ${qualityReport?.nextActions[0] ?? "편집기에서 문구, CTA, 색상, 배경을 반복 수정하세요."}`
             : warningCount
               ? `상품 브리프와 상세페이지 구조를 만들었습니다. 카피 경고 ${warningCount}건을 확인한 뒤 섹션 이미지를 생성하세요.`
               : startsWithReadinessWarning
                 ? "부족한 입력으로 상세페이지 구조를 만들었습니다. 카피와 근거를 확인한 뒤 섹션 이미지를 생성하세요."
-                : "상품 브리프와 상세페이지 구조를 만들었습니다. 섹션별 이미지를 생성하거나 편집하세요.";
+                : "상품 브리프와 상세페이지 구조를 만들었습니다. 편집기에서 문구, CTA, 색상, 배경을 반복 수정하세요.";
       const savedEditorDraft = await persistDraftSnapshot({
         mode: "auto",
         resultOverride: response.result,
@@ -679,7 +579,7 @@ export function PdpMakerClient() {
   async function openRedesignEditor(project = redesignProject) {
     if (!project) return;
     const nextResult = redesignProjectToResult(project);
-    const nextNotice = "리디자인 결과를 편집기로 넘겼습니다. 텍스트/도형 오버레이와 ZIP 다운로드를 사용할 수 있습니다.";
+    const nextNotice = "리디자인 결과를 편집기로 넘겼습니다. 문구, CTA, 색상, 배경을 섹션별로 반복 수정할 수 있습니다.";
     if (!isEditorReadyResult(nextResult)) {
       setErrorMessage("편집기로 열 수 있는 생성 섹션이 없습니다. 먼저 히어로 또는 누락 섹션을 생성해 주세요.");
       return;
@@ -707,7 +607,7 @@ export function PdpMakerClient() {
         const text = await extractKnowledgeText(file);
         const response = await apiJson<{ indexed: boolean; reason?: string }>("/knowledge", {
           method: "POST",
-          body: JSON.stringify({ name: file.name, text })
+          body: JSON.stringify({ name: file.name, text, sourceKind: inferKnowledgeSourceKind(file.name, text), tags: inferKnowledgeTags(file.name, text) })
         });
         if (response.indexed) {
           indexedCount += 1;
@@ -912,7 +812,7 @@ export function PdpMakerClient() {
             <span className={styles.toolKicker}>Codex Local PDP Workspace</span>
             <h1 className={styles.toolTitle}>Codex PDP Maker</h1>
             <p className={styles.toolDescription}>
-              Codex OAuth로 제품·SW 홍보 상세페이지를 만들고, 기존 상세페이지를 원본 흐름처럼 1장 검토 후 이어 생성합니다.
+              제품·SW 상세페이지 초안을 만든 뒤 문구, CTA, 색상, 배경을 섹션별로 반복 편집합니다.
             </p>
           </div>
           <div className={styles.toolHeaderActions}>
@@ -1116,7 +1016,7 @@ export function PdpMakerClient() {
                   ? "자료 업로드 후 생성"
                   : productInputReadiness.status === "blocked"
                   ? "경고 감수하고 구조 생성"
-                  : "상세페이지 구조 생성"
+                  : "구조 생성 후 편집 시작"
                 : redesignCount === 1
                   ? "히어로 1장 먼저 생성"
                   : `S1부터 ${redesignCount}장 생성`}
@@ -1160,974 +1060,9 @@ export function PdpMakerClient() {
   }
 }
 
-function ProductUpload({
-  inputRef,
-  modelInputRef,
-  productImages,
-  modelImage,
-  modelImageUsage,
-  onProductFiles,
-  onReferenceRoleChange,
-  removeProductImage,
-  onModelImage,
-  onModelImageUsage,
-  removeModelImage
-}: {
-  inputRef: RefObject<HTMLInputElement>;
-  modelInputRef: RefObject<HTMLInputElement>;
-  productImages: PreparedReferenceImageDraft[];
-  modelImage: PreparedImageDraft | null;
-  modelImageUsage: ReferenceModelUsage | null;
-  onProductFiles: (files: File[]) => void;
-  onReferenceRoleChange: (imageId: string, role: ReferenceImageRole) => void;
-  removeProductImage: (imageId: string) => void;
-  onModelImage: (file: File) => void;
-  onModelImageUsage: (usage: ReferenceModelUsage) => void;
-  removeModelImage: () => void;
-}) {
-  const [isProductDragging, setIsProductDragging] = useState(false);
-  const [isModelDragging, setIsModelDragging] = useState(false);
-  const productDropzoneClass = isProductDragging ? styles.dropzoneActive : styles.dropzone;
-  const modelDropzoneClass = `${isModelDragging ? styles.dropzoneActive : styles.dropzone} ${styles.dropzoneCompact}`;
-
-  return (
-    <>
-      <button
-        className={productDropzoneClass}
-        onClick={() => inputRef.current?.click()}
-        onDragEnter={(event) => {
-          preventFileDragDefault(event);
-          setIsProductDragging(true);
-        }}
-        onDragLeave={(event) => {
-          preventFileDragDefault(event);
-          setIsProductDragging(false);
-        }}
-        onDragOver={preventFileDragDefault}
-        onDrop={(event) => {
-          preventFileDragDefault(event);
-          setIsProductDragging(false);
-          onProductFiles(filesFromDragEvent(event));
-        }}
-        type="button"
-      >
-        <span className={styles.dropzoneIcon}><Upload size={24} /></span>
-        <strong>제품/SW 자료를 여러 장 업로드하세요</strong>
-        <p>클릭하거나 드래그 앤 드롭하세요. 대표컷, 디테일컷, 증빙 이미지, 앱 화면, PDF 페이지를 최대 20개까지 함께 넣을 수 있습니다.</p>
-        <span className={styles.dropzoneHint}>{productImages.length ? `${productImages.length}/${MAX_PRODUCT_REFERENCE_UPLOADS}개 참조 자료 준비됨` : "JPG, PNG, WebP, PDF"}</span>
-      </button>
-      <input
-        className={styles.hiddenInput}
-        multiple
-        onChange={(event) => {
-          onProductFiles(Array.from(event.target.files || []));
-          event.currentTarget.value = "";
-        }}
-        ref={inputRef}
-        type="file"
-        accept="image/*,.pdf"
-      />
-      {productImages.length ? (
-        <div className={styles.referenceAssetList}>
-          {productImages.map((image, index) => (
-            <div className={styles.referenceAssetCard} key={image.id}>
-              <div className={styles.referenceAssetThumb}>
-                <img alt={image.fileName} src={image.previewUrl} />
-              </div>
-              <div className={styles.referenceAssetMeta}>
-                <strong>{image.fileName}</strong>
-                <span>{index === 0 ? "첫 번째 참조 이미지" : "추가 참조 이미지"}</span>
-                <div className={styles.roleChipGrid}>
-                  {REFERENCE_ROLE_OPTIONS.map((role) => (
-                    <button
-                      className={image.role === role.value ? styles.optionChipActive : styles.optionChip}
-                      key={role.value}
-                      onClick={() => onReferenceRoleChange(image.id, role.value)}
-                      title={role.description}
-                      type="button"
-                    >
-                      {role.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button className={styles.inlineDangerButton} onClick={() => removeProductImage(image.id)} type="button">
-                <Trash2 size={14} />
-                제거
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
-      <div className={styles.optionalUploadBlock}>
-        <div className={styles.optionalUploadHeader}>
-          <div>
-            <span className={styles.panelLabel}>선택 옵션</span>
-            <h3 className={styles.optionalUploadTitle}>모델 이미지</h3>
-            <p className={styles.optionalUploadDescription}>특정 인물의 정체성을 유지한 모델컷이 필요할 때 사용합니다.</p>
-          </div>
-          {modelImage ? (
-            <button className={styles.inlineButton} onClick={removeModelImage} type="button">
-              <Trash2 size={14} />
-              제거
-            </button>
-          ) : null}
-        </div>
-        <button
-          className={modelDropzoneClass}
-          onClick={() => modelInputRef.current?.click()}
-          onDragEnter={(event) => {
-            preventFileDragDefault(event);
-            setIsModelDragging(true);
-          }}
-          onDragLeave={(event) => {
-            preventFileDragDefault(event);
-            setIsModelDragging(false);
-          }}
-          onDragOver={preventFileDragDefault}
-          onDrop={(event) => {
-            preventFileDragDefault(event);
-            setIsModelDragging(false);
-            const [file] = filesFromDragEvent(event);
-            if (file) onModelImage(file);
-          }}
-          type="button"
-        >
-          <span className={styles.dropzoneIcon}><FileImage size={20} /></span>
-          <strong>모델 이미지 업로드</strong>
-          <span className={styles.dropzoneHint}>{modelImage?.fileName || "선택 사항, 드래그 가능"}</span>
-        </button>
-        <input
-          className={styles.hiddenInput}
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) onModelImage(file);
-            event.currentTarget.value = "";
-          }}
-          ref={modelInputRef}
-          type="file"
-          accept="image/*"
-        />
-        {modelImage ? <ImagePreview image={modelImage} ratioLabel="참조 모델" /> : null}
-        {modelImage ? (
-          <div className={styles.modelUsageGrid}>
-            <button className={modelImageUsage === "hero-only" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => onModelImageUsage("hero-only")} type="button">
-              <strong>히어로에만 사용</strong>
-              <span>첫 섹션 모델컷에만 인물 정체성을 적용합니다.</span>
-            </button>
-            <button className={modelImageUsage === "all-sections" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => onModelImageUsage("all-sections")} type="button">
-              <strong>전체 섹션에 유지</strong>
-              <span>모델컷 포함 시 같은 인물을 계속 유지합니다.</span>
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </>
-  );
-}
-
-function ProductInputReadinessPanel({ readiness }: { readiness: ProductInputReadiness }) {
-  const statusLabel =
-    readiness.status === "ready" ? "생성 준비 완료" : readiness.status === "blocked" ? "자료 보강 필요" : "검수 권장";
-  const statusClass =
-    readiness.status === "ready"
-      ? styles.inputQualityReady
-      : readiness.status === "blocked"
-        ? styles.inputQualityBlocked
-        : styles.inputQualityReview;
-
-  return (
-    <div className={styles.inputQualityPanel}>
-      <div className={styles.inputQualityHeader}>
-        <div>
-          <span className={styles.panelLabel}>입력 품질 게이트</span>
-          <strong>{statusLabel}</strong>
-        </div>
-        <span className={statusClass}>{readiness.score}점</span>
-      </div>
-      <p>{readiness.summary}</p>
-      {readiness.strengths.length ? (
-        <div className={styles.inputQualityChips}>
-          {readiness.strengths.slice(0, 4).map((strength) => (
-            <span key={strength}>{strength}</span>
-          ))}
-        </div>
-      ) : null}
-      {readiness.actions.length ? (
-        <div className={styles.inputQualityActions}>
-          <strong>생성 전 보강</strong>
-          {readiness.actions.slice(0, 4).map((action) => (
-            <span key={action}>{action}</span>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function buildProductInputReadiness(input: {
-  productImages: PreparedReferenceImageDraft[];
-  productDescription: string;
-  additionalInfo: string;
-  desiredTone: string;
-  modelImage: PreparedImageDraft | null;
-  modelImageUsage: ReferenceModelUsage | null;
-}): ProductInputReadiness {
-  const issues: string[] = [];
-  const actions: string[] = [];
-  const strengths: string[] = [];
-  let score = 100;
-
-  const description = normalizeReadinessText(input.productDescription);
-  const direction = normalizeReadinessText(input.additionalInfo);
-  const combined = `${description} ${direction} ${input.productImages.map((image) => image.fileName).join(" ")}`.toLowerCase();
-  const isSoftware = /(sw|saas|software|app|앱|소프트웨어|웹서비스|대시보드|ui|ux|obs|브라우저|프로그램|위젯|서비스)/i.test(combined);
-  const hasPrimary = input.productImages.some((image) => image.role === "primary");
-  const hasDetail = input.productImages.some((image) => image.role === "detail");
-  const hasProof = input.productImages.some((image) => image.role === "proof");
-  const hasReference = input.productImages.some((image) => image.role === "reference");
-
-  if (!input.productImages.length) {
-    score -= 45;
-    issues.push("대표 제품/SW 자료가 없습니다.");
-    actions.push("대표 제품컷이나 실제 SW 화면을 1장 이상 업로드하세요.");
-  } else {
-    strengths.push(`${input.productImages.length}개 참조 자료 업로드`);
-  }
-
-  if (input.productImages.length && !hasPrimary) {
-    score -= 12;
-    issues.push("대표 기준 이미지가 지정되지 않았습니다.");
-    actions.push("가장 중요한 제품컷 또는 실제 화면을 대표 자료로 지정하세요.");
-  } else if (hasPrimary) {
-    strengths.push("대표 자료 지정");
-  }
-
-  if (isSoftware && input.productImages.length < 2) {
-    score -= 10;
-    issues.push("SW/SaaS는 실제 화면 근거가 더 필요합니다.");
-    actions.push("대시보드, 설정, 결과 화면처럼 실제 사용 흐름을 보여주는 화면을 2장 이상 넣으세요.");
-  }
-
-  if (!hasDetail && !hasProof) {
-    score -= 14;
-    issues.push("디테일/증빙 자료가 부족합니다.");
-    actions.push(isSoftware ? "설정 화면, 상태 화면, 결과 화면 중 하나를 디테일 자료로 추가하세요." : "스펙, 구성품, 사용 장면, 인증/후기 등 확인 자료를 추가하세요.");
-  } else {
-    strengths.push(hasProof ? "증빙 자료 포함" : "디테일 자료 포함");
-  }
-
-  if (description.length < 80) {
-    score -= 26;
-    issues.push("상품 설명이 짧아 카피와 스토리 근거가 약합니다.");
-    actions.push("상품명, 대상 고객, 핵심 기능 3개, 사용 상황, 구매/도입 이유를 5문장 이상으로 적으세요.");
-  } else if (description.length < 160) {
-    score -= 10;
-    issues.push("상품 설명이 유료 납품용으로는 다소 짧습니다.");
-    actions.push("가격/도입 이유, AS/지원 범위, 절대 만들면 안 되는 주장을 추가하세요.");
-  } else {
-    strengths.push("상품 사실 정보 충분");
-  }
-
-  if (!/(대상|타깃|고객|사용자|구매자|판매자|스트리머|운영자|담당자|브랜드|팀|사장|셀러)/.test(description)) {
-    score -= 8;
-    issues.push("대상 고객이 명확하지 않습니다.");
-    actions.push("누가 쓰는지 한 문장으로 명시하세요. 예: 치지직 스트리머, 육아 중인 부모, 스마트스토어 셀러.");
-  }
-
-  if (!/(기능|장점|특징|연동|자동|지원|구성|소재|성분|화면|대시보드|배송|교환|as|요금|가격|보안|권한)/i.test(description)) {
-    score -= 10;
-    issues.push("핵심 기능/장점 근거가 부족합니다.");
-    actions.push("기능을 나열하지 말고 고객이 얻는 변화까지 함께 적으세요.");
-  }
-
-  if (!/(사용|상황|문제|고민|불편|운영|방송|도입|구매|설치|관리|확인|비교|전환)/.test(description)) {
-    score -= 8;
-    issues.push("사용 상황 또는 고객 문제가 약합니다.");
-    actions.push("고객이 어떤 상황에서 왜 필요로 하는지 실제 사용 맥락을 추가하세요.");
-  }
-
-  if (!/(금지|하지 말|과장|허위|없는|효능|효과|의학|보장|주의|기능|연동|지원|가격|요금|공식|로고)/.test(`${description} ${direction}`)) {
-    score -= 6;
-    issues.push("금지 기능/주의 표현이 없어 기능 과장 위험이 있습니다.");
-    actions.push("없는 기능, 연동, 지원 범위, 효능, 가격, 공식 로고처럼 만들면 안 되는 내용을 명시하세요.");
-  } else {
-    strengths.push("금지 기능/주의 표현 입력");
-  }
-
-  if (input.modelImage && !input.modelImageUsage) {
-    score -= 20;
-    issues.push("모델 이미지를 업로드했지만 사용 범위가 정해지지 않았습니다.");
-    actions.push("모델 이미지를 히어로에만 쓸지, 모든 섹션에 쓸지 선택하세요.");
-  }
-
-  if (direction.length >= 20 || input.desiredTone) {
-    strengths.push("제작 방향 입력");
-  } else {
-    score -= 4;
-    actions.push("원하는 톤, 첫 화면 우선순위, 강조/제외할 메시지를 제작 방향에 적으세요.");
-  }
-
-  if (hasReference) {
-    strengths.push("톤/구도 참조 포함");
-  }
-
-  const finalScore = clampReadinessScore(score);
-  const status = !input.productImages.length || (input.modelImage && !input.modelImageUsage) || finalScore < 55 ? "blocked" : finalScore < 80 ? "needs_review" : "ready";
-
-  return {
-    score: finalScore,
-    status,
-    summary:
-      status === "ready"
-        ? "유료 초안 생성을 시작할 수 있을 만큼 상품 사실과 참조 자료가 준비됐습니다."
-        : status === "blocked"
-          ? "현재 자료로 생성하면 품질 게이트에서 막힐 가능성이 높습니다. 생성 전 필수 정보를 보강하세요."
-          : "생성은 가능하지만 결과 품질을 높이려면 몇 가지 자료를 더 보강하는 편이 좋습니다.",
-    strengths: uniqueReadinessItems(strengths),
-    issues: uniqueReadinessItems(issues),
-    actions: uniqueReadinessItems(actions)
-  };
-}
-
-function normalizeReadinessText(value: string) {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-function uniqueReadinessItems(items: string[]) {
-  return Array.from(new Set(items.filter(Boolean))).slice(0, 8);
-}
-
-function clampReadinessScore(value: number) {
-  return Math.max(0, Math.min(100, Math.round(value)));
-}
-
-function RedesignUpload({ inputRef, files, onFiles }: { inputRef: RefObject<HTMLInputElement>; files: File[]; onFiles: (files: File[]) => void }) {
-  const [isDragging, setIsDragging] = useState(false);
-
-  return (
-    <>
-      <button
-        className={isDragging ? styles.dropzoneActive : styles.dropzone}
-        onClick={() => inputRef.current?.click()}
-        onDragEnter={(event) => {
-          preventFileDragDefault(event);
-          setIsDragging(true);
-        }}
-        onDragLeave={(event) => {
-          preventFileDragDefault(event);
-          setIsDragging(false);
-        }}
-        onDragOver={preventFileDragDefault}
-        onDrop={(event) => {
-          preventFileDragDefault(event);
-          setIsDragging(false);
-          onFiles(filesFromDragEvent(event));
-        }}
-        type="button"
-      >
-        <span className={styles.dropzoneIcon}><Upload size={24} /></span>
-        <strong>기존 상세페이지 이미지 또는 PDF</strong>
-        <p>클릭하거나 드래그 앤 드롭하세요. PDF는 브라우저에서 최대 6페이지까지 이미지로 변환해 참조로 사용합니다.</p>
-        <span className={styles.dropzoneHint}>{files.length ? `${files.length}개 파일 선택됨` : "이미지, PDF"}</span>
-      </button>
-      <input
-        className={styles.hiddenInput}
-        multiple
-        onChange={(event) => {
-          onFiles(Array.from(event.target.files || []));
-          event.currentTarget.value = "";
-        }}
-        ref={inputRef}
-        type="file"
-        accept="image/*,.pdf"
-      />
-      {files.length ? (
-        <div className={styles.emptyStatePanel}>
-          <FileText size={18} />
-          <div>
-            <strong>선택한 참조 파일</strong>
-            <ul className={styles.emptyList}>{files.map((file) => <li key={`${file.name}-${file.size}`}>{file.name}</li>)}</ul>
-          </div>
-        </div>
-      ) : null}
-    </>
-  );
-}
-
-function RedesignProjectPanel({
-  project,
-  projects,
-  rolloutRequest,
-  setRolloutRequest,
-  editRequests,
-  editingSectionId,
-  onEditRequestChange,
-  onEditSection,
-  onGenerateMissing,
-  onOpenEditor,
-  onActivateProject
-}: {
-  project: RedesignProject;
-  projects: RedesignProject[];
-  rolloutRequest: string;
-  setRolloutRequest: (value: string) => void;
-  editRequests: Record<string, string>;
-  editingSectionId: string | null;
-  onEditRequestChange: (sectionId: string, value: string) => void;
-  onEditSection: (sectionId: string) => void;
-  onGenerateMissing: () => void;
-  onOpenEditor: () => void;
-  onActivateProject: (project: RedesignProject) => void;
-}) {
-  const generatedCount = project.sections.filter((section) => section.imageUrl).length;
-  const missingCount = Math.max(0, REDESIGN_SECTION_TOTAL - generatedCount);
-  const blockedSections = project.sections.filter((section) => section.imageUrl && getRedesignSectionQualityStatus(section) === "blocked");
-  const reviewSections = project.sections.filter((section) => section.imageUrl && getRedesignSectionQualityStatus(section) === "needs_review");
-  const readySections = project.sections.filter((section) => section.imageUrl && getRedesignSectionQualityStatus(section) === "ready");
-  const qualityLabel = blockedSections.length
-    ? `납품 차단 ${blockedSections.length}개`
-    : generatedCount
-      ? `납품 가능 ${readySections.length}/${generatedCount}`
-      : "품질 대기";
-
-  return (
-    <div className={styles.redesignProjectPanel}>
-      <div className={styles.redesignProjectHeader}>
-        <div>
-          <span className={styles.panelLabel}>Redesign Project</span>
-          <h3>{project.title}</h3>
-          <p>{generatedCount}개 생성됨 · {qualityLabel} · {project.channel} · {project.modelLabel}</p>
-        </div>
-        <span className={project.status === "완료" ? styles.successPill : styles.warningPill}>{project.status}</span>
-      </div>
-
-      {blockedSections.length ? (
-        <div className={styles.inlineWarning}>
-          <AlertCircle size={16} />
-          품질 게이트에서 차단된 섹션이 있습니다. {blockedSections.map((section) => section.name).slice(0, 3).join(", ")} 섹션을 수정하거나 다시 생성하세요.
-        </div>
-      ) : reviewSections.length ? (
-        <div className={styles.inlineWarning}>
-          <AlertCircle size={16} />
-          {reviewSections.length}개 섹션은 고객 제공 전 수동 검수가 필요합니다.
-        </div>
-      ) : null}
-
-      {project.warning ? (
-        <div className={styles.inlineWarning}>
-          <AlertCircle size={16} />
-          {project.warning}
-        </div>
-      ) : null}
-
-      <div className={styles.rolloutPanel}>
-        <label className={styles.fieldLabel} htmlFor="rolloutRequest">히어로 검토 후 요청</label>
-        <textarea
-          className={styles.textarea}
-          id="rolloutRequest"
-          onChange={(event) => setRolloutRequest(event.target.value)}
-          placeholder="예: 첫 장은 제품이 잘 보이지만 카피가 강합니다. 나머지는 후기/근거/배송 불안을 더 신뢰감 있게 풀어주세요."
-          rows={4}
-          value={rolloutRequest}
-        />
-        <div className={styles.inlineActionRow}>
-          <button className={styles.secondaryButton} disabled={!missingCount} onClick={onGenerateMissing} type="button">
-            <Sparkles size={16} />
-            {missingCount ? `나머지/누락 ${missingCount}장 생성` : "8장 생성 완료"}
-          </button>
-          <button className={styles.primaryButtonCompact} disabled={!generatedCount} onClick={onOpenEditor} type="button">
-            <CheckCircle2 size={16} />
-            편집기로 넘기기
-          </button>
-        </div>
-      </div>
-
-      <div className={styles.redesignSectionGrid}>
-        {project.sections.map((section, index) => (
-          <div className={styles.redesignSectionCard} key={section.section_id || section.id}>
-            <div className={styles.redesignThumb}>
-              {section.imageUrl ? <img alt={section.name} src={section.imageUrl} /> : <PlaceholderThumb index={index} />}
-            </div>
-            <div className={styles.redesignSectionCopy}>
-              <strong>{section.name}</strong>
-              <p>{section.purpose}</p>
-              {section.imageQualityReport ? (
-                <span className={getRedesignQualityPillClass(section)}>
-                  {getRedesignQualityLabel(section)} · {section.imageQualityReport.score}점
-                </span>
-              ) : section.imageUrl ? (
-                <span className={styles.warningPill}>검수 필요</span>
-              ) : null}
-              {section.providerProof ? <span className={styles.providerProofPill}>{section.providerProof.model} · fallback off</span> : null}
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel} htmlFor={`edit-${section.section_id}`}>섹션 수정 요청</label>
-              <textarea
-                className={styles.textarea}
-                id={`edit-${section.section_id}`}
-                onChange={(event) => onEditRequestChange(section.section_id, event.target.value)}
-                placeholder="예: 헤드라인을 줄이고 제품 컷을 더 크게, 배송/교환 불안 해소 문구 추가"
-                rows={3}
-                value={editRequests[section.section_id] || ""}
-              />
-            </div>
-            <button className={styles.secondaryButton} disabled={!section.imageUrl || editingSectionId === section.section_id} onClick={() => onEditSection(section.section_id)} type="button">
-              {editingSectionId === section.section_id ? <Loader2 className={styles.spinIcon} size={16} /> : <RefreshCw size={16} />}
-              이 섹션 수정
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {projects.length > 1 ? (
-        <div className={styles.redesignProjectList}>
-          <span className={styles.fieldLabel}>최근 리디자인 프로젝트</span>
-          <div className={styles.inlineActionRow}>
-            {projects.slice(0, 5).map((candidate) => (
-              <button className={candidate.id === project.id ? styles.toneButtonActive : styles.toneButton} key={candidate.id} onClick={() => onActivateProject(candidate)} type="button">
-                {candidate.title}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function PlaceholderThumb({ index }: { index: number }) {
-  return (
-    <div className={styles.placeholderThumb}>
-      <FileImage size={20} />
-      <span>S{index + 1}</span>
-    </div>
-  );
-}
-
-function getRedesignSectionQualityStatus(section: RedesignSection) {
-  if (!section.imageUrl) return "needs_review";
-  return section.imageQualityReport?.status ?? "needs_review";
-}
-
-function getRedesignQualityLabel(section: RedesignSection) {
-  const status = getRedesignSectionQualityStatus(section);
-  if (status === "ready") return "납품 가능";
-  if (status === "blocked") return "납품 차단";
-  return "검수 필요";
-}
-
-function getRedesignQualityPillClass(section: RedesignSection) {
-  const status = getRedesignSectionQualityStatus(section);
-  if (status === "ready") return styles.successPill;
-  if (status === "blocked") return styles.warningPill;
-  return styles.providerProofPill;
-}
-
-function ImagePreview({ image, ratioLabel }: { image: PreparedImageDraft; ratioLabel: string }) {
-  return (
-    <div className={styles.uploadPreviewCard}>
-      <div className={styles.previewFrame}>
-        <img alt={image.fileName} className={styles.selectedImage} src={image.previewUrl} />
-      </div>
-      <div className={styles.uploadMeta}>
-        <strong>{image.fileName}</strong>
-        <div className={styles.metaList}>
-          <div className={styles.metaItem}><span>유형</span><strong>{ratioLabel}</strong></div>
-          <div className={styles.metaItem}><span>포맷</span><strong>JPEG</strong></div>
-          <div className={styles.metaItem}><span>전송</span><strong>960px</strong></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function KnowledgePanel({
-  inputRef,
-  items,
-  onFiles,
-  onDelete
-}: {
-  inputRef: RefObject<HTMLInputElement>;
-  items: KnowledgeItem[];
-  onFiles: (files: FileList | null) => void;
-  onDelete: (id: string) => void;
-}) {
-  return (
-    <div className={styles.modelUsagePanel}>
-      <div className={styles.modelUsageHeader}>
-        <strong>로컬 RAG 지식파일</strong>
-        <span>PDF/TXT/MD를 등록하면 생성 프롬프트에 로컬 검색 결과를 반영합니다.</span>
-      </div>
-      <button className={styles.secondaryButton} onClick={() => inputRef.current?.click()} type="button">
-        <FileText size={16} />
-        지식파일 등록
-      </button>
-      <input className={styles.hiddenInput} multiple onChange={(event) => onFiles(event.target.files)} ref={inputRef} type="file" accept=".pdf,.txt,.md,text/*,application/pdf" />
-      {items.length ? (
-        <ul className={styles.emptyList}>
-          {items.map((item) => (
-            <li key={item.id}>
-              {item.name}
-              <button className={styles.inlineButton} onClick={() => onDelete(item.id)} type="button">삭제</button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
-function DraftPanel({ drafts, onOpen, onDelete }: { drafts: PdpDraftSummary[]; onOpen: (id: string) => void; onDelete: (id: string) => void }) {
-  return (
-    <div className={styles.modelUsagePanel}>
-      <div className={styles.modelUsageHeader}>
-        <strong>저장된 초안</strong>
-        <span>브라우저 IndexedDB에 저장됩니다.</span>
-      </div>
-      {drafts.length ? (
-        <div className={styles.metaList}>
-          {drafts.slice(0, 6).map((draft) => {
-            const opensEditor = draft.sectionCount > 0 && draft.stageLabel === "편집 중";
-            const modeLabel = draft.sourceMode === "redesign" ? "리디자인" : "새 PDP";
-            const sectionLabel = draft.sectionCount ? `${draft.sectionCount}섹션` : "구조 생성 전";
-            return (
-              <div className={styles.metaItem} key={draft.id}>
-                <strong>{draft.title}</strong>
-                <span>{modeLabel} · {draft.stageLabel} · {sectionLabel}</span>
-                <button className={styles.inlineButton} onClick={() => onOpen(draft.id)} type="button">
-                  <FolderOpen size={14} />
-                  {opensEditor ? "편집 열기" : "설정 불러오기"}
-                </button>
-                <button className={styles.inlineDangerButton} onClick={() => onDelete(draft.id)} type="button"><Trash2 size={14} />삭제</button>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <span className={styles.dropzoneHint}>아직 저장된 초안이 없습니다.</span>
-      )}
-    </div>
-  );
-}
-
 function applyThemePreference(theme: ThemeMode) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-}
-
-function preventFileDragDefault(event: DragEvent<HTMLElement>) {
-  event.preventDefault();
-  event.stopPropagation();
-}
-
-function filesFromDragEvent(event: DragEvent<HTMLElement>) {
-  return Array.from(event.dataTransfer.files || []);
-}
-
-async function normalizeFilesForUpload(files: File[], limit: number, options: { renderImages?: boolean } = {}) {
-  const output: File[] = [];
-  for (const file of files) {
-    if (output.length >= limit) break;
-    const remainingSlots = Math.max(0, limit - output.length);
-    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
-      output.push(...(await renderPdfToImages(file, remainingSlots)));
-    } else if (file.type.startsWith("image/")) {
-      if (options.renderImages) {
-        output.push(...(await renderImageToReferenceFiles(file, remainingSlots)));
-      } else {
-        output.push(file);
-      }
-    }
-  }
-  return output.slice(0, limit);
-}
-
-async function renderImageToReferenceFiles(file: File, limit: number) {
-  if (limit <= 0) return [];
-  const objectUrl = URL.createObjectURL(file);
-
-  try {
-    const image = await loadImageElement(objectUrl);
-    const naturalWidth = image.naturalWidth || image.width;
-    const naturalHeight = image.naturalHeight || image.height;
-    if (!naturalWidth || !naturalHeight) throw new Error("업로드 이미지를 읽지 못했습니다.");
-
-    const isLongDetailPage = naturalHeight / naturalWidth > 2.2;
-    const sliceCount = isLongDetailPage ? Math.min(limit, Math.ceil(naturalHeight / naturalWidth / 1.8)) : 1;
-    const files: File[] = [];
-
-    for (let index = 0; index < sliceCount; index += 1) {
-      const sourceY = Math.floor((naturalHeight / sliceCount) * index);
-      const sourceHeight = index === sliceCount - 1 ? naturalHeight - sourceY : Math.floor(naturalHeight / sliceCount);
-      files.push(await cropImageToJpegFile({
-        image,
-        sourceX: 0,
-        sourceY,
-        sourceWidth: naturalWidth,
-        sourceHeight,
-        fileName: file.name,
-        index
-      }));
-    }
-
-    return files;
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
-async function renderPdfToImages(file: File, limit: number) {
-  const pdfjs = await import("pdfjs-dist");
-  configurePdfWorker(pdfjs);
-  const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-  const pages: File[] = [];
-  for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, limit); pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 1.6 });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.floor(viewport.width);
-    canvas.height = Math.floor(viewport.height);
-    const context = canvas.getContext("2d");
-    if (!context) continue;
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvas, canvasContext: context, viewport }).promise;
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((result) => (result ? resolve(result) : reject(new Error("PDF 페이지를 이미지로 변환하지 못했습니다."))), "image/jpeg", 0.88);
-    });
-    pages.push(new File([blob], `${file.name.replace(/\.pdf$/i, "")}-page-${pageNumber}.jpg`, { type: "image/jpeg" }));
-  }
-  return pages;
-}
-
-function ensurePrimaryReferenceImages(images: PreparedReferenceImageDraft[]) {
-  if (!images.length) return images;
-  if (images.some((image) => image.role === "primary")) return images;
-  return images.map((image, index) => (index === 0 ? { ...image, role: "primary" as const } : image));
-}
-
-async function extractKnowledgeText(file: File) {
-  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) return extractPdfText(file);
-  return file.text();
-}
-
-async function extractPdfText(file: File) {
-  const pdfjs = await import("pdfjs-dist");
-  configurePdfWorker(pdfjs);
-  const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-  const pages: string[] = [];
-  for (let pageNumber = 1; pageNumber <= Math.min(pdf.numPages, 80); pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const text = content.items
-      .map((item) => ("str" in item ? item.str : ""))
-      .filter(Boolean)
-      .join(" ");
-    if (text.trim()) pages.push(`[${file.name} p.${pageNumber}] ${text}`);
-    if (pages.join("\n").length > 120000) break;
-  }
-  return pages.join("\n");
-}
-
-function configurePdfWorker(pdfjs: typeof import("pdfjs-dist")) {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url).toString();
-}
-
-function loadImageElement(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("이미지 파일을 브라우저에서 열 수 없습니다."));
-    image.src = src;
-  });
-}
-
-async function cropImageToJpegFile({
-  image,
-  sourceX,
-  sourceY,
-  sourceWidth,
-  sourceHeight,
-  fileName,
-  index
-}: {
-  image: HTMLImageElement;
-  sourceX: number;
-  sourceY: number;
-  sourceWidth: number;
-  sourceHeight: number;
-  fileName: string;
-  index: number;
-}) {
-  const maxWidth = 1200;
-  const maxHeight = 1800;
-  const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
-  const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
-  const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = targetWidth;
-  canvas.height = targetHeight;
-  const context = canvas.getContext("2d", { alpha: false });
-  if (!context) throw new Error("이미지 변환 캔버스를 만들지 못했습니다.");
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, targetWidth, targetHeight);
-  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
-
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((result) => {
-      if (result) resolve(result);
-      else reject(new Error("이미지를 JPEG로 변환하지 못했습니다."));
-    }, "image/jpeg", 0.88);
-  });
-
-  const safeName = fileName.replace(/\.[^.]+$/i, "");
-  return new File([blob], `${safeName}-reference-${index + 1}.jpg`, { type: "image/jpeg" });
-}
-
-function mergeRedesignProjects(baseProject: RedesignProject | null | undefined, incoming: RedesignProject): RedesignProject {
-  if (!baseProject) {
-    return {
-      ...incoming,
-      sections: sortSections(incoming.sections.map((section) => ({ ...section, revisions: ensureSectionRevisions(section) })))
-    };
-  }
-
-  const byId = new Map<string, RedesignSection>();
-  for (const section of baseProject.sections) byId.set(section.section_id || section.id, section);
-  for (const section of incoming.sections) {
-    const existing = byId.get(section.section_id || section.id);
-    byId.set(section.section_id || section.id, {
-      ...existing,
-      ...section,
-      revisions: mergeRevisions(existing, section)
-    });
-  }
-
-  const sections = sortSections(Array.from(byId.values()));
-  const generatedCount = sections.filter((section) => section.imageUrl).length;
-  const hasIncomingFailures = Boolean(incoming.failedSections?.length);
-  const warning = hasIncomingFailures
-    ? incoming.warning || `${incoming.failedSections?.length ?? 0}개 섹션 생성에 실패했습니다. 누락 섹션을 이어 생성하세요.`
-    : generatedCount >= REDESIGN_SECTION_TOTAL
-      ? ""
-      : baseProject.warning
-        ? "일부 섹션이 아직 생성되지 않았습니다. 누락 섹션을 이어 생성하세요."
-        : "";
-  return {
-    ...baseProject,
-    ...incoming,
-    id: baseProject.id,
-    title: baseProject.title || incoming.title,
-    createdAt: baseProject.createdAt,
-    originalImage: baseProject.originalImage || incoming.originalImage,
-    referenceImages: baseProject.referenceImages?.length ? baseProject.referenceImages : incoming.referenceImages,
-    sections,
-    count: generatedCount,
-    status: hasIncomingFailures ? "부분완료" : generatedCount >= REDESIGN_SECTION_TOTAL ? "완료" : incoming.status,
-    warning,
-    failedSections: incoming.failedSections || []
-  };
-}
-
-function mergeRevisions(existing: RedesignSection | undefined, incoming: RedesignSection) {
-  const revisions = ensureSectionRevisions(existing);
-  if (!incoming.imageUrl) return revisions;
-  if (revisions.some((revision) => revision.imageUrl === incoming.imageUrl)) return revisions;
-  return [
-    ...revisions,
-    {
-      id: `revision-${Date.now()}-${incoming.section_id}`,
-      imageUrl: incoming.imageUrl,
-      label: revisions.length ? `생성 ${revisions.length + 1}` : "초안",
-      createdAt: new Date().toISOString(),
-      providerProof: incoming.providerProof
-    }
-  ];
-}
-
-function ensureSectionRevisions(section?: RedesignSection | null): RedesignSectionRevision[] {
-  const revisions = section?.revisions?.filter((revision) => revision.imageUrl) ?? [];
-  if (!section?.imageUrl) return revisions;
-  if (revisions.some((revision) => revision.imageUrl === section.imageUrl)) return revisions;
-  return [
-    {
-      id: `revision-original-${section.section_id}`,
-      imageUrl: section.imageUrl,
-      label: "초안",
-      createdAt: new Date().toISOString(),
-      providerProof: section.providerProof
-    },
-    ...revisions
-  ];
-}
-
-function redesignProjectToResult(project: RedesignProject): GeneratedResult {
-  const sections = sortSections(project.sections)
-    .filter((section) => section.imageUrl)
-    .map((section, index) => redesignSectionToBlueprint(section, index, project.ratio));
-
-  return {
-    originalImage: project.originalImage,
-    referenceImages: project.referenceImages,
-    sourceMode: "redesign",
-    providerProof: project.providerProof,
-    blueprint: {
-      executiveSummary: typeof project.analysis === "object" && project.analysis && "diagnostic_summary" in project.analysis
-        ? String((project.analysis as { diagnostic_summary?: string }).diagnostic_summary || "기존 상세페이지를 리디자인했습니다.")
-        : "기존 상세페이지를 리디자인했습니다.",
-      scorecard: [
-        {
-          category: "리디자인",
-          score: project.status,
-          reason: project.warning || `${sections.length}개 섹션을 편집기로 넘길 수 있습니다.`
-        }
-      ],
-      blueprintList: sections.map((section) => `${section.section_id} ${section.section_name}`),
-      sections
-    }
-  };
-}
-
-function redesignSectionToBlueprint(section: RedesignSection, index: number, aspectRatio: AspectRatio): SectionBlueprint {
-  return {
-    section_id: section.section_id || `S${index + 1}`,
-    section_name: section.name || `섹션 ${index + 1}`,
-    goal: section.purpose || "구매전환을 위한 리디자인 섹션",
-    headline: section.headline || section.name || `섹션 ${index + 1}`,
-    headline_en: section.headline || section.name || `Section ${index + 1}`,
-    subheadline: section.subheadline || section.purpose || "",
-    subheadline_en: section.subheadline || section.purpose || "",
-    bullets: section.bullets?.length ? section.bullets : [section.source || "원본 정보 보존", "한국형 모바일 가독성", "구매 불안 해소"],
-    bullets_en: section.bullets?.length ? section.bullets : [section.source || "Preserve source facts", "Mobile readability", "Reduce purchase anxiety"],
-    trust_or_objection_line: section.trust || "원본에서 확인 가능한 정보만 사용",
-    trust_or_objection_line_en: section.trust || "Use only verifiable source information.",
-    CTA: section.cta || "자세히 보기",
-    CTA_en: section.cta || "Learn more",
-    layout_notes: `${aspectRatio} 리디자인 섹션`,
-    compliance_notes: "확인되지 않은 효능, 기능, 가격, 공식 로고는 사용하지 않습니다. 리뷰, 인증, 수치형 신뢰 문구는 마케팅 카피로 사용할 수 있습니다.",
-    image_id: section.image_id || `redesign_${index + 1}`,
-    purpose: section.purpose || "상세페이지 리디자인",
-    prompt_ko: section.promptText || section.prompt,
-    prompt_en: section.promptText || section.prompt,
-    negative_prompt: "fake product functions, fake logos, fake pricing, unreadable dense text",
-    style_guide: "Korean mobile commerce PDP, trustworthy, conversion-focused",
-    reference_usage: "기존 상세페이지 이미지를 제품 사실과 시각 기준으로 사용",
-    generatedImage: section.imageUrl,
-    imageQualityReport: section.imageQualityReport,
-    providerProof: section.providerProof
-  };
-}
-
-function sortSections(sections: RedesignSection[]) {
-  return sections.slice().sort((left, right) => sectionNumber(left.section_id || left.id) - sectionNumber(right.section_id || right.id));
-}
-
-function sectionNumber(sectionId: string) {
-  const value = Number(String(sectionId || "").replace(/\D/g, ""));
-  return Number.isFinite(value) ? value : 0;
 }
 
 function isEditorReadyResult(result: GeneratedResult | null | undefined): result is GeneratedResult {
@@ -2142,4 +1077,20 @@ function withDetail(message: string, detail?: string) {
   const error = new Error(message);
   if (detail) error.name = detail;
   return error;
+}
+
+function inferKnowledgeSourceKind(name: string, text: string) {
+  const source = `${name} ${text.slice(0, 2000)}`.toLowerCase();
+  if (/(review|reviews|후기|리뷰|평점|별점)/i.test(source)) return "review";
+  if (/(competitor|comparison|benchmark|경쟁사|타사|비교|상세페이지\s*분석)/i.test(source)) return "competitor_pdp";
+  if (/(category|카테고리|시장|구매심리|소비자|buyer)/i.test(source)) return "category";
+  if (/(product|상품명|제품명|스펙|구성|소재|성분|기능|가격|배송|as)/i.test(source)) return "product_data";
+  return "general";
+}
+
+function inferKnowledgeTags(name: string, text: string) {
+  const source = `${name} ${text.slice(0, 2000)}`;
+  return ["스마트스토어", "쿠팡", "SaaS", "뷰티", "식품", "패션", "전자제품", "홈리빙", "B2B"]
+    .filter((tag) => source.toLowerCase().includes(tag.toLowerCase()))
+    .slice(0, 6);
 }

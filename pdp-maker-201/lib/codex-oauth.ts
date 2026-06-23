@@ -200,7 +200,8 @@ export async function generateImageWithCodex(input: {
       resolvedProvider: "openai-codex-oauth",
       model: CODEX_IMAGE_MODEL,
       authRoute: "chatgpt.com/backend-api/codex/responses:image_generation",
-      fallbackUsed: false
+      fallbackUsed: false,
+      capabilities: ["generate", "edit", "reference-image"]
     }
   } satisfies CodexImageResult;
 }
@@ -233,7 +234,8 @@ export async function generateTextWithCodex(input: {
       resolvedProvider: "openai-codex-oauth",
       model: input.model || CODEX_TEXT_MODEL,
       authRoute: "chatgpt.com/backend-api/codex/responses:text",
-      fallbackUsed: false
+      fallbackUsed: false,
+      capabilities: ["generate"]
     } satisfies ProviderProof
   };
 }

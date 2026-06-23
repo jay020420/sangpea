@@ -304,6 +304,7 @@ function normalizeGeneratedResult(
       productBrief: result.productBrief,
       generationTrace: result.generationTrace,
       copyWarnings: result.copyWarnings,
+      layeredDocument: result.layeredDocument,
       blueprint: {
         executiveSummary: result.blueprint.executiveSummary ?? "",
         scorecard: Array.isArray(result.blueprint.scorecard) ? result.blueprint.scorecard : [],

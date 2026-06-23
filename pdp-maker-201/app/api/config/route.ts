@@ -1,4 +1,5 @@
 import { CODEX_IMAGE_MODEL, CODEX_TEXT_MODEL, getCodexAuthStatus, listCodexModels } from "../../../lib/codex-oauth";
+import { listImageProviders } from "../../../lib/image-providers";
 import { getKnowledgeStats } from "../../../lib/local-rag";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,8 @@ export async function GET() {
     modelError,
     textModel: CODEX_TEXT_MODEL,
     imageModel: CODEX_IMAGE_MODEL,
+    imageProvider: process.env.IMAGE_PROVIDER || "openai-codex-oauth",
+    imageProviders: listImageProviders(),
     knowledge
   });
 }

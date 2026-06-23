@@ -1,4 +1,4 @@
-import { generateImageWithCodex } from "../../../../lib/codex-oauth";
+import { getImageProvider } from "../../../../lib/image-providers";
 import { hasExpectedImageSignature } from "../../../../lib/image-validation";
 import { evaluateRedesignImageQuality } from "../../../../lib/redesign-service";
 
@@ -55,9 +55,9 @@ export async function POST(request: Request) {
       "Preserve the product shape, package, color, visible factual information, or software screen structure, menus, colors, and visible text from the reference."
     ].join("\n");
 
-    const result = await generateImageWithCodex({
+    const result = await getImageProvider().edit({
       prompt,
-      referenceImages: [image],
+      sourceImage: image,
       aspectRatio
     });
     const imageQualityReport = await evaluateRedesignImageQuality({

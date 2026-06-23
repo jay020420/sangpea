@@ -8,6 +8,10 @@ export type ReferenceModelUsage = "hero-only" | "all-sections";
 export type PdpGuidePriorityMode = "guide-first" | "style-first";
 export type ReferenceImageRole = "primary" | "detail" | "proof" | "reference" | "optional_model";
 export type PdpLayoutTemplate = "hero" | "problem" | "benefit" | "proof" | "spec" | "demo" | "use-case" | "faq-cta";
+export type ImageProviderId = "openai-codex-oauth" | "flux" | "comfyui" | "qwen" | "sdxl";
+export type ImageProviderCapability = "generate" | "edit" | "reference-image" | "layer-aware" | "local-runtime";
+export type PdpEditableLayerKind = "background" | "product" | "text" | "shape" | "cta" | "proof" | "section";
+export type PdpQualityMetricKey = "textReadability" | "ctaVisibility" | "mobileReadability" | "productExposure" | "whitespaceBalance" | "layerEditability";
 
 export interface ProductBrief {
   productName: string;
@@ -57,7 +61,7 @@ export type PdpQualityStatus = "ready" | "needs_review" | "blocked";
 
 export interface PdpQualityIssue {
   sectionId?: string;
-  category: "story" | "copy" | "proof" | "visual" | "risk" | "input";
+  category: "story" | "copy" | "proof" | "visual" | "risk" | "input" | "readability" | "cta" | "mobile" | "composition" | "product";
   severity: "critical" | "major" | "minor";
   message: string;
   fix: string;
@@ -86,6 +90,7 @@ export interface PdpImageQualityReport {
   status: PdpQualityStatus;
   summary: string;
   checks: string[];
+  pdpChecks?: Partial<Record<PdpQualityMetricKey, PdpQualityMetric>>;
   issues: PdpQualityIssue[];
   nextActions: string[];
   attemptCount?: number;
@@ -94,6 +99,40 @@ export interface PdpImageQualityReport {
     score: number;
     status: PdpQualityStatus;
     summary: string;
+  }>;
+}
+
+export interface PdpQualityMetric {
+  score: number;
+  status: PdpQualityStatus;
+  note: string;
+}
+
+export interface PdpEditableLayer {
+  id: string;
+  kind: PdpEditableLayerKind;
+  name: string;
+  sectionId?: string;
+  editable: boolean;
+  role?: string;
+  text?: string;
+  zIndex?: number;
+  bounds?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    unit: "px" | "percent";
+  };
+}
+
+export interface PdpLayeredDocument {
+  version: 1;
+  format: "pdp-layered-document";
+  sections: Array<{
+    sectionId: string;
+    backgroundImageId?: string;
+    layers: PdpEditableLayer[];
   }>;
 }
 
@@ -140,6 +179,7 @@ export interface SectionBlueprint {
   overlay_layout_hint?: string;
   quality_notes?: string;
   image_prompt_override?: string;
+  editableLayers?: PdpEditableLayer[];
   generatedImage?: string;
   imageQualityReport?: PdpImageQualityReport;
   providerProof?: ProviderProof;
@@ -160,6 +200,7 @@ export interface GeneratedResult {
   generationTrace?: GenerationTrace;
   copyWarnings?: CopyWarning[];
   qualityReport?: PdpQualityReport;
+  layeredDocument?: PdpLayeredDocument;
   blueprint: LandingPageBlueprint;
   sourceMode?: "product" | "redesign";
   providerProof?: ProviderProof;
@@ -258,11 +299,12 @@ export interface PdpValidateApiKeySuccessResponse {
 }
 
 export interface ProviderProof {
-  provider: "openai-codex-oauth";
-  resolvedProvider: "openai-codex-oauth";
+  provider: ImageProviderId;
+  resolvedProvider: ImageProviderId;
   model: string;
   authRoute: string;
   fallbackUsed: boolean;
+  capabilities?: ImageProviderCapability[];
 }
 
 export type PdpErrorCode =

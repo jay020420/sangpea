@@ -5,6 +5,7 @@ import {
   listKnowledgeDocuments,
   retrieveKnowledge
 } from "../../../lib/local-rag";
+import type { KnowledgeSourceKind } from "../../../lib/local-rag";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -36,7 +37,9 @@ export async function POST(request: Request) {
     }
     const name = String(body.name || "knowledge-file");
     const text = String(body.text || "");
-    const result = await indexKnowledgeDocument({ name, text });
+    const sourceKind = String(body.sourceKind || "general") as KnowledgeSourceKind;
+    const tags = Array.isArray(body.tags) ? body.tags.map(String) : [];
+    const result = await indexKnowledgeDocument({ name, text, sourceKind, tags });
     return Response.json(result);
   } catch (error) {
     return Response.json(

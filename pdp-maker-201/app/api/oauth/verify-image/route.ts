@@ -1,4 +1,4 @@
-import { generateImageWithCodex } from "../../../../lib/codex-oauth";
+import { getImageProvider } from "../../../../lib/image-providers";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
         ? [validateImagePayload(body.referenceImageBase64, body.referenceImageMimeType, "검증용 참조 이미지")]
         : [];
 
-    const result = await generateImageWithCodex({
+    const result = await getImageProvider().generate({
       prompt,
       referenceImages: referenceImage,
       aspectRatio: "1:1"
