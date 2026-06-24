@@ -22,7 +22,7 @@ export function ProductInputReadinessPanel({ readiness }: { readiness: ProductIn
         </div>
         <span className={statusClass}>{readiness.score}점</span>
       </div>
-      <p>{readiness.summary}</p>
+      <p>{toCompactSentence(readiness.summary)}</p>
       {readiness.strengths.length ? (
         <div className={styles.inputQualityChips}>
           {readiness.strengths.slice(0, 4).map((strength) => (
@@ -32,12 +32,17 @@ export function ProductInputReadinessPanel({ readiness }: { readiness: ProductIn
       ) : null}
       {readiness.actions.length ? (
         <div className={styles.inputQualityActions}>
-          <strong>생성 전 보강</strong>
-          {readiness.actions.slice(0, 4).map((action) => (
+          <strong>필수 보강</strong>
+          {readiness.actions.slice(0, 2).map((action) => (
             <span key={action}>{action}</span>
           ))}
         </div>
       ) : null}
     </div>
   );
+}
+
+function toCompactSentence(value: string) {
+  const compact = value.trim().replace(/\s+/g, " ");
+  return compact.length > 72 ? `${compact.slice(0, 69)}...` : compact;
 }

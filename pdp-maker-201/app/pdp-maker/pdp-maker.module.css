@@ -875,6 +875,36 @@
   line-height: 1.68;
 }
 
+.generateActionStatus,
+.generateActionWarning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.generateActionStatus {
+  background: rgba(20, 115, 108, 0.08);
+  color: var(--teal-deep);
+  border: 1px solid rgba(20, 115, 108, 0.14);
+}
+
+.generateActionWarning {
+  background: rgba(174, 108, 99, 0.08);
+  color: #8b4138;
+  border: 1px solid rgba(174, 108, 99, 0.16);
+}
+
+.generateActionStatus svg,
+.generateActionWarning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
 .primaryButton,
 .primaryButtonWide,
 .secondaryButtonWide,
@@ -2048,6 +2078,82 @@
 
 .qualityIssueList span {
   border-left-color: rgba(174, 108, 99, 0.35);
+}
+
+.layerTreePanel {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(18, 33, 47, 0.08);
+}
+
+.layerTreeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.layerTreeHeader strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.layerTreeHeader span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.layerTreeList {
+  display: grid;
+  gap: 6px;
+}
+
+.layerTreeRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 8px;
+  padding-top: 8px;
+  padding-right: 8px;
+  padding-bottom: 8px;
+  border-radius: 12px;
+  background: rgba(18, 33, 47, 0.035);
+  min-width: 0;
+}
+
+.layerTreeType {
+  align-self: start;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(20, 115, 108, 0.1);
+  color: var(--teal-deep);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.layerTreeName,
+.layerTreeMeta,
+.layerTreeFlags {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.layerTreeName {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.layerTreeMeta,
+.layerTreeFlags {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .scoreStack,
@@ -3741,5 +3847,506 @@
   .workbenchShell {
     width: calc(100% - 24px) !important;
     left: 12px !important;
+  }
+}
+
+/* Production UI pass: compact editor shell, explicit workflow, reduced text density. */
+.page {
+  --bg: #f6f7f9;
+  --bg-soft: #eef2f5;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-muted: #f7f9fb;
+  --text: #162231;
+  --ink: #162231;
+  --ink-soft: #3a4858;
+  --muted: #697586;
+  --border: rgba(22, 34, 49, 0.1);
+  --border-strong: rgba(20, 115, 108, 0.24);
+  --primary: #0f766e;
+  --primary-strong: #0b5f59;
+  --teal: #0f766e;
+  --teal-deep: #0b5f59;
+  --navy: #172334;
+  --navy-deep: #26384f;
+  --shadow: 0 14px 34px rgba(22, 34, 49, 0.08);
+  --card-shadow: 0 10px 24px rgba(22, 34, 49, 0.08);
+  padding: 12px;
+  color-scheme: light;
+  background: linear-gradient(180deg, #f6f7f9 0%, #eef2f5 100%);
+}
+
+.page * {
+  letter-spacing: 0;
+}
+
+.page[data-theme="dark"] {
+  --bg: #101721;
+  --bg-soft: #141e2b;
+  --surface: rgba(18, 27, 39, 0.96);
+  --surface-strong: rgba(22, 32, 45, 0.98);
+  --surface-muted: rgba(27, 39, 54, 0.92);
+  --text: #edf3f8;
+  --ink: #edf3f8;
+  --ink-soft: #c9d6e2;
+  --muted: #9fadbc;
+  background: linear-gradient(180deg, #101721 0%, #141e2b 100%);
+  color-scheme: dark;
+}
+
+.toolHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: auto;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.toolHeader::before {
+  display: none;
+}
+
+.toolHeaderCopy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 2px;
+}
+
+.toolKicker {
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.14);
+  color: var(--teal);
+  font-size: 11px;
+}
+
+.toolTitle {
+  font-size: 24px;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.toolDescription {
+  grid-column: 1 / -1;
+  max-width: none;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.toolHeaderActions {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.toolHeader .metaPill,
+.toolHeader .headerActionButton {
+  background: #f7f9fb;
+  border: 1px solid var(--border);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.toolHeader .metaPill {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.page[data-theme="dark"] .toolHeader .metaPill,
+.page[data-theme="dark"] .toolHeader .headerActionButton {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--ink);
+}
+
+.uploadStage {
+  display: grid;
+  grid-template-columns: 184px minmax(0, 1fr) minmax(300px, 360px);
+  align-items: start;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.uploadMain {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.workflowRail {
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+}
+
+.workflowRailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.workflowRailHeader strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.workflowRailHeader span,
+.workflowRailStatus span,
+.workflowRailStep small,
+.workflowRailStepActive small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.workflowStepList {
+  display: grid;
+  gap: 8px;
+}
+
+.workflowRailStep,
+.workflowRailStepActive {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.workflowRailStep {
+  background: rgba(22, 34, 49, 0.035);
+}
+
+.workflowRailStepActive {
+  background: rgba(15, 118, 110, 0.08);
+  border-color: rgba(15, 118, 110, 0.16);
+}
+
+.workflowRailStep span,
+.workflowRailStepActive span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--teal);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workflowRailStep strong,
+.workflowRailStepActive strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflowRailStep small,
+.workflowRailStepActive small {
+  grid-column: 2;
+  margin-top: -4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflowRailStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.workflowRailStatus strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.uploadStage .controlRail {
+  position: sticky;
+  top: 12px;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.panelIntro {
+  gap: 10px;
+}
+
+.sectionHeading {
+  gap: 10px;
+}
+
+.sectionStep {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.sectionHeadingCopy h2 {
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.sectionHeadingCopy p {
+  max-width: 620px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.modelUsageGrid {
+  gap: 10px;
+}
+
+.modelUsageCard,
+.modelUsageCardActive {
+  min-width: 0;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.modelUsageCard span,
+.modelUsageCardActive span,
+.helperCopy,
+.inputQualityPanel p,
+.optionalUploadDescription {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dropzone,
+.dropzoneActive {
+  min-height: 210px;
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(22, 34, 49, 0.03), rgba(15, 118, 110, 0.04));
+}
+
+.dropzoneCompact {
+  min-height: 94px;
+}
+
+.dropzone strong {
+  font-size: 20px;
+}
+
+.dropzone p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.inputQualityPanel,
+.modelUsagePanel,
+.optionalUploadBlock,
+.redesignProjectPanel {
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+.inputQualityHeader strong,
+.modelUsageHeader strong {
+  font-size: 14px;
+}
+
+.inputQualityActions {
+  gap: 7px;
+}
+
+.inputQualityActions span,
+.inputQualityChips span {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.fieldGroup {
+  gap: 7px;
+}
+
+.input,
+.textarea,
+.select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.textarea {
+  min-height: 94px;
+}
+
+.controlRail .textarea {
+  min-height: 86px;
+}
+
+.ratioGrid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.ratioButton,
+.ratioButtonActive {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 9px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.ratioButton span,
+.ratioButtonActive span {
+  grid-column: 2;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ratioButton strong,
+.ratioButtonActive strong {
+  font-size: 13px;
+}
+
+.toneGrid {
+  gap: 7px;
+}
+
+.toneButton,
+.toneButtonActive,
+.optionChip,
+.optionChipActive,
+.inlineButton,
+.inlineDangerButton,
+.secondaryButton,
+.navButton {
+  min-height: 34px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.primaryButton,
+.primaryButtonWide,
+.secondaryButtonWide {
+  min-height: 40px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  box-shadow: none;
+}
+
+.generateActionStatus,
+.generateActionWarning {
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.referenceAssetCard {
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 14px;
+}
+
+.referenceAssetMeta strong,
+.referenceAssetMeta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1220px) {
+  .uploadStage {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+
+  .uploadStage .controlRail {
+    grid-column: 1 / -1;
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .toolHeader,
+  .toolHeaderActions {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .uploadStage {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowRail,
+  .uploadStage .controlRail {
+    position: static;
+  }
+
+  .workflowStepList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .page {
+    padding: 8px;
+  }
+
+  .toolHeader,
+  .uploadStage {
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .toolHeaderCopy {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowStepList,
+  .uploadStage .controlRail,
+  .modelUsageGrid {
+    grid-template-columns: 1fr;
   }
 }

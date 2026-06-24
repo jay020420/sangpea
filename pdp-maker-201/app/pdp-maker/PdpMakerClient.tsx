@@ -36,7 +36,7 @@ import styles from "./pdp-maker.module.css";
 type SourceMode = "product" | "redesign";
 type ThemeMode = "dark" | "light";
 
-const THEME_STORAGE_KEY = "codex-pdp-maker-theme";
+const THEME_STORAGE_KEY = "codex-pdp-maker-theme-v2";
 
 type ConfigState = {
   auth?: { ok: boolean; message?: string; authPath?: string; accountId?: string };
@@ -59,6 +59,10 @@ type DraftSnapshotInput = {
   markClean?: boolean;
 };
 
+type OpenEditorOptions = {
+  pendingSave?: boolean;
+};
+
 type SavedDraftMeta = {
   id: string;
   createdAt: string;
@@ -66,7 +70,7 @@ type SavedDraftMeta = {
 };
 
 export function PdpMakerClient() {
-  const [theme, setTheme] = useState<ThemeMode>("dark");
+  const [theme, setTheme] = useState<ThemeMode>("light");
   const [themeLoaded, setThemeLoaded] = useState(false);
   const [sourceMode, setSourceMode] = useState<SourceMode>("product");
   const [appState, setAppState] = useState<"upload" | "processing" | "editor">("upload");
@@ -87,7 +91,7 @@ export function PdpMakerClient() {
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [channel, setChannel] = useState("스마트스토어");
   const [redesignCount, setRedesignCount] = useState(1);
-  const [notice, setNotice] = useState("Codex OAuth 로그인 상태를 확인한 뒤 자료를 업로드하세요. 먼저 구조를 만들고, 편집기에서 문구·CTA·색상·배경을 반복 수정합니다.");
+  const [notice, setNotice] = useState("자료를 넣고 구조를 만든 뒤, 편집기에서 문구와 CTA를 레이어로 조정합니다.");
   const [errorMessage, setErrorMessage] = useState("");
   const [errorDetail, setErrorDetail] = useState("");
   const [loadingStep, setLoadingStep] = useState("");
@@ -102,6 +106,7 @@ export function PdpMakerClient() {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [manualSaveToastToken, setManualSaveToastToken] = useState(0);
   const [isDirty, setIsDirty] = useState(false);
+  const [isOpeningEditor, setIsOpeningEditor] = useState(false);
 
   const productInputRef = useRef<HTMLInputElement>(null);
   const modelInputRef = useRef<HTMLInputElement>(null);
@@ -121,8 +126,28 @@ export function PdpMakerClient() {
       }),
     [additionalInfo, desiredTone, modelImage, modelImageUsage, productDescription, productImages]
   );
-  const canGenerateProduct = Boolean(productImages.length && (!modelImage || modelImageUsage));
-  const canGenerateRedesign = redesignFiles.length > 0;
+  const authBlockReason = config.auth && !config.auth.ok ? config.auth.message || "Codex OAuth 로그인 후 생성할 수 있습니다." : "";
+  const productGenerateBlockReason = getProductGenerateBlockReason({
+    authBlockReason,
+    productImageCount: productImages.length,
+    hasModelImage: Boolean(modelImage),
+    modelImageUsage
+  });
+  const redesignGenerateBlockReason = getRedesignGenerateBlockReason({
+    authBlockReason,
+    redesignFileCount: redesignFiles.length
+  });
+  const canGenerateProduct = !productGenerateBlockReason;
+  const canGenerateRedesign = !redesignGenerateBlockReason;
+  const currentGenerateBlockReason = sourceMode === "product" ? productGenerateBlockReason : redesignGenerateBlockReason;
+  const currentGenerateStatusMessage = getGenerateStatusMessage({
+    appState,
+    loadingStep,
+    sourceMode,
+    blockReason: currentGenerateBlockReason,
+    productReadinessStatus: productInputReadiness.status,
+    redesignCount
+  });
   const currentRedesignResult = useMemo(
     () => (redesignProject ? redesignProjectToResult(redesignProject) : null),
     [redesignProject]
@@ -131,7 +156,7 @@ export function PdpMakerClient() {
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    const nextTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+    const nextTheme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
     applyThemePreference(nextTheme);
     setTheme(nextTheme);
     setThemeLoaded(true);
@@ -291,6 +316,11 @@ export function PdpMakerClient() {
 
   async function generateProduct() {
     const primaryImage = productImages[0];
+    if (authBlockReason) {
+      setErrorMessage(authBlockReason);
+      setErrorDetail("");
+      return;
+    }
     if (!primaryImage) {
       setErrorMessage("먼저 제품 이미지, SW 화면 또는 참조 자료를 업로드해 주세요.");
       return;
@@ -369,6 +399,7 @@ export function PdpMakerClient() {
               : startsWithReadinessWarning
                 ? "부족한 입력으로 상세페이지 구조를 만들었습니다. 카피와 근거를 확인한 뒤 섹션 이미지를 생성하세요."
                 : "상품 브리프와 상세페이지 구조를 만들었습니다. 편집기에서 문구, CTA, 색상, 배경을 반복 수정하세요.";
+      openEditor(response.result, nextNotice, setupDraft, { pendingSave: true });
       const savedEditorDraft = await persistDraftSnapshot({
         mode: "auto",
         resultOverride: response.result,
@@ -380,7 +411,9 @@ export function PdpMakerClient() {
         createdAtOverride: setupDraft?.createdAt ?? draftCreatedAt,
         markClean: true
       });
-      openEditor(response.result, nextNotice, savedEditorDraft);
+      if (!savedEditorDraft) {
+        setNotice(`${nextNotice} 단, 로컬 초안 저장은 실패했습니다. 편집은 계속할 수 있고, 상단의 작업 저장하기를 다시 눌러 주세요.`);
+      }
     } catch (error) {
       setAppState("upload");
       showError(error, "업로드 자료 분석에 실패했습니다.");
@@ -404,6 +437,11 @@ export function PdpMakerClient() {
     nextRolloutRequest: string;
     baseProject?: RedesignProject | null;
   }) {
+    if (authBlockReason) {
+      setErrorMessage(authBlockReason);
+      setErrorDetail("");
+      return null;
+    }
     if (!redesignFiles.length) {
       setErrorMessage("기존 상세페이지 이미지 또는 PDF를 업로드해 주세요.");
       return null;
@@ -445,28 +483,27 @@ export function PdpMakerClient() {
       const nextNotice =
         mergedProject.warning ||
         `${generatedCount}개 섹션을 생성했습니다. 결과를 확인한 뒤 이어 생성하거나 편집기로 넘기세요.`;
-      const savedDraft = generatedCount
-        ? await persistDraftSnapshot({
-            mode: "auto",
-            resultOverride: nextResult,
-            editorStateOverride: null,
-            appStateOverride: "editor",
-            sourceModeOverride: "redesign",
-            noticeOverride: nextNotice,
-            idOverride: baseProject ? activeDraftId : null,
-            createdAtOverride: baseProject ? draftCreatedAt : null,
-            markClean: true
-          })
-        : null;
       setRedesignProject(mergedProject);
       setRedesignProjects((current) => [mergedProject, ...current.filter((project) => project.id !== mergedProject.id)].slice(0, 8));
       setResult(nextResult);
-      setNotice(
-        savedDraft || !generatedCount
-          ? nextNotice
-          : `${nextNotice} 단, 로컬 초안 저장은 실패했습니다. 현재 리디자인을 편집기로 열거나 다시 생성해 주세요.`
-      );
+      setNotice(nextNotice);
       setAppState("upload");
+      if (generatedCount) {
+        const savedDraft = await persistDraftSnapshot({
+          mode: "auto",
+          resultOverride: nextResult,
+          editorStateOverride: null,
+          appStateOverride: "editor",
+          sourceModeOverride: "redesign",
+          noticeOverride: nextNotice,
+          idOverride: baseProject ? activeDraftId : null,
+          createdAtOverride: baseProject ? draftCreatedAt : null,
+          markClean: true
+        });
+        if (!savedDraft) {
+          setNotice(`${nextNotice} 단, 로컬 초안 저장은 실패했습니다. 현재 리디자인을 편집기로 열거나 다시 생성해 주세요.`);
+        }
+      }
       return mergedProject;
     } catch (error) {
       setAppState("upload");
@@ -584,16 +621,28 @@ export function PdpMakerClient() {
       setErrorMessage("편집기로 열 수 있는 생성 섹션이 없습니다. 먼저 히어로 또는 누락 섹션을 생성해 주세요.");
       return;
     }
-    const savedEditorDraft = await persistDraftSnapshot({
-      mode: "auto",
-      resultOverride: nextResult,
-      editorStateOverride: null,
-      appStateOverride: "editor",
-      sourceModeOverride: "redesign",
-      noticeOverride: nextNotice,
-      markClean: true
-    });
-    openEditor(nextResult, nextNotice, savedEditorDraft);
+    const currentDraftMeta =
+      activeDraftId && draftCreatedAt
+        ? { id: activeDraftId, createdAt: draftCreatedAt, updatedAt: lastSavedAt ?? draftCreatedAt }
+        : null;
+    setIsOpeningEditor(true);
+    openEditor(nextResult, nextNotice, currentDraftMeta, { pendingSave: true });
+    try {
+      const savedEditorDraft = await persistDraftSnapshot({
+        mode: "auto",
+        resultOverride: nextResult,
+        editorStateOverride: null,
+        appStateOverride: "editor",
+        sourceModeOverride: "redesign",
+        noticeOverride: nextNotice,
+        markClean: true
+      });
+      if (!savedEditorDraft) {
+        setNotice(`${nextNotice} 단, 로컬 초안 저장은 실패했습니다. 편집은 계속할 수 있고, 상단의 작업 저장하기를 다시 눌러 주세요.`);
+      }
+    } finally {
+      setIsOpeningEditor(false);
+    }
   }
 
   async function handleKnowledgeFiles(files: FileList | null) {
@@ -739,26 +788,27 @@ export function PdpMakerClient() {
     }
   }
 
-  function openEditor(nextResult: GeneratedResult, nextNotice: string, draftMeta?: SavedDraftMeta | null) {
+  function openEditor(nextResult: GeneratedResult, nextNotice: string, draftMeta?: SavedDraftMeta | null, options: OpenEditorOptions = {}) {
     if (!isEditorReadyResult(nextResult)) {
       setAppState("upload");
       setErrorMessage("편집기로 열 수 있는 섹션이 없습니다. 상세페이지 구조 생성을 다시 실행해 주세요.");
       return;
     }
+    const shouldShowDraftSaveError = !options.pendingSave && !draftMeta;
     setResult(nextResult);
     setEditorDraftState(null);
     setEditorSessionKey(`editor-${crypto.randomUUID()}`);
     setActiveDraftId(draftMeta?.id ?? null);
     setDraftCreatedAt(draftMeta?.createdAt ?? null);
-    setLastSavedAt(draftMeta?.updatedAt ?? null);
-    setSaveState(draftMeta ? "saved" : "error");
-    setIsDirty(!draftMeta);
+    setLastSavedAt(options.pendingSave ? null : draftMeta?.updatedAt ?? null);
+    setSaveState(options.pendingSave ? "saving" : draftMeta ? "saved" : "error");
+    setIsDirty(options.pendingSave || !draftMeta);
     setNotice(
-      draftMeta
+      draftMeta || options.pendingSave
         ? nextNotice
         : `${nextNotice} 단, 로컬 초안 저장은 실패했습니다. 현재 화면에서 작업 저장하기를 다시 눌러 주세요.`
     );
-    setErrorMessage(draftMeta ? "" : "편집 화면은 열렸지만 로컬 초안 저장에 실패했습니다.");
+    setErrorMessage(shouldShowDraftSaveError ? "편집 화면은 열렸지만 로컬 초안 저장에 실패했습니다." : "");
     setErrorDetail("");
     setAppState("editor");
   }
@@ -809,10 +859,10 @@ export function PdpMakerClient() {
       <section className={styles.shell}>
         <header className={styles.toolHeader}>
           <div className={styles.toolHeaderCopy}>
-            <span className={styles.toolKicker}>Codex Local PDP Workspace</span>
-            <h1 className={styles.toolTitle}>Codex PDP Maker</h1>
+            <span className={styles.toolKicker}>PDP Maker</span>
+            <h1 className={styles.toolTitle}>상세페이지 제작</h1>
             <p className={styles.toolDescription}>
-              제품·SW 상세페이지 초안을 만든 뒤 문구, CTA, 색상, 배경을 섹션별로 반복 편집합니다.
+              자료를 구조화하고, 이미지와 카피를 레이어로 분리해 편집합니다.
             </p>
           </div>
           <div className={styles.toolHeaderActions}>
@@ -834,23 +884,51 @@ export function PdpMakerClient() {
         </header>
 
         <section className={styles.uploadStage}>
-          <section>
+          <aside className={styles.workflowRail}>
+            <div className={styles.workflowRailHeader}>
+              <strong>Workflow</strong>
+              <span>{sourceMode === "product" ? "새 PDP" : "리디자인"}</span>
+            </div>
+            <div className={styles.workflowStepList}>
+              <div className={styles.workflowRailStepActive}>
+                <span>1</span>
+                <strong>Input</strong>
+                <small>{sourceMode === "product" ? `${productImages.length}개 자료` : `${redesignFiles.length}개 파일`}</small>
+              </div>
+              <div className={appState === "processing" ? styles.workflowRailStepActive : styles.workflowRailStep}>
+                <span>2</span>
+                <strong>Structure</strong>
+                <small>{appState === "processing" ? "생성 중" : result ? "완료" : "대기"}</small>
+              </div>
+              <div className={appState === "editor" || result ? styles.workflowRailStepActive : styles.workflowRailStep}>
+                <span>3</span>
+                <strong>Edit</strong>
+                <small>{result ? "레이어 편집" : "생성 후"}</small>
+              </div>
+            </div>
+            <div className={styles.workflowRailStatus}>
+              <span>품질 게이트</span>
+              <strong>{sourceMode === "product" ? `${productInputReadiness.score}점` : canOpenCurrentRedesign ? "열기 가능" : "대기"}</strong>
+            </div>
+          </aside>
+
+          <section className={styles.uploadMain}>
             <div className={styles.panelIntro}>
               <div className={styles.sectionHeading}>
                 <span className={styles.sectionStep}>1</span>
                 <div className={styles.sectionHeadingCopy}>
-                  <h2>작업 모드</h2>
-                  <p>제품컷, 앱 화면, SW 스크린샷으로 새 PDP를 만들거나, 기존 상세페이지/PDF를 리디자인합니다.</p>
+                  <h2>입력</h2>
+                  <p>제품컷, SW 화면, 증빙 자료를 역할별로 넣습니다.</p>
                 </div>
               </div>
               <div className={styles.modelUsageGrid}>
                 <button className={sourceMode === "product" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => setSourceMode("product")} type="button">
-                  <strong>새 상세페이지 만들기</strong>
-                  <span>제품컷, SW 화면, 증빙 자료 여러 장으로 상세페이지 구조를 설계합니다.</span>
+                  <strong>새 PDP</strong>
+                  <span>자료에서 구조를 만듭니다.</span>
                 </button>
                 <button className={sourceMode === "redesign" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => setSourceMode("redesign")} type="button">
-                  <strong>기존 상세페이지 리디자인</strong>
-                  <span>이미지 또는 PDF를 참조해 히어로부터 순차 생성합니다.</span>
+                  <strong>리디자인</strong>
+                  <span>기존 PDP를 다시 구성합니다.</span>
                 </button>
               </div>
             </div>
@@ -879,6 +957,7 @@ export function PdpMakerClient() {
                   <RedesignProjectPanel
                     editingSectionId={editingSectionId}
                     editRequests={sectionEditRequests}
+                    isOpeningEditor={isOpeningEditor}
                     onActivateProject={activateRedesignProject}
                     onEditRequestChange={(sectionId, value) => setSectionEditRequests((current) => ({ ...current, [sectionId]: value }))}
                     onEditSection={(sectionId) => void editRedesignSection(sectionId)}
@@ -909,7 +988,7 @@ export function PdpMakerClient() {
               <div className={styles.sectionHeading}>
                 <span className={styles.sectionStep}>2</span>
                 <div className={styles.sectionHeadingCopy}>
-                  <h2>생성 설정</h2>
+                  <h2>설정</h2>
                   <p>{notice}</p>
                 </div>
               </div>
@@ -931,11 +1010,11 @@ export function PdpMakerClient() {
                   className={styles.textarea}
                   id="productDescription"
                   onChange={(event) => setProductDescription(event.target.value)}
-                  placeholder="상품명, 카테고리, 주요 기능/소재/구성, 타깃 고객, 사용 상황, 가격 이유, 배송/AS, 절대 만들면 안 되는 주장까지 적어주세요. 이 내용은 이미지 분석보다 우선하는 사실 정보로 사용됩니다."
-                  rows={7}
+                  placeholder="상품명, 대상 고객, 핵심 기능 3개, 사용 상황, 금지 표현을 적어주세요."
+                  rows={5}
                   value={productDescription}
                 />
-                <p className={styles.helperCopy}>이미지에 안 보이는 핵심 장점과 금지 표현은 여기에 넣어야 카피와 섹션 기획에 안정적으로 반영됩니다.</p>
+                <p className={styles.helperCopy}>이미지에 없는 사실과 금지 표현만 짧게 보강합니다.</p>
               </div>
             ) : null}
 
@@ -945,8 +1024,8 @@ export function PdpMakerClient() {
                 className={styles.textarea}
                 id="additionalInfo"
                 onChange={(event) => setAdditionalInfo(event.target.value)}
-                placeholder={sourceMode === "product" ? "예: 모바일에서 첫 화면은 신뢰감 있게, 무료 체험 CTA 강조, 과장 표현 없이 실사용감 중심" : "예: 기존 카피는 줄이고, 제품 근거와 배송/교환 불안을 더 명확히 보여주세요."}
-                rows={5}
+                placeholder={sourceMode === "product" ? "예: 과장 없이 실사용감 중심, CTA는 무료 체험" : "예: 카피를 줄이고 근거와 불안을 더 명확히"}
+                rows={4}
                 value={additionalInfo}
               />
             </div>
@@ -1011,21 +1090,23 @@ export function PdpMakerClient() {
               type="button"
             >
               {appState === "processing" ? <Loader2 className={styles.spinIcon} size={16} /> : <Sparkles size={16} />}
-              {sourceMode === "product"
-                ? !productImages.length
-                  ? "자료 업로드 후 생성"
-                  : productInputReadiness.status === "blocked"
-                  ? "경고 감수하고 구조 생성"
-                  : "구조 생성 후 편집 시작"
-                : redesignCount === 1
-                  ? "히어로 1장 먼저 생성"
-                  : `S1부터 ${redesignCount}장 생성`}
+              {getGenerateButtonLabel({
+                appState,
+                sourceMode,
+                productImageCount: productImages.length,
+                productReadinessStatus: productInputReadiness.status,
+                redesignCount
+              })}
             </button>
+            <div className={currentGenerateBlockReason ? styles.generateActionWarning : styles.generateActionStatus}>
+              {currentGenerateBlockReason ? <AlertCircle size={14} /> : appState === "processing" ? <Loader2 className={styles.spinIcon} size={14} /> : <CheckCircle2 size={14} />}
+              <span>{currentGenerateStatusMessage}</span>
+            </div>
 
             {sourceMode === "redesign" && redesignProject ? (
-              <button className={styles.secondaryButtonWide} disabled={!canOpenCurrentRedesign} onClick={() => void openRedesignEditor()} type="button">
-                <CheckCircle2 size={16} />
-                현재 리디자인을 편집기로 열기
+              <button className={styles.secondaryButtonWide} disabled={!canOpenCurrentRedesign || isOpeningEditor} onClick={() => void openRedesignEditor()} type="button">
+                {isOpeningEditor ? <Loader2 className={styles.spinIcon} size={16} /> : <CheckCircle2 size={16} />}
+                {isOpeningEditor ? "편집기 여는 중" : "현재 리디자인을 편집기로 열기"}
               </button>
             ) : null}
 
@@ -1071,6 +1152,62 @@ function isEditorReadyResult(result: GeneratedResult | null | undefined): result
 
 function hasAnalysisFallback(result: GeneratedResult) {
   return Boolean(result.generationTrace?.stages.some((stage) => stage.name === "fallback-section-blueprint"));
+}
+
+function getProductGenerateBlockReason(input: {
+  authBlockReason: string;
+  productImageCount: number;
+  hasModelImage: boolean;
+  modelImageUsage: ReferenceModelUsage | null;
+}) {
+  if (input.authBlockReason) return input.authBlockReason;
+  if (!input.productImageCount) return "대표 제품/SW 자료를 1장 이상 업로드해야 생성할 수 있습니다.";
+  if (input.hasModelImage && !input.modelImageUsage) return "모델 이미지 사용 범위를 먼저 선택해야 생성할 수 있습니다.";
+  return "";
+}
+
+function getRedesignGenerateBlockReason(input: { authBlockReason: string; redesignFileCount: number }) {
+  if (input.authBlockReason) return input.authBlockReason;
+  if (!input.redesignFileCount) return "기존 상세페이지 이미지 또는 PDF를 업로드해야 생성할 수 있습니다.";
+  return "";
+}
+
+function getGenerateButtonLabel(input: {
+  appState: "upload" | "processing" | "editor";
+  sourceMode: SourceMode;
+  productImageCount: number;
+  productReadinessStatus: "ready" | "needs_review" | "blocked";
+  redesignCount: number;
+}) {
+  if (input.appState === "processing") {
+    return input.sourceMode === "product" ? "구조 생성 중" : "리디자인 생성 중";
+  }
+  if (input.sourceMode === "product") {
+    if (!input.productImageCount) return "자료 업로드 후 생성";
+    if (input.productReadinessStatus === "blocked") return "경고 감수하고 구조 생성";
+    return "구조 생성 후 편집 시작";
+  }
+  return input.redesignCount === 1 ? "히어로 1장 먼저 생성" : `S1부터 ${input.redesignCount}장 생성`;
+}
+
+function getGenerateStatusMessage(input: {
+  appState: "upload" | "processing" | "editor";
+  loadingStep: string;
+  sourceMode: SourceMode;
+  blockReason: string;
+  productReadinessStatus: "ready" | "needs_review" | "blocked";
+  redesignCount: number;
+}) {
+  if (input.appState === "processing") {
+    return input.loadingStep || "생성 요청을 처리하는 중입니다. 완료되면 자동으로 편집 화면으로 이동합니다.";
+  }
+  if (input.blockReason) return input.blockReason;
+  if (input.sourceMode === "product") {
+    if (input.productReadinessStatus === "blocked") return "자료가 부족해도 구조 생성은 가능하지만, 편집기에서 카피와 근거를 반드시 검수하세요.";
+    if (input.productReadinessStatus === "needs_review") return "생성은 가능하지만 결과 품질을 높이려면 입력 자료를 추가로 보강하는 편이 좋습니다.";
+    return "생성 버튼을 누르면 구조 생성 후 편집 화면으로 자동 전환됩니다.";
+  }
+  return input.redesignCount === 1 ? "히어로 1장을 만든 뒤 이어 생성하거나 편집기로 열 수 있습니다." : `${input.redesignCount}개 섹션을 생성한 뒤 편집기로 넘길 수 있습니다.`;
 }
 
 function withDetail(message: string, detail?: string) {

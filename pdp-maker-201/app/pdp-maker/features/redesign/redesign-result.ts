@@ -1,4 +1,5 @@
 import type { AspectRatio, GeneratedResult, PdpEditableLayer, PdpLayoutTemplate, SectionBlueprint } from "@runacademy/shared";
+import { createLayeredDocumentV2FromBlueprint } from "../../../../lib/pdp-layered-document";
 import type { RedesignProject, RedesignSection, RedesignSectionRevision } from "./types";
 import { REDESIGN_SECTION_TOTAL } from "./types";
 
@@ -84,6 +85,21 @@ export function redesignProjectToResult(project: RedesignProject): GeneratedResu
   const sections = sortSections(project.sections)
     .filter((section) => section.imageUrl)
     .map((section, index) => redesignSectionToBlueprint(section, index, project.ratio));
+  const blueprint: GeneratedResult["blueprint"] = {
+    executiveSummary:
+      typeof project.analysis === "object" && project.analysis && "diagnostic_summary" in project.analysis
+        ? String((project.analysis as { diagnostic_summary?: string }).diagnostic_summary || "기존 상세페이지를 리디자인했습니다.")
+        : "기존 상세페이지를 리디자인했습니다.",
+    scorecard: [
+      {
+        category: "리디자인",
+        score: project.status,
+        reason: project.warning || `${sections.length}개 섹션을 편집기로 넘길 수 있습니다.`
+      }
+    ],
+    blueprintList: sections.map((section) => `${section.section_id} ${section.section_name}`),
+    sections
+  };
 
   return {
     originalImage: project.originalImage,
@@ -99,21 +115,14 @@ export function redesignProjectToResult(project: RedesignProject): GeneratedResu
         layers: section.editableLayers ?? []
       }))
     },
-    blueprint: {
-      executiveSummary:
-        typeof project.analysis === "object" && project.analysis && "diagnostic_summary" in project.analysis
-          ? String((project.analysis as { diagnostic_summary?: string }).diagnostic_summary || "기존 상세페이지를 리디자인했습니다.")
-          : "기존 상세페이지를 리디자인했습니다.",
-      scorecard: [
-        {
-          category: "리디자인",
-          score: project.status,
-          reason: project.warning || `${sections.length}개 섹션을 편집기로 넘길 수 있습니다.`
-        }
-      ],
-      blueprintList: sections.map((section) => `${section.section_id} ${section.section_name}`),
-      sections
-    }
+    layeredDocumentV2: createLayeredDocumentV2FromBlueprint({
+      title: project.title,
+      blueprint,
+      originalImage: project.originalImage,
+      referenceImages: project.referenceImages,
+      aspectRatio: project.ratio
+    }),
+    blueprint
   };
 }
 

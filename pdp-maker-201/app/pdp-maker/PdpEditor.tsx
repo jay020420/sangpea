@@ -54,6 +54,10 @@ import type {
   TextOverlay,
   WorkbenchTab
 } from "./pdp-drafts";
+import { buildEditorLayeredDocumentV2, exportFigmaDocument } from "./features/layered/editor-layered-document";
+import { buildLayerExportManifest } from "./features/layered/layered-export-manifest";
+import { canvasLayersFromLayeredDocumentV2 } from "./features/layered/layered-document-migration";
+import { buildLayerTreePreview, summarizeLayeredDocument } from "./features/layered/layered-document-summary";
 import styles from "./pdp-maker.module.css";
 import { apiJson, toDataUrl } from "./pdp-utils";
 
@@ -270,7 +274,16 @@ export function PdpEditor({
   const [overlaysBySection, setOverlaysBySection] = useState<Record<number, CanvasLayer[]>>(
     () => {
       const savedOverlays = normalizeOverlayRecord(initialDraftState?.overlaysBySection ?? {});
-      return Object.keys(savedOverlays).length ? savedOverlays : buildAutoCopyOverlayRecord(initialSections, aspectRatio);
+      if (Object.keys(savedOverlays).length) {
+        return savedOverlays;
+      }
+      const recoveredOverlays = normalizeOverlayRecord(
+        canvasLayersFromLayeredDocumentV2({
+          document: initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null,
+          sections: initialSections
+        })
+      );
+      return Object.keys(recoveredOverlays).length ? recoveredOverlays : buildAutoCopyOverlayRecord(initialSections, aspectRatio);
     }
   );
   const [defaultCopyLanguage, setDefaultCopyLanguage] = useState<PdpCopyLanguage>(
@@ -334,6 +347,41 @@ export function PdpEditor({
   const blueprintList = (initialResult.blueprint.blueprintList ?? []).filter(Boolean);
   const toneLabel = desiredTone || "AI 자동 추천";
   const progressPercent = sections.length ? Math.round(((safeCurrentSectionIndex + 1) / sections.length) * 100) : 0;
+  const layeredDocumentV2 = useMemo(
+    () =>
+      buildEditorLayeredDocumentV2({
+        initialResult,
+        sections,
+        overlaysBySection,
+        aspectRatio,
+        existingDocument: initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null
+      }),
+    [aspectRatio, initialDraftState?.layeredDocumentV2, initialResult, overlaysBySection, sections]
+  );
+  const layeredDocumentSummary = useMemo(() => summarizeLayeredDocument(layeredDocumentV2), [layeredDocumentV2]);
+  const figmaPayload = useMemo(() => exportFigmaDocument(layeredDocumentV2), [layeredDocumentV2]);
+  const layerExportManifest = useMemo(
+    () =>
+      buildLayerExportManifest({
+        document: layeredDocumentV2,
+        figmaPayload,
+        summary: layeredDocumentSummary
+      }),
+    [figmaPayload, layeredDocumentSummary, layeredDocumentV2]
+  );
+  const currentLayeredSectionSummary = layeredDocumentSummary.sections.find(
+    (section) => section.sectionId === currentSection?.section_id
+  );
+  const currentLayerTreePreview = useMemo(
+    () =>
+      buildLayerTreePreview({
+        document: layeredDocumentV2,
+        sectionId: currentSection?.section_id,
+        sectionIndex: safeCurrentSectionIndex,
+        maxItems: 18
+      }),
+    [currentSection?.section_id, layeredDocumentV2, safeCurrentSectionIndex]
+  );
 
   useEffect(() => {
     if (currentSectionIndex !== safeCurrentSectionIndex) {
@@ -373,12 +421,13 @@ export function PdpEditor({
       sections,
       sectionOptions,
       overlaysBySection,
+      layeredDocumentV2,
       defaultCopyLanguage,
       notice,
       workbenchTab,
       workbenchState
     });
-  }, [defaultCopyLanguage, notice, onDraftStateChange, overlaysBySection, safeCurrentSectionIndex, sectionOptions, sections, workbenchState, workbenchTab]);
+  }, [defaultCopyLanguage, layeredDocumentV2, notice, onDraftStateChange, overlaysBySection, safeCurrentSectionIndex, sectionOptions, sections, workbenchState, workbenchTab]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -2012,6 +2061,18 @@ export function PdpEditor({
     }
   };
 
+  const handleDownloadFigmaPayload = () => {
+    try {
+      const blob = new Blob([JSON.stringify(figmaPayload, null, 2)], {
+        type: "application/json;charset=utf-8"
+      });
+      downloadBlob(blob, `pdp-figma-payload-${new Date().toISOString().slice(0, 10)}.json`);
+      setNotice("Figma plugin-ready 계층 payload를 다운로드했습니다.");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Figma payload를 만들지 못했습니다.");
+    }
+  };
+
   const captureSectionBlob = async (sectionIndex: number) => {
     const section = sections[sectionIndex];
     if (!section?.generatedImage) {
@@ -2081,6 +2142,10 @@ export function PdpEditor({
 
       zip.file("delivery-report.json", JSON.stringify(deliveryReport, null, 2));
       zip.file("delivery-summary.txt", buildDeliverySummaryText(deliveryReport));
+      zip.file("figma-payload.json", JSON.stringify(figmaPayload, null, 2));
+      zip.file("figma-payload-summary.json", JSON.stringify({ importHints: figmaPayload.importHints, summary: figmaPayload.summary, validation: figmaPayload.validation }, null, 2));
+      zip.file("layered-document-v2.json", JSON.stringify(layeredDocumentV2, null, 2));
+      zip.file("layer-export-manifest.json", JSON.stringify(layerExportManifest, null, 2));
 
       const archive = await zip.generateAsync({ type: "blob" });
       downloadBlob(archive, `pdp-sections-${new Date().toISOString().slice(0, 10)}.zip`);
@@ -2183,6 +2248,7 @@ export function PdpEditor({
             </span>
             {lastSavedAt ? <span className={styles.metaPill}>최근 저장 {formatSavedAt(lastSavedAt)}</span> : null}
             {saveState === "saving" ? <span className={styles.metaPill}>저장 중</span> : null}
+            {saveState === "error" ? <span className={styles.warningPill}>초안 저장 실패</span> : null}
           </div>
 
           <div className={styles.topbarActions}>
@@ -2228,6 +2294,10 @@ export function PdpEditor({
             <button className={`${styles.secondaryButton} ${styles.headerActionButton}`} disabled={isGenerationBusy} onClick={handleDownloadDeliveryReport} type="button">
               <FileText size={16} />
               납품 리포트
+            </button>
+            <button className={`${styles.secondaryButton} ${styles.headerActionButton}`} disabled={isGenerationBusy} onClick={handleDownloadFigmaPayload} type="button">
+              <FileText size={16} />
+              Figma payload
             </button>
             <button
               className={`${styles.secondaryButton} ${styles.headerActionButton} ${styles.zipDownloadButton}`}
@@ -2317,6 +2387,14 @@ export function PdpEditor({
                     <span>레이어</span>
                     <strong>{currentLayers.length}</strong>
                   </div>
+                  <div className={styles.metricCard}>
+                    <span>문서 노드</span>
+                    <strong>{currentLayeredSectionSummary?.totalNodes ?? 0}</strong>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <span>Asset</span>
+                    <strong>{layeredDocumentSummary.assetCount}</strong>
+                  </div>
                 </div>
               </div>
 
@@ -2341,6 +2419,101 @@ export function PdpEditor({
                 ))}
               </div>
             </div>
+
+            <details className={styles.analysisDisclosure}>
+              <summary className={styles.disclosureSummary}>
+                <FileText size={16} />
+                계층형 문서 상태
+              </summary>
+              <div className={styles.analysisBody}>
+                <div className={styles.metricGrid}>
+                  <div className={styles.metricCard}>
+                    <span>Section frame</span>
+                    <strong>
+                      {layeredDocumentSummary.frameCount}/{layeredDocumentSummary.sectionCount}
+                    </strong>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <span>Editable copy</span>
+                    <strong>{layeredDocumentSummary.editableCopyNodeCount}</strong>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <span>Generated bg</span>
+                    <strong>{layeredDocumentSummary.backgroundNodeCount}</strong>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <span>Product ref</span>
+                    <strong>{layeredDocumentSummary.productReferenceNodeCount}</strong>
+                  </div>
+                </div>
+
+                <div className={styles.blueprintList}>
+                  <span>전체 node {layeredDocumentSummary.totalNodes}</span>
+                  <span>표시 node {layeredDocumentSummary.visibleNodes}</span>
+                  <span>잠금 node {layeredDocumentSummary.lockedNodes}</span>
+                  <span>생성 asset {layeredDocumentSummary.generatedAssetCount}</span>
+                  <span>제품 asset {layeredDocumentSummary.productAssetCount}</span>
+                  <span>Figma frame {figmaPayload.summary.frameCount}</span>
+                  <span>Figma height {figmaPayload.importHints.totalHeight}px</span>
+                  <span>Figma 검증 {figmaPayload.validation.status}</span>
+                </div>
+
+                {currentLayeredSectionSummary ? (
+                  <div className={styles.qualityActionList}>
+                    <strong>{currentLayeredSectionSummary.name}</strong>
+                    <span>
+                      text {currentLayeredSectionSummary.textNodes} · CTA {currentLayeredSectionSummary.ctaNodes} · shape{" "}
+                      {currentLayeredSectionSummary.shapeNodes}
+                    </span>
+                    <span>
+                      image {currentLayeredSectionSummary.imageNodes} · product {currentLayeredSectionSummary.productNodes} · editable{" "}
+                      {currentLayeredSectionSummary.editableNodes}
+                    </span>
+                  </div>
+                ) : null}
+
+                {currentLayerTreePreview.length ? (
+                  <div className={styles.layerTreePanel}>
+                    <div className={styles.layerTreeHeader}>
+                      <strong>현재 섹션 layer tree</strong>
+                      <span>{currentLayerTreePreview.length}개 표시</span>
+                    </div>
+                    <div className={styles.layerTreeList}>
+                      {currentLayerTreePreview.map((node) => (
+                        <div className={styles.layerTreeRow} key={node.id} style={{ paddingLeft: `${8 + node.depth * 14}px` }}>
+                          <span className={styles.layerTreeType}>{node.type}</span>
+                          <span className={styles.layerTreeName}>{node.name}</span>
+                          <span className={styles.layerTreeMeta}>
+                            {node.role || "role 없음"}
+                            {node.assetId ? ` · ${node.assetId}` : ""}
+                          </span>
+                          <span className={styles.layerTreeFlags}>
+                            {node.visible ? "visible" : "hidden"} · {node.locked ? "locked" : "unlocked"} · {node.editable ? "editable" : "fixed"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {layeredDocumentSummary.warnings.length ? (
+                  <div className={styles.inlineWarning}>
+                    <AlertCircle size={16} />
+                    계층 문서 warning {layeredDocumentSummary.warnings.length}건: {layeredDocumentSummary.warnings[0]}
+                  </div>
+                ) : figmaPayload.validation.warnings.length ? (
+                  <div className={styles.inlineWarning}>
+                    <AlertCircle size={16} />
+                    Figma payload warning {figmaPayload.validation.warnings.length}건: {figmaPayload.validation.warnings[0]}
+                  </div>
+                ) : (
+                  <div className={styles.copyNoticeBox}>
+                    <strong>Layer export ready</strong>
+                    <p>저장 draft와 Figma payload에 현재 node tree, image asset 참조, 세로 frame 배치 정보가 포함됩니다.</p>
+                  </div>
+                )}
+              </div>
+            </details>
 
             <details className={styles.analysisDisclosure}>
               <summary className={styles.disclosureSummary}>
@@ -2797,6 +2970,8 @@ export function PdpEditor({
               <div className={styles.canvasFooter}>
                 <span className={styles.footerStatus}>{currentSection.generatedImage ? "이미지 준비 완료" : "이미지 생성 필요"}</span>
                 <span className={styles.footerStatus}>레이어 {currentLayers.length}개</span>
+                <span className={styles.footerStatus}>문서 노드 {currentLayeredSectionSummary?.totalNodes ?? 0}개</span>
+                <span className={styles.footerStatus}>Asset {layeredDocumentSummary.assetCount}개</span>
                 <span className={styles.footerStatus}>{workbenchState.isOpen ? "플로팅 워크벤치 열림" : "플로팅 워크벤치 닫힘"}</span>
               </div>
             </article>

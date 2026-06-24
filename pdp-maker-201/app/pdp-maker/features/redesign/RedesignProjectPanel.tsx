@@ -12,6 +12,7 @@ export function RedesignProjectPanel({
   setRolloutRequest,
   editRequests,
   editingSectionId,
+  isOpeningEditor,
   onEditRequestChange,
   onEditSection,
   onGenerateMissing,
@@ -24,6 +25,7 @@ export function RedesignProjectPanel({
   setRolloutRequest: (value: string) => void;
   editRequests: Record<string, string>;
   editingSectionId: string | null;
+  isOpeningEditor: boolean;
   onEditRequestChange: (sectionId: string, value: string) => void;
   onEditSection: (sectionId: string) => void;
   onGenerateMissing: () => void;
@@ -90,9 +92,9 @@ export function RedesignProjectPanel({
             <Sparkles size={16} />
             {missingCount ? `나머지/누락 ${missingCount}장 생성` : "8장 생성 완료"}
           </button>
-          <button className={styles.primaryButtonCompact} disabled={!generatedCount} onClick={onOpenEditor} type="button">
-            <CheckCircle2 size={16} />
-            편집기로 넘기기
+          <button className={styles.primaryButtonCompact} disabled={!generatedCount || isOpeningEditor} onClick={onOpenEditor} type="button">
+            {isOpeningEditor ? <Loader2 className={styles.spinIcon} size={16} /> : <CheckCircle2 size={16} />}
+            {isOpeningEditor ? "편집기 여는 중" : "편집기로 넘기기"}
           </button>
         </div>
       </div>

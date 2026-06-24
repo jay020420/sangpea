@@ -70,8 +70,8 @@ export function ProductUpload({
         <span className={styles.dropzoneIcon}>
           <Upload size={24} />
         </span>
-        <strong>제품/SW 자료를 여러 장 업로드하세요</strong>
-        <p>클릭하거나 드래그 앤 드롭하세요. 대표컷, 디테일컷, 증빙 이미지, 앱 화면, PDF 페이지를 최대 20개까지 함께 넣을 수 있습니다.</p>
+        <strong>제품/SW 자료 업로드</strong>
+        <p>대표컷, 디테일, 증빙, 앱 화면 또는 PDF를 최대 20개까지 넣습니다.</p>
         <span className={styles.dropzoneHint}>{productImages.length ? `${productImages.length}/${MAX_PRODUCT_REFERENCE_UPLOADS}개 참조 자료 준비됨` : "JPG, PNG, WebP, PDF"}</span>
       </button>
       <input
@@ -123,7 +123,7 @@ export function ProductUpload({
           <div>
             <span className={styles.panelLabel}>선택 옵션</span>
             <h3 className={styles.optionalUploadTitle}>모델 이미지</h3>
-            <p className={styles.optionalUploadDescription}>특정 인물의 정체성을 유지한 모델컷이 필요할 때 사용합니다.</p>
+            <p className={styles.optionalUploadDescription}>인물 일관성이 필요할 때만 사용합니다.</p>
           </div>
           {modelImage ? (
             <button className={styles.inlineButton} onClick={removeModelImage} type="button">
@@ -156,7 +156,7 @@ export function ProductUpload({
             <FileImage size={20} />
           </span>
           <strong>모델 이미지 업로드</strong>
-          <span className={styles.dropzoneHint}>{modelImage?.fileName || "선택 사항, 드래그 가능"}</span>
+          <span className={styles.dropzoneHint}>{modelImage?.fileName || "선택 사항"}</span>
         </button>
         <input
           accept="image/*"
@@ -173,12 +173,12 @@ export function ProductUpload({
         {modelImage ? (
           <div className={styles.modelUsageGrid}>
             <button className={modelImageUsage === "hero-only" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => onModelImageUsage("hero-only")} type="button">
-              <strong>히어로에만 사용</strong>
-              <span>첫 섹션 모델컷에만 인물 정체성을 적용합니다.</span>
+              <strong>히어로만</strong>
+              <span>첫 섹션에만 적용</span>
             </button>
             <button className={modelImageUsage === "all-sections" ? styles.modelUsageCardActive : styles.modelUsageCard} onClick={() => onModelImageUsage("all-sections")} type="button">
-              <strong>전체 섹션에 유지</strong>
-              <span>모델컷 포함 시 같은 인물을 계속 유지합니다.</span>
+              <strong>전체 유지</strong>
+              <span>같은 인물 유지</span>
             </button>
           </div>
         ) : null}

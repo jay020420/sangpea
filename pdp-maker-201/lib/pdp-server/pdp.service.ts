@@ -12,6 +12,7 @@ import {
 import { getImageProvider, type ImageProvider } from "../image-providers";
 import { hasExpectedImageSignature } from "../image-validation";
 import { buildKnowledgeContextWithSources } from "../local-rag";
+import { createLayeredDocumentV2FromBlueprint } from "../pdp-layered-document";
 import type {
   AspectRatio,
   CopyWarning,
@@ -498,6 +499,13 @@ export class PdpService {
         qualityReport,
         blueprint: sanitizedBlueprint,
         layeredDocument: buildLayeredDocument(sanitizedBlueprint),
+        layeredDocumentV2: createLayeredDocumentV2FromBlueprint({
+          title: productBrief.productName || "PDP layered document",
+          blueprint: sanitizedBlueprint,
+          originalImage,
+          referenceImages: references,
+          aspectRatio: request.aspectRatio
+        }),
         sourceMode: "product" as const,
         providerProof: textProviderProof
       } satisfies GeneratedResult;
@@ -1239,15 +1247,18 @@ function buildImagePrompt(input: {
 
   return [
     "Create one Korean mobile detail-page section image, not a poster, not a social ad, and not a generic landing-page hero.",
-    "This is base artwork for a final image where the app will composite the exact Korean copy as editable text layers, then export it as image pixels.",
-    "Do not render readable Korean or English marketing copy as pixels. Do not draw the headline, CTA text, prices, review text, certification text, labels, badges, or paragraphs yourself.",
-    "Design the artwork around the planned copy: leave calm high-contrast panels, negative space, or card surfaces where app-composited text will look intentionally integrated.",
+    "OUTPUT CONTRACT: generate BACKGROUND PLATE artwork only. The app will add all marketing copy, CTA, proof text, labels, and final typography as editable layers after generation.",
+    "ABSOLUTE TEXT BAN: do not render any new readable Korean, English, numbers, app names, brand slogans, CTA words, speech bubbles, badges, prices, review text, certification text, labels, paragraphs, or dashboard values as pixels.",
+    "Allowed text exception: text already visible inside an uploaded product package or uploaded software screenshot may remain only if it is part of that exact source image. Do not invent or rewrite it.",
+    "Use blank cards, blank panels, empty buttons, abstract bars, neutral icons, and clean placeholder geometry where text will be composited later.",
+    "Design around the planned copy without drawing it: reserve 30-45% of the canvas as calm high-contrast editable safe zones for headline, subcopy, bullets, proof, and CTA layers.",
     "For a 9:16 mobile section, compose it like a production PDP module: one clear main product/screen area, one integrated headline/subcopy area, two or three bullet/feature surfaces, and one CTA/proof surface. These surfaces must be visually obvious, high-contrast, and connected to the product visual, but contain no readable text yet.",
     "Do not make a detached empty block at the bottom. Text-composition areas should look like intentional PDP panels, cards, or calm negative space inside the section hierarchy.",
     "Visual direction: premium but practical Korean commerce art direction, consistent product lighting/color, source-faithful UI/product details, varied composition per section, and clear mobile scanning paths.",
     "Sharpness requirement: the main product, package, software widget, browser frame, dashboard, or app screen must be crisp and in focus. Do not blur, smear, fog, glass-blur, frosted-glass, motion blur, or depth-of-field blur the main subject or its important UI geometry.",
-    "If the source is software or a UI widget, make interface panels clean, vector-like, and sharply edged. Replace text with crisp abstract bars, icons, and blank blocks; never use fuzzy fake text, blurred dashboard rows, or soft unreadable labels as the main visual.",
-    "Do not introduce decorative icons, skulls, crosshairs, combat/game symbols, target reticles, badges, or fictional controls unless they are clearly present in the uploaded source. Software PDP visuals should feel like a product workflow, not a game poster.",
+    "If the source is software or a UI widget, make interface panels clean, vector-like, and sharply edged. Replace text with crisp abstract bars, neutral UI blocks, and blank cards; never use fuzzy fake text, blurred dashboard rows, fake chart numbers, or soft unreadable labels as the main visual.",
+    "If no real software screenshot or UI reference is provided, do not invent a detailed fake dashboard. Use neutral device/browser frames with empty panels and source-faithful product context instead.",
+    "Do not introduce decorative icons, skulls, crosshairs, combat/game symbols, target reticles, badges, notification pills, chat bubbles, or fictional controls unless they are clearly present in the uploaded source. Software PDP visuals should feel like a product workflow, not a game poster.",
     `Layout template: ${template}.`,
     `Story role: ${storyRole}.`,
     `Role-specific visual layout: ${roleLayoutDirection}`,
@@ -1271,6 +1282,7 @@ function buildImagePrompt(input: {
     input.knowledgeText ? `Korean commerce RAG guidance:\n${input.knowledgeText.slice(0, 12000)}` : "",
     "For Korean buyers, prefer trust, realistic use cases, clear purchase reasons, onboarding clarity, support/security anxiety reduction, and practical CTAs over aggressive hype.",
     "Final quality check: the output must be recognizable as a Korean mobile detail-page section that will look complete after app-composited copy is placed on it, while readable copy remains absent from model-generated pixels.",
+    "Reject-worthy mistakes to avoid: text-filled pill overlays, Korean headline bubbles, fake app brand words, fake dashboard metrics, tiny unreadable glyph rows, oversized decorative UI, poster-only composition, and no usable text safe zone.",
     section.negative_prompt ? `Avoid: ${section.negative_prompt}.` : "",
     "Avoid blur, motion blur, defocused cards, frosted-glass cards, smeared UI text, unreadable fake dashboard data, low contrast overlays, tiny dense labels, and cropped-off safe zones.",
     "Avoid skull icons, combat/game decoration, target reticles, fake app controls, unrelated symbols, and source-inconsistent UI elements.",
@@ -1350,6 +1362,8 @@ function buildImageRepairPrompt(input: {
     "- If this is software, use one crisp, source-faithful UI/screen composition as the main subject. Avoid game-like icons, fictional controls, neon fog, and fake dashboard clutter.",
     "- Remove decorative skulls, target reticles, combat/game symbols, and fictional UI controls unless they are in the uploaded source.",
     "- If blur or low fidelity was mentioned, use sharp edges, clean panels, clear geometry, and crisp blank placeholder bars instead of smeared text.",
+    "- Remove all newly generated readable text: no Korean headline bubbles, no English app names, no CTA words, no dashboard numbers, no badge labels, no review/certification text. Use blank panels and abstract bars only.",
+    "- Do not invent a new SaaS dashboard, fake product brand, fake app screen, fake metric card, or fake integration. Preserve only source-visible UI/product identity.",
     "- Keep large, calm high-contrast areas where the app can composite headline, subcopy, bullets, and CTA. Do not render readable marketing copy into the model-generated pixels.",
     "- Make the app-composited text areas explicit and integrated: headline panel, bullet surfaces, and CTA/proof surface should be visible as designed PDP areas, not as an unrelated blank rectangle.",
     "- Simplify the layout if the previous image was too poster-like or busy. A paid customer must see a usable detail-page section after app-composited text is added, not a decorative ad."
@@ -1410,7 +1424,15 @@ function qualityStatusRank(status: PdpQualityStatus) {
 }
 
 function shouldAutoRegenerateImage(report: PdpImageQualityReport) {
-  return report.status === "blocked" || report.score < IMAGE_AUTO_REGEN_SCORE_THRESHOLD;
+  const checks = report.pdpChecks ?? {};
+  return (
+    report.status === "blocked" ||
+    report.score < IMAGE_AUTO_REGEN_SCORE_THRESHOLD ||
+    (checks.layerEditability?.score ?? 100) < 74 ||
+    (checks.textReadability?.score ?? 100) < 70 ||
+    (checks.productExposure?.score ?? 100) < 66 ||
+    (checks.whitespaceBalance?.score ?? 100) < 62
+  );
 }
 
 async function evaluateGeneratedSectionImage(input: {
@@ -1553,11 +1575,12 @@ function buildImageQualityPrompt(input: {
     "Evaluate this generated Korean mobile PDP section image for paid-service delivery readiness.",
     "Return only one strict JSON object. Do not include markdown, prose, comments, or trailing commas.",
     "Score harshly. A paid customer should not receive blurry, poster-like, unreadable, or misleading images.",
+    "This is a RAW BACKGROUND PLATE. The app has not added editable text layers yet. New readable marketing text inside the generated pixels is a failure, not a feature.",
     "Check these criteria:",
     "1. Main product, software screen, UI frame, dashboard, or package is crisp and recognizable. Penalize blur, fog, glass blur, motion blur, smeared UI, or defocused main subjects.",
     "2. The image is a mobile detail-page section, not a one-off poster, social ad, or decorative hero only.",
     "3. There are clean high-contrast composition areas where the app can composite headline, subcopy, bullets, and CTA so the final exported image reads as one integrated PDP section.",
-    "4. The model-generated image itself does not render readable marketing copy, prices, review/certification text, badges, customer logos, unsupported dashboard data, or product-function claims as pixels.",
+    "4. The model-generated image itself does not render readable marketing copy, prices, review/certification text, badges, customer logos, unsupported dashboard data, product-function claims, speech bubbles, CTA buttons with words, fake app names, or dashboard numbers as pixels.",
     "5. The visual preserves the source product/service identity and does not invent unsupported features.",
     "6. For software, no decorative skulls, crosshairs, combat/game symbols, target reticles, fictional controls, or unrelated icons unless clearly present in the uploaded source.",
     "7. Composition should be usable on mobile: no critical subject cropped off, enough contrast behind overlay zones, and no clutter where text must sit.",
@@ -1580,8 +1603,9 @@ function buildImageQualityPrompt(input: {
       2
     )}`,
     `Product brief:\n${briefToPromptText(input.productBrief)}`,
+    "If the image contains newly generated readable Korean/English copy, headline bubbles, CTA text, fake dashboard metrics, or fake app brand words, status must be blocked and score must be 48 or lower.",
     "If the image cannot plausibly become a complete PDP section after app-composited headline/subcopy/bullets/CTA are added, status must be blocked even if it is visually attractive.",
-    "If the image is usable with minor manual edits, status should be needs_review. Use blocked for blurry, misleading, text-baked, badly cropped, poster-like, low-contrast, or no-composition-area results.",
+    "If the image is usable with minor manual edits, status should be needs_review. Use blocked for blurry, misleading, text-baked, badly cropped, poster-like, low-contrast, fake-UI-heavy, or no-composition-area results.",
     "Required JSON shape:",
     JSON.stringify(IMAGE_QUALITY_REPORT_REPAIR_SHAPE, null, 2)
   ]
@@ -1591,7 +1615,7 @@ function buildImageQualityPrompt(input: {
 
 function normalizeImageQualityReport(report: ImageQualityReportJson): PdpImageQualityReport {
   const baseScore = clampScore(report.score);
-  const issues = report.issues
+  const parsedIssues = report.issues
     .filter((issue) => issue.message || issue.fix)
     .slice(0, 8)
     .map((issue) => {
@@ -1604,6 +1628,7 @@ function normalizeImageQualityReport(report: ImageQualityReportJson): PdpImageQu
         fix
       };
     });
+  const issues = [...parsedIssues, ...buildMetricQualityIssues(report.pdpChecks)].slice(0, 8);
   const score = issues.some((issue) => issue.severity === "critical") ? Math.min(baseScore, 52) : baseScore;
   const status = getQualityStatus(score, issues);
   return {
@@ -1621,6 +1646,49 @@ function normalizeImageQualityReport(report: ImageQualityReportJson): PdpImageQu
     issues,
     nextActions: cleanStringList(report.nextActions.length ? report.nextActions : issues.map((issue) => issue.fix)).slice(0, 4)
   };
+}
+
+function buildMetricQualityIssues(checks: Partial<Record<PdpQualityMetricKey, PdpQualityMetric>> | undefined): PdpQualityIssue[] {
+  const issues: PdpQualityIssue[] = [];
+  const layerEditabilityScore = checks?.layerEditability?.score;
+  const textReadabilityScore = checks?.textReadability?.score;
+  const productExposureScore = checks?.productExposure?.score;
+  const whitespaceScore = checks?.whitespaceBalance?.score;
+
+  if (typeof layerEditabilityScore === "number" && layerEditabilityScore < 74) {
+    issues.push({
+      category: "composition",
+      severity: layerEditabilityScore < 58 ? "critical" : "major",
+      message: "텍스트/CTA를 레이어로 올릴 안전영역이 부족합니다.",
+      fix: "배경 이미지는 카피가 들어갈 빈 패널과 여백을 먼저 확보해야 합니다."
+    });
+  }
+  if (typeof textReadabilityScore === "number" && textReadabilityScore < 70) {
+    issues.push({
+      category: "readability",
+      severity: textReadabilityScore < 55 ? "critical" : "major",
+      message: "최종 합성 카피가 모바일에서 읽히기 어려운 배경입니다.",
+      fix: "복잡한 배경과 작은 픽셀 텍스트를 제거하고 고대비 빈 영역을 확보하세요."
+    });
+  }
+  if (typeof productExposureScore === "number" && productExposureScore < 66) {
+    issues.push({
+      category: "product",
+      severity: productExposureScore < 50 ? "critical" : "major",
+      message: "제품 또는 SW 화면 노출이 부족하거나 원본 정체성이 약합니다.",
+      fix: "원본 제품/화면을 더 크게, 선명하게 배치하고 가짜 UI 요소를 줄이세요."
+    });
+  }
+  if (typeof whitespaceScore === "number" && whitespaceScore < 62) {
+    issues.push({
+      category: "composition",
+      severity: "major",
+      message: "여백 균형이 부족해 상세페이지 섹션으로 쓰기 어렵습니다.",
+      fix: "장식과 패널 수를 줄이고 섹션 목적별로 한 가지 메시지 영역만 남기세요."
+    });
+  }
+
+  return issues;
 }
 
 function normalizePdpChecks(
@@ -3301,6 +3369,13 @@ function buildAnalyzeFallbackResult(request: PdpAnalyzeRequest, trace: Generatio
       qualityReport,
       blueprint: fallbackBlueprint,
       layeredDocument: buildLayeredDocument(fallbackBlueprint),
+      layeredDocumentV2: createLayeredDocumentV2FromBlueprint({
+        title: productBrief.productName || "PDP fallback layered document",
+        blueprint: fallbackBlueprint,
+        originalImage: toDataUrl(primaryReference.mimeType, sanitizeBase64Payload(primaryReference.base64)),
+        referenceImages: references,
+        aspectRatio: request.aspectRatio
+      }),
       sourceMode: "product"
     } satisfies GeneratedResult;
   } catch {

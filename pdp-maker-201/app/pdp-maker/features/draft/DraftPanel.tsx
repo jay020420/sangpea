@@ -8,8 +8,8 @@ export function DraftPanel({ drafts, onOpen, onDelete }: { drafts: PdpDraftSumma
   return (
     <div className={styles.modelUsagePanel}>
       <div className={styles.modelUsageHeader}>
-        <strong>저장된 초안</strong>
-        <span>브라우저 IndexedDB에 저장됩니다.</span>
+        <strong>Drafts</strong>
+        <span>로컬 저장 초안</span>
       </div>
       {drafts.length ? (
         <div className={styles.metaList}>

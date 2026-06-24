@@ -27,12 +27,12 @@ export function KnowledgePanel({
   return (
     <div className={styles.modelUsagePanel}>
       <div className={styles.modelUsageHeader}>
-        <strong>로컬 RAG 지식파일</strong>
-        <span>제품 데이터, 경쟁사 상세페이지, 후기, 카테고리 자료를 등록하면 생성 프롬프트에 반영합니다.</span>
+        <strong>Knowledge</strong>
+        <span>제품, 경쟁사, 후기, 카테고리 문서</span>
       </div>
       <button className={styles.secondaryButton} onClick={() => inputRef.current?.click()} type="button">
         <FileText size={16} />
-        지식파일 등록
+        문서 등록
       </button>
       <input className={styles.hiddenInput} multiple onChange={(event) => onFiles(event.target.files)} ref={inputRef} type="file" accept=".pdf,.txt,.md,text/*,application/pdf" />
       {items.length ? (

@@ -5,6 +5,7 @@ import type {
   GeneratedResult,
   ImageGenOptions,
   PdpCopyLanguage,
+  PdpLayeredDocumentV2,
   ReferenceImageRole,
   ReferenceModelUsage,
   SectionBlueprint
@@ -73,6 +74,7 @@ export interface PdpEditorDraftState {
   sections: SectionBlueprint[];
   sectionOptions: Record<number, ImageGenOptions>;
   overlaysBySection: Record<number, CanvasLayer[]>;
+  layeredDocumentV2?: PdpLayeredDocumentV2 | null;
   defaultCopyLanguage: PdpCopyLanguage;
   notice: string;
   workbenchTab: WorkbenchTab;
@@ -305,6 +307,7 @@ function normalizeGeneratedResult(
       generationTrace: result.generationTrace,
       copyWarnings: result.copyWarnings,
       layeredDocument: result.layeredDocument,
+      layeredDocumentV2: result.layeredDocumentV2,
       blueprint: {
         executiveSummary: result.blueprint.executiveSummary ?? "",
         scorecard: Array.isArray(result.blueprint.scorecard) ? result.blueprint.scorecard : [],
@@ -368,6 +371,7 @@ function normalizeEditorState(editorState: PdpEditorDraftState | null | undefine
     sections,
     sectionOptions,
     overlaysBySection,
+    layeredDocumentV2: editorState?.layeredDocumentV2 ?? result?.layeredDocumentV2 ?? null,
     defaultCopyLanguage: editorState?.defaultCopyLanguage === "en" ? "en" : "ko",
     notice: editorState?.notice ?? "저장된 작업을 이어서 편집할 수 있습니다.",
     workbenchTab:

@@ -12,6 +12,9 @@ export type ImageProviderId = "openai-codex-oauth" | "flux" | "comfyui" | "qwen"
 export type ImageProviderCapability = "generate" | "edit" | "reference-image" | "layer-aware" | "local-runtime";
 export type PdpEditableLayerKind = "background" | "product" | "text" | "shape" | "cta" | "proof" | "section";
 export type PdpQualityMetricKey = "textReadability" | "ctaVisibility" | "mobileReadability" | "productExposure" | "whitespaceBalance" | "layerEditability";
+export type PdpLayerNodeType = "frame" | "group" | "image" | "text" | "shape" | "cta" | "proof" | "product";
+export type PdpLayerBoundsUnit = "px" | "percent";
+export type PdpImageFit = "cover" | "contain" | "fill";
 
 export interface ProductBrief {
   productName: string;
@@ -136,6 +139,93 @@ export interface PdpLayeredDocument {
   }>;
 }
 
+export interface PdpLayerBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  unit: PdpLayerBoundsUnit;
+  rotation?: number;
+}
+
+export interface PdpLayerTextStyle {
+  fontFamily: string;
+  fontSize: number;
+  fontWeight: string;
+  lineHeight: number;
+  color: string;
+  align: "left" | "center" | "right";
+}
+
+export interface PdpLayerFill {
+  color?: string;
+  opacity?: number;
+  imageAssetId?: string;
+}
+
+export interface PdpLayerNode {
+  id: string;
+  name: string;
+  type: PdpLayerNodeType;
+  visible: boolean;
+  locked: boolean;
+  editable: boolean;
+  opacity?: number;
+  role?: string;
+  zIndex: number;
+  bounds: PdpLayerBounds;
+  text?: string;
+  assetId?: string;
+  imageFit?: PdpImageFit;
+  fills?: PdpLayerFill[];
+  cornerRadius?: number;
+  textStyle?: PdpLayerTextStyle;
+  children?: PdpLayerNode[];
+}
+
+export interface PdpLayerImageAsset {
+  id: string;
+  name: string;
+  mimeType: string;
+  dataUrl: string;
+  sourceRole: "original" | "reference" | "generated" | "product" | "background" | "shadow" | "decoration";
+  sectionId?: string;
+}
+
+export interface PdpLayeredDocumentV2 {
+  version: 2;
+  format: "pdp-layered-document-v2";
+  documentId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  canvas: {
+    width: number;
+    height: number;
+    unit: "px";
+    aspectRatio?: AspectRatio;
+  };
+  assets: {
+    images: PdpLayerImageAsset[];
+  };
+  styles: {
+    colors: string[];
+    textStyles: PdpLayerTextStyle[];
+  };
+  exportTargets: {
+    figma: {
+      pluginPayloadVersion: 1;
+    };
+  };
+  sections: Array<{
+    id: string;
+    sectionId: string;
+    name: string;
+    frameNodeId: string;
+    nodes: PdpLayerNode[];
+  }>;
+}
+
 export interface PdpReferenceImage {
   id?: string;
   name?: string;
@@ -201,6 +291,7 @@ export interface GeneratedResult {
   copyWarnings?: CopyWarning[];
   qualityReport?: PdpQualityReport;
   layeredDocument?: PdpLayeredDocument;
+  layeredDocumentV2?: PdpLayeredDocumentV2;
   blueprint: LandingPageBlueprint;
   sourceMode?: "product" | "redesign";
   providerProof?: ProviderProof;

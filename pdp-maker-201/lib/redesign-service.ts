@@ -18,6 +18,7 @@ import { CodexProviderError, extractJsonObject, generateTextWithCodex } from "./
 import { getImageProvider, type ImageProvider } from "./image-providers";
 import { hasExpectedImageSignature } from "./image-validation";
 import { buildKnowledgeContext } from "./local-rag";
+import { createLayeredDocumentV2FromBlueprint } from "./pdp-layered-document";
 
 const MAX_REFERENCE_IMAGES = 6;
 const MAX_REDESIGN_SECTIONS = 8;
@@ -317,6 +318,13 @@ export function projectToGeneratedResult(project: RedesignProject): GeneratedRes
     originalImage: project.originalImage,
     referenceImages: project.referenceImages,
     blueprint,
+    layeredDocumentV2: createLayeredDocumentV2FromBlueprint({
+      title: project.title,
+      blueprint,
+      originalImage: project.originalImage,
+      referenceImages: project.referenceImages,
+      aspectRatio: project.ratio
+    }),
     sourceMode: "redesign",
     providerProof: project.providerProof
   };
