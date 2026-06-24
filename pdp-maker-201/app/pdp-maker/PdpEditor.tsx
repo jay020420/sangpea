@@ -41,6 +41,8 @@ import type {
   PdpGenerateImageRequest,
   PdpGenerateImageResponse,
   PdpImagePromptPreviewResponse,
+  PdpLayerPlanContext,
+  PdpLayeredDocumentV2,
   ReferenceModelUsage,
   SectionBlueprint
 } from "@runacademy/shared";
@@ -1674,6 +1676,7 @@ export function PdpEditor({
       section,
       aspectRatio,
       desiredTone: desiredTone || undefined,
+      layerPlan: buildLayerPlanContextForSection(layeredDocumentV2, section, sectionIndex),
       options: {
         ...targetOptions,
         headline: section.headline,
@@ -1735,7 +1738,12 @@ export function PdpEditor({
     }
 
     const generatedImage = toDataUrl(response.mimeType, response.imageBase64);
-    let generatedCopyOverlays = await buildContentAwareAutoCopyOverlays(targetSection, aspectRatio, generatedImage, "balanced");
+    const generatedCopyOverlays = buildLayeredDocumentCopyOverlays({
+      document: layeredDocumentV2,
+      sections,
+      sectionIndex,
+      aspectRatio
+    });
     let nextLayers = buildGeneratedSectionLayers(existingLayers, generatedCopyOverlays);
     let finalQualityReport = response.imageQualityReport ?? buildFinalQualityFallbackReport(targetSection, null);
 
@@ -1746,23 +1754,6 @@ export function PdpEditor({
         section: targetSection,
         backgroundQualityReport: response.imageQualityReport
       });
-
-      if (shouldRetryFinalCompositeLayout(finalQualityReport, nextLayers, existingLayers, generatedCopyOverlays)) {
-        const retryCopyOverlays = await buildContentAwareAutoCopyOverlays(targetSection, aspectRatio, generatedImage, "safe-stack");
-        const retryLayers = buildGeneratedSectionLayers(existingLayers, retryCopyOverlays);
-        const retryQualityReport = await evaluateFinalCompositeQuality({
-          imageSrc: generatedImage,
-          layers: retryLayers,
-          section: targetSection,
-          backgroundQualityReport: response.imageQualityReport
-        });
-
-        if (isBetterFinalCompositeReport(retryQualityReport, finalQualityReport)) {
-          generatedCopyOverlays = retryCopyOverlays;
-          nextLayers = retryLayers;
-          finalQualityReport = retryQualityReport;
-        }
-      }
     } catch (error) {
       finalQualityReport = buildFinalQualityFallbackReport(targetSection, error, response.imageQualityReport);
     }
@@ -3562,6 +3553,41 @@ function buildAutoCopyOverlayRecord(sections: SectionBlueprint[], aspectRatio: A
   }, {});
 }
 
+function buildLayerPlanContextForSection(
+  document: PdpLayeredDocumentV2,
+  section: SectionBlueprint,
+  sectionIndex: number
+): PdpLayerPlanContext | undefined {
+  const plannedSection =
+    document.sections.find((candidate) => candidate.sectionId === section.section_id) ??
+    document.sections[sectionIndex] ??
+    null;
+  if (!plannedSection) return undefined;
+  return {
+    canvas: document.canvas,
+    sections: [plannedSection]
+  };
+}
+
+function buildLayeredDocumentCopyOverlays(input: {
+  document: PdpLayeredDocumentV2;
+  sections: SectionBlueprint[];
+  sectionIndex: number;
+  aspectRatio: AspectRatio;
+}): TextOverlay[] {
+  const section = input.sections[input.sectionIndex];
+  const recovered = canvasLayersFromLayeredDocumentV2({
+    document: input.document,
+    sections: input.sections
+  });
+  const layeredText = (recovered[input.sectionIndex] ?? []).filter(isTextLayer);
+  if (layeredText.length) {
+    const canvasHeight = getOverlayCanvasHeight(input.aspectRatio);
+    return layeredText.map((overlay) => clampTextOverlayToCanvas(overlay, canvasHeight));
+  }
+  return section ? buildAutoCopyOverlays(section, input.aspectRatio) : [];
+}
+
 function buildGeneratedSectionLayers(existingLayers: CanvasLayer[], generatedCopyOverlays: TextOverlay[]) {
   if (!generatedCopyOverlays.length) return existingLayers;
   const existingTextLayers = existingLayers.filter(isTextLayer);
@@ -3576,11 +3602,12 @@ function shouldReplaceAutoCopyLayers(existingLayers: CanvasLayer[], nextAutoLaye
   if (!existingTextLayers.length) return true;
   if (existingLayers.some(isShapeLayer)) return false;
 
-  const nextTexts = new Set(nextAutoLayers.map((layer) => normalizeCopyToken(layer.translations.ko || layer.text)).filter(Boolean));
-  const existingTexts = existingTextLayers.map((layer) => normalizeCopyToken(layer.translations.ko || layer.text)).filter(Boolean);
-  if (!existingTexts.length || !nextTexts.size) return false;
-  const matchedCount = existingTexts.filter((text) => nextTexts.has(text)).length;
-  return matchedCount >= Math.max(1, Math.ceil(existingTexts.length * 0.6));
+  const nextById = new Map(nextAutoLayers.map((layer) => [layer.id, layer]));
+  return existingTextLayers.every((existing) => {
+    const next = nextById.get(existing.id);
+    if (!next) return false;
+    return normalizeCopyToken(existing.translations.ko || existing.text) === normalizeCopyToken(next.translations.ko || next.text);
+  });
 }
 
 async function buildContentAwareAutoCopyOverlays(
@@ -3590,33 +3617,7 @@ async function buildContentAwareAutoCopyOverlays(
   mode: "balanced" | "safe-stack"
 ): Promise<TextOverlay[]> {
   const baseOverlays = buildAutoCopyOverlays(section, aspectRatio);
-  if (!baseOverlays.length) return baseOverlays;
-
-  try {
-    const canvasHeight = getOverlayCanvasHeight(aspectRatio);
-    const occupancy = await buildImageOccupancyMap(imageSrc, canvasHeight);
-    const role = getSectionStoryRole(section);
-    const placed: TextOverlay[] = [];
-
-    for (const overlay of baseOverlays) {
-      const candidates = buildOverlayPlacementCandidates(overlay, role, canvasHeight, placed, mode);
-      const selected = selectBestOverlayPlacement(overlay, candidates, occupancy, placed, mode);
-      const adjusted = adjustOverlayForImageRegion(
-        {
-          ...overlay,
-          x: selected.x,
-          y: selected.y
-        },
-        occupancy,
-        mode
-      );
-      placed.push(clampTextOverlayToCanvas(adjusted, canvasHeight));
-    }
-
-    return placed;
-  } catch {
-    return baseOverlays.map((overlay) => clampTextOverlayToCanvas(overlay, getOverlayCanvasHeight(aspectRatio)));
-  }
+  return baseOverlays.map((overlay) => clampTextOverlayToCanvas(overlay, getOverlayCanvasHeight(aspectRatio)));
 }
 
 interface ImageOccupancyMap {

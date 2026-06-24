@@ -226,6 +226,8 @@ export interface PdpLayeredDocumentV2 {
   }>;
 }
 
+export type PdpLayerPlanContext = Pick<PdpLayeredDocumentV2, "canvas" | "sections">;
+
 export interface PdpReferenceImage {
   id?: string;
   name?: string;
@@ -348,6 +350,7 @@ export interface PdpGenerateImageRequest {
   referenceImageIds?: string[];
   desiredTone?: string;
   options?: ImageGenOptions;
+  layerPlan?: PdpLayerPlanContext;
 }
 
 export interface PdpGenerateImageSuccessResponse {

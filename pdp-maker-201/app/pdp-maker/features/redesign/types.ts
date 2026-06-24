@@ -3,6 +3,7 @@ import type {
   GeneratedResult,
   ImageProviderId,
   PdpImageQualityReport,
+  PdpLayerBounds,
   ProviderProof,
   ReferenceImageRole
 } from "@runacademy/shared";
@@ -83,6 +84,8 @@ export type RedesignEditResponse =
       imageUrl: string;
       mimeType?: string;
       prompt?: string;
+      targetLayerId?: string;
+      targetBounds?: PdpLayerBounds;
       imageQualityReport?: PdpImageQualityReport;
       providerProof?: ProviderProof;
     }

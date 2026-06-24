@@ -1,6 +1,7 @@
 import { getImageProvider } from "../../../../lib/image-providers";
 import { hasExpectedImageSignature } from "../../../../lib/image-validation";
 import { evaluateRedesignImageQuality } from "../../../../lib/redesign-service";
+import type { PdpLayerBounds, PdpLayerNode, PdpLayerPlanContext } from "@runacademy/shared";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -34,12 +35,23 @@ export async function POST(request: Request) {
     const section = body.section && typeof body.section === "object" ? body.section as Record<string, unknown> : {};
     const project = body.project && typeof body.project === "object" ? body.project as Record<string, unknown> : {};
     const aspectRatio = String(body.aspectRatio || project.ratio || "9:16");
+    const targetLayerId = typeof body.targetLayerId === "string" ? body.targetLayerId.trim() : "";
+    const targetLayerRole = typeof body.targetLayerRole === "string" ? body.targetLayerRole.trim() : "";
+    const targetBounds = parseLayerBounds(body.targetBounds);
+    const layerPlan = parseLayerPlan(body.layerPlan);
+    const targetPrompt = buildTargetLayerPrompt({
+      targetLayerId,
+      targetLayerRole,
+      targetBounds,
+      layerPlan
+    });
 
     if (!image) return Response.json({ ok: false, error: "수정할 섹션 이미지가 없습니다." }, { status: 400 });
     if (!requestText) return Response.json({ ok: false, error: "섹션 수정 요청사항을 입력해 주세요." }, { status: 400 });
 
     const prompt = [
       "Edit/redesign the attached ecommerce or software promotional PDP section image.",
+      targetPrompt,
       "Keep the same product, software UI, and factual constraints. Change only what is needed for the user's request.",
       "Korean-market style: trustworthy, mobile-readable, concrete, and not overhyped.",
       "The edited result must stay sharp. Do not blur, smear, fog, crop off, or hide the main product, package, app screen, browser frame, dashboard, or important UI geometry.",
@@ -83,6 +95,8 @@ export async function POST(request: Request) {
       imageUrl: `data:${result.mimeType};base64,${result.imageBase64}`,
       mimeType: result.mimeType,
       prompt,
+      targetLayerId: targetLayerId || undefined,
+      targetBounds: targetBounds ?? undefined,
       imageQualityReport,
       providerProof: result.providerProof
     });
@@ -106,6 +120,104 @@ function parseDataUrl(value: string) {
     throw new RedesignEditValidationError("수정할 섹션 이미지 데이터가 올바른 data URL 형식이 아닙니다.");
   }
   return validateImagePayload(match[2], match[1], "수정할 섹션 이미지");
+}
+
+function parseLayerBounds(value: unknown): PdpLayerBounds | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Partial<PdpLayerBounds>;
+  const unit = candidate.unit === "percent" ? "percent" : "px";
+  const x = Number(candidate.x);
+  const y = Number(candidate.y);
+  const width = Number(candidate.width);
+  const height = Number(candidate.height);
+  if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null;
+  return {
+    x,
+    y,
+    width,
+    height,
+    unit,
+    rotation: Number.isFinite(Number(candidate.rotation)) ? Number(candidate.rotation) : undefined
+  };
+}
+
+function parseLayerPlan(value: unknown): PdpLayerPlanContext | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Partial<PdpLayerPlanContext>;
+  if (!candidate.canvas || typeof candidate.canvas.width !== "number" || typeof candidate.canvas.height !== "number" || !Array.isArray(candidate.sections)) {
+    return null;
+  }
+  return {
+    canvas: candidate.canvas,
+    sections: candidate.sections
+  };
+}
+
+function buildTargetLayerPrompt(input: {
+  targetLayerId: string;
+  targetLayerRole: string;
+  targetBounds: PdpLayerBounds | null;
+  layerPlan: PdpLayerPlanContext | null;
+}) {
+  const layerPlanSummary = input.layerPlan ? summarizeLayerPlan(input.layerPlan, input.targetLayerId) : "";
+  if (!input.targetLayerId || !input.targetBounds) {
+    return [
+      "TARGETING MODE: whole-section edit. Preserve the current section composition unless the user explicitly asks for a broader redesign.",
+      layerPlanSummary
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  const bounds = boundsToPrompt(input.targetBounds, input.layerPlan?.canvas ?? null);
+  return [
+    "TARGETING MODE: layer-targeted edit.",
+    `Target layer id: ${input.targetLayerId}`,
+    input.targetLayerRole ? `Target layer role: ${input.targetLayerRole}` : "",
+    `Target bounds: ${bounds}`,
+    "Change only the visual treatment needed around this target rectangle. Preserve everything outside the target bounds unless it must be adjusted to maintain continuity.",
+    "Do not redraw the full section from scratch. Do not move unrelated product/screen areas, proof areas, headline zones, bullet zones, or CTA zones.",
+    layerPlanSummary
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function summarizeLayerPlan(layerPlan: PdpLayerPlanContext, targetLayerId: string) {
+  const nodes = layerPlan.sections.flatMap((section) => section.nodes.flatMap(flattenLayerNode)).filter(isRelevantLayerPlanNode);
+  if (!nodes.length) return "";
+  const lines = nodes.slice(0, 16).map((node) => {
+    const marker = node.id === targetLayerId ? "TARGET" : "PRESERVE";
+    return `${marker} ${node.id} role=${node.role || node.type} ${boundsToPrompt(node.bounds, layerPlan.canvas)}`;
+  });
+  return [`LayeredDocument section plan: canvas ${layerPlan.canvas.width}x${layerPlan.canvas.height}px`, ...lines].join("\n");
+}
+
+function flattenLayerNode(node: PdpLayerNode): PdpLayerNode[] {
+  return [node, ...(node.children ?? []).flatMap(flattenLayerNode)];
+}
+
+function isRelevantLayerPlanNode(node: PdpLayerNode) {
+  const role = node.role || "";
+  return role === "product" || role === "safe-zone" || role === "headline" || role === "subheadline" || role === "bullet" || role === "trust" || role === "cta" || node.type === "cta" || node.type === "proof";
+}
+
+function boundsToPrompt(bounds: PdpLayerBounds, canvas: PdpLayerPlanContext["canvas"] | null) {
+  const px =
+    bounds.unit === "percent" && canvas
+      ? {
+          x: Math.round((bounds.x / 100) * canvas.width),
+          y: Math.round((bounds.y / 100) * canvas.height),
+          width: Math.round((bounds.width / 100) * canvas.width),
+          height: Math.round((bounds.height / 100) * canvas.height)
+        }
+      : {
+          x: Math.round(bounds.x),
+          y: Math.round(bounds.y),
+          width: Math.round(bounds.width),
+          height: Math.round(bounds.height)
+        };
+  return `px(x:${px.x}, y:${px.y}, w:${px.width}, h:${px.height})`;
 }
 
 function mapErrorStatus(error: unknown) {

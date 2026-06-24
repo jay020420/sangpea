@@ -28,6 +28,8 @@ import type {
   PdpGenerateImageRequest,
   PdpImagePromptPreviewRequest,
   PdpImageQualityReport,
+  PdpLayerNode,
+  PdpLayerPlanContext,
   PdpLayeredDocument,
   PdpLayoutTemplate,
   PdpQualityIssue,
@@ -529,7 +531,7 @@ export class PdpService {
   }
 
   async generateSectionImage(request: PdpGenerateImageRequest) {
-    const { prompt, references, productBrief } = await buildSectionImagePromptBundle(request);
+    const { prompt, references, productBrief, layerPlanPrompt } = await buildSectionImagePromptBundle(request);
 
     const firstCandidate = await generateAndEvaluateSectionImage({
       imageProvider: this.imageProvider,
@@ -538,7 +540,8 @@ export class PdpService {
       section: request.section,
       aspectRatio: request.aspectRatio,
       productBrief,
-      desiredTone: request.desiredTone
+      desiredTone: request.desiredTone,
+      layerPlanPrompt
     });
     const candidates = [firstCandidate];
 
@@ -556,7 +559,8 @@ export class PdpService {
           section: request.section,
           aspectRatio: request.aspectRatio,
           productBrief,
-          desiredTone: request.desiredTone
+          desiredTone: request.desiredTone,
+          layerPlanPrompt
         });
         candidates.push(repairedCandidate);
         if (!shouldAutoRegenerateImage(repairedCandidate.imageQualityReport)) break;
@@ -1151,6 +1155,8 @@ async function buildSectionImagePromptBundle(request: PdpGenerateImageRequest): 
   references: PdpReferenceImage[];
   productBrief: ProductBrief;
   usingOverride: boolean;
+  layerPlan: PdpLayerPlanContext;
+  layerPlanPrompt: string;
 }> {
   if (!request?.section || typeof request.section !== "object") {
     throw new PdpServiceError("INVALID_REQUEST", "생성할 섹션 정보가 없습니다.");
@@ -1168,13 +1174,17 @@ async function buildSectionImagePromptBundle(request: PdpGenerateImageRequest): 
 
   const productBrief = normalizeRequestProductBrief(request.productBrief, request.productDescription, request.desiredTone);
   const overridePrompt = getImagePromptOverride(request.section);
+  const layerPlan = resolveLayerPlanContext(request);
+  const layerPlanPrompt = buildLayerPlanPromptConstraints(layerPlan, request.section);
 
   if (overridePrompt) {
     return {
-      prompt: overridePrompt,
+      prompt: [overridePrompt, layerPlanPrompt].filter(Boolean).join("\n\n"),
       references,
       productBrief,
-      usingOverride: true
+      usingOverride: true,
+      layerPlan,
+      layerPlanPrompt
     };
   }
 
@@ -1202,17 +1212,122 @@ async function buildSectionImagePromptBundle(request: PdpGenerateImageRequest): 
       desiredTone: request.desiredTone,
       options: request.options,
       references: selectedReferences.length ? selectedReferences : requestReferences,
-      knowledgeText: knowledge.text
+      knowledgeText: knowledge.text,
+      layerPlanPrompt
     }),
     references,
     productBrief,
-    usingOverride: false
+    usingOverride: false,
+    layerPlan,
+    layerPlanPrompt
   };
 }
 
 function getImagePromptOverride(section: SectionBlueprint) {
   const value = section.image_prompt_override;
   return typeof value === "string" ? value.trim() : "";
+}
+
+function resolveLayerPlanContext(request: PdpGenerateImageRequest): PdpLayerPlanContext {
+  if (isLayerPlanContext(request.layerPlan)) {
+    return request.layerPlan;
+  }
+
+  const document = createLayeredDocumentV2FromBlueprint({
+    title: request.section.section_name || request.section.section_id || "Section layer plan",
+    blueprint: {
+      executiveSummary: "",
+      scorecard: [],
+      blueprintList: [],
+      sections: [request.section]
+    },
+    aspectRatio: request.aspectRatio
+  });
+  return {
+    canvas: document.canvas,
+    sections: document.sections
+  };
+}
+
+function isLayerPlanContext(value: unknown): value is PdpLayerPlanContext {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<PdpLayerPlanContext>;
+  return Boolean(
+    candidate.canvas &&
+      typeof candidate.canvas.width === "number" &&
+      typeof candidate.canvas.height === "number" &&
+      Array.isArray(candidate.sections)
+  );
+}
+
+function buildLayerPlanPromptConstraints(layerPlan: PdpLayerPlanContext, section: SectionBlueprint) {
+  const layerSection = findLayerPlanSection(layerPlan, section);
+  if (!layerSection) return "";
+
+  const relevantNodes = layerSection.nodes
+    .flatMap(flattenLayerNode)
+    .filter(isPromptConstraintNode)
+    .sort((left, right) => left.zIndex - right.zIndex);
+
+  if (!relevantNodes.length) return "";
+
+  const lines = relevantNodes.map((node, index) => {
+    const bounds = layerBoundsToPixels(node.bounds, layerPlan.canvas);
+    const role = node.role || node.type;
+    const instruction =
+      role === "product"
+        ? "place or preserve the main product/screen here when possible; do not cover reserved text zones"
+        : role === "safe-zone"
+          ? "keep this whole area calm, high-contrast, and free of readable generated text"
+          : "leave this rectangle visually clean for app-composited editable copy; do not render readable text inside it";
+    return `${index + 1}. ${node.id} role=${role} px(x:${bounds.x}, y:${bounds.y}, w:${bounds.width}, h:${bounds.height}) - ${instruction}`;
+  });
+
+  return [
+    "LAYERED DOCUMENT COORDINATE CONSTRAINTS (authoritative):",
+    `Canvas: ${layerPlan.canvas.width}x${layerPlan.canvas.height}px. Coordinates are section-local pixels.`,
+    "Generated pixels must respect these planned editable layer bounds:",
+    ...lines
+  ].join("\n");
+}
+
+function findLayerPlanSection(layerPlan: PdpLayerPlanContext, section: SectionBlueprint) {
+  return (
+    layerPlan.sections.find((candidate) => candidate.sectionId === section.section_id) ??
+    layerPlan.sections.find((candidate) => candidate.id === `${section.section_id}-section`) ??
+    layerPlan.sections[0] ??
+    null
+  );
+}
+
+function flattenLayerNode(node: PdpLayerNode): PdpLayerNode[] {
+  return [node, ...(node.children ?? []).flatMap(flattenLayerNode)];
+}
+
+function isPromptConstraintNode(node: PdpLayerNode) {
+  const role = node.role || "";
+  if (role === "safe-zone") return true;
+  if (role === "product") return true;
+  if (role === "headline" || role === "subheadline" || role === "bullet" || role === "trust" || role === "cta") return true;
+  return node.type === "cta" || node.type === "proof";
+}
+
+function layerBoundsToPixels(bounds: PdpLayerNode["bounds"], canvas: PdpLayerPlanContext["canvas"]) {
+  if (bounds.unit === "percent") {
+    return {
+      x: Math.round((bounds.x / 100) * canvas.width),
+      y: Math.round((bounds.y / 100) * canvas.height),
+      width: Math.round((bounds.width / 100) * canvas.width),
+      height: Math.round((bounds.height / 100) * canvas.height)
+    };
+  }
+
+  return {
+    x: Math.round(bounds.x),
+    y: Math.round(bounds.y),
+    width: Math.max(1, Math.round(bounds.width)),
+    height: Math.max(1, Math.round(bounds.height))
+  };
 }
 
 function buildImagePrompt(input: {
@@ -1226,6 +1341,7 @@ function buildImagePrompt(input: {
   options?: ImageGenOptions;
   references?: PdpReferenceImage[];
   knowledgeText?: string;
+  layerPlanPrompt?: string;
 }) {
   const section = input.section;
   const overridePrompt = getImagePromptOverride(section);
@@ -1252,6 +1368,7 @@ function buildImagePrompt(input: {
     "Allowed text exception: text already visible inside an uploaded product package or uploaded software screenshot may remain only if it is part of that exact source image. Do not invent or rewrite it.",
     "Use blank cards, blank panels, empty buttons, abstract bars, neutral icons, and clean placeholder geometry where text will be composited later.",
     "Design around the planned copy without drawing it: reserve 30-45% of the canvas as calm high-contrast editable safe zones for headline, subcopy, bullets, proof, and CTA layers.",
+    input.layerPlanPrompt,
     "For a 9:16 mobile section, compose it like a production PDP module: one clear main product/screen area, one integrated headline/subcopy area, two or three bullet/feature surfaces, and one CTA/proof surface. These surfaces must be visually obvious, high-contrast, and connected to the product visual, but contain no readable text yet.",
     "Do not make a detached empty block at the bottom. Text-composition areas should look like intentional PDP panels, cards, or calm negative space inside the section hierarchy.",
     "Visual direction: premium but practical Korean commerce art direction, consistent product lighting/color, source-faithful UI/product details, varied composition per section, and clear mobile scanning paths.",
@@ -1311,6 +1428,7 @@ async function generateAndEvaluateSectionImage(input: {
   aspectRatio: AspectRatio;
   productBrief: ProductBrief;
   desiredTone?: string;
+  layerPlanPrompt?: string;
 }): Promise<SectionImageCandidate> {
   const result = await input.imageProvider.generate({
     prompt: input.prompt,
@@ -1323,7 +1441,8 @@ async function generateAndEvaluateSectionImage(input: {
     section: input.section,
     aspectRatio: input.aspectRatio,
     productBrief: input.productBrief,
-    desiredTone: input.desiredTone
+    desiredTone: input.desiredTone,
+    layerPlanPrompt: input.layerPlanPrompt
   });
 
   return {
@@ -1442,6 +1561,7 @@ async function evaluateGeneratedSectionImage(input: {
   aspectRatio: AspectRatio;
   productBrief: ProductBrief;
   desiredTone?: string;
+  layerPlanPrompt?: string;
   mode?: "background" | "final-composite";
   backgroundQualityReport?: PdpImageQualityReport;
 }): Promise<PdpImageQualityReport> {
@@ -1511,6 +1631,7 @@ function buildImageQualityPrompt(input: {
   aspectRatio: AspectRatio;
   productBrief: ProductBrief;
   desiredTone?: string;
+  layerPlanPrompt?: string;
   mode?: "background" | "final-composite";
   backgroundQualityReport?: PdpImageQualityReport;
 }) {
@@ -1584,9 +1705,13 @@ function buildImageQualityPrompt(input: {
     "5. The visual preserves the source product/service identity and does not invent unsupported features.",
     "6. For software, no decorative skulls, crosshairs, combat/game symbols, target reticles, fictional controls, or unrelated icons unless clearly present in the uploaded source.",
     "7. Composition should be usable on mobile: no critical subject cropped off, enough contrast behind overlay zones, and no clutter where text must sit.",
+    input.layerPlanPrompt
+      ? "8. For layerEditability, inspect the exact LayeredDocument px coordinates below. These zones must remain visually calm enough for app-composited editable layers and must not contain baked marketing text."
+      : "",
     "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw backgrounds, score text/CTA based on whether there is a safe editable zone.",
     `Aspect ratio: ${input.aspectRatio}`,
     input.desiredTone ? `Desired tone: ${input.desiredTone}` : "",
+    input.layerPlanPrompt ? `LayeredDocument coordinate plan:\n${input.layerPlanPrompt}` : "",
     `Section:\n${JSON.stringify(
       {
         section_id: input.section.section_id,

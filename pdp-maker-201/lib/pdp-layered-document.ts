@@ -6,11 +6,117 @@ import type {
   PdpLayerNode,
   PdpLayerTextStyle,
   PdpLayeredDocumentV2,
+  PdpLayoutTemplate,
   PdpReferenceImage,
   SectionBlueprint
 } from "./shared";
 
 const DEFAULT_CANVAS_WIDTH = 460;
+
+type RatioBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type LayoutZoneConfig = {
+  product: RatioBounds;
+  safeZone: RatioBounds;
+  headline: RatioBounds;
+  subheadline: RatioBounds;
+  bulletArea: RatioBounds;
+  trust: RatioBounds;
+  cta: RatioBounds;
+};
+
+type SectionLayerZones = {
+  template: PdpLayoutTemplate;
+  product: PdpLayerBounds;
+  safeZone: PdpLayerBounds;
+  headline: PdpLayerBounds;
+  subheadline: PdpLayerBounds;
+  bulletArea: PdpLayerBounds;
+  trust: PdpLayerBounds;
+  cta: PdpLayerBounds;
+};
+
+const DEFAULT_LAYOUT_TEMPLATE: PdpLayoutTemplate = "benefit";
+
+const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
+  hero: {
+    headline: { x: 0.08, y: 0.06, width: 0.84, height: 0.11 },
+    subheadline: { x: 0.08, y: 0.18, width: 0.84, height: 0.09 },
+    product: { x: 0.14, y: 0.29, width: 0.72, height: 0.3 },
+    bulletArea: { x: 0.08, y: 0.64, width: 0.84, height: 0.14 },
+    trust: { x: 0.08, y: 0.79, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.62, width: 0.88, height: 0.34 }
+  },
+  problem: {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.11 },
+    subheadline: { x: 0.08, y: 0.17, width: 0.84, height: 0.09 },
+    product: { x: 0.12, y: 0.31, width: 0.76, height: 0.24 },
+    bulletArea: { x: 0.08, y: 0.58, width: 0.84, height: 0.16 },
+    trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.56, width: 0.88, height: 0.34 }
+  },
+  benefit: {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.16, width: 0.84, height: 0.08 },
+    product: { x: 0.13, y: 0.25, width: 0.74, height: 0.27 },
+    bulletArea: { x: 0.08, y: 0.56, width: 0.84, height: 0.18 },
+    trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.54, width: 0.88, height: 0.36 }
+  },
+  proof: {
+    headline: { x: 0.08, y: 0.04, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.15, width: 0.84, height: 0.08 },
+    product: { x: 0.14, y: 0.28, width: 0.72, height: 0.22 },
+    bulletArea: { x: 0.08, y: 0.53, width: 0.84, height: 0.18 },
+    trust: { x: 0.08, y: 0.73, width: 0.84, height: 0.09 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.58, width: 0.88, height: 0.32 }
+  },
+  spec: {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.15, width: 0.84, height: 0.08 },
+    product: { x: 0.12, y: 0.22, width: 0.76, height: 0.26 },
+    bulletArea: { x: 0.08, y: 0.51, width: 0.84, height: 0.22 },
+    trust: { x: 0.08, y: 0.75, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.5, width: 0.88, height: 0.4 }
+  },
+  demo: {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.15, width: 0.84, height: 0.08 },
+    product: { x: 0.1, y: 0.24, width: 0.8, height: 0.27 },
+    bulletArea: { x: 0.08, y: 0.55, width: 0.84, height: 0.2 },
+    trust: { x: 0.08, y: 0.77, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.54, width: 0.88, height: 0.36 }
+  },
+  "use-case": {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.15, width: 0.84, height: 0.08 },
+    product: { x: 0.12, y: 0.25, width: 0.76, height: 0.25 },
+    bulletArea: { x: 0.08, y: 0.53, width: 0.84, height: 0.2 },
+    trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
+    safeZone: { x: 0.06, y: 0.52, width: 0.88, height: 0.38 }
+  },
+  "faq-cta": {
+    headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
+    subheadline: { x: 0.08, y: 0.16, width: 0.84, height: 0.08 },
+    product: { x: 0.16, y: 0.27, width: 0.68, height: 0.2 },
+    bulletArea: { x: 0.08, y: 0.5, width: 0.84, height: 0.18 },
+    trust: { x: 0.08, y: 0.7, width: 0.84, height: 0.08 },
+    cta: { x: 0.18, y: 0.84, width: 0.64, height: 0.07 },
+    safeZone: { x: 0.06, y: 0.7, width: 0.88, height: 0.26 }
+  }
+};
 
 export function createLayeredDocumentV2FromBlueprint(input: {
   title: string;
@@ -182,7 +288,7 @@ function buildSectionFrame(section: SectionBlueprint, index: number, canvas: Pdp
   }
 
   if (hasProductSourceAsset) {
-    children.push(buildHiddenProductSourceNode(sectionId, canvas, 2));
+    children.push(buildProductPlacementNode(section, canvas, 2));
   }
   children.push(buildEditableSafeZoneNode(section, canvas, 3));
   children.push(...buildTextPlanningNodes(section, canvas));
@@ -209,31 +315,28 @@ function buildSectionFrame(section: SectionBlueprint, index: number, canvas: Pdp
   };
 }
 
-function buildHiddenProductSourceNode(sectionId: string, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
+export function buildProductPlacementNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
+  const sectionId = section.section_id || "section";
+  const zones = getSectionLayerZones(section, canvas);
   return {
     id: `${sectionId}-product-source-reference`,
-    name: "Locked product source reference",
+    name: "Editable product placement",
     type: "product",
-    visible: false,
-    locked: true,
-    editable: false,
+    visible: true,
+    locked: false,
+    editable: true,
     opacity: 1,
-    role: "product-source-reference",
+    role: "product",
     zIndex,
-    bounds: {
-      x: Math.round(canvas.width * 0.16),
-      y: Math.round(canvas.height * 0.2),
-      width: Math.round(canvas.width * 0.68),
-      height: Math.round(canvas.height * 0.42),
-      unit: "px"
-    },
+    bounds: zones.product,
     assetId: primaryProductAssetId(),
     imageFit: "contain"
   };
 }
 
-function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
+export function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
   const sectionId = section.section_id || "section";
+  const zones = getSectionLayerZones(section, canvas);
   return {
     id: `${sectionId}-editable-safe-zone`,
     name: "Editable copy safe zone",
@@ -244,13 +347,7 @@ function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayered
     opacity: 0.18,
     role: "safe-zone",
     zIndex,
-    bounds: {
-      x: 28,
-      y: Math.round(canvas.height * 0.64),
-      width: canvas.width - 56,
-      height: Math.round(canvas.height * 0.27),
-      unit: "px"
-    },
+    bounds: zones.safeZone,
     fills: [{ color: "#4cb7aa", opacity: 0.18 }],
     cornerRadius: 20
   };
@@ -259,16 +356,89 @@ function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayered
 function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"]): PdpLayerNode[] {
   const textStyle = defaultTextStyles()[0];
   const sectionId = section.section_id || "section";
+  const zones = getSectionLayerZones(section, canvas);
   const nodes: PdpLayerNode[] = [];
   if (section.headline) {
-    nodes.push(textNode(`${sectionId}-planned-headline`, "Planned headline", "headline", section.headline, { x: 36, y: 36, width: canvas.width - 72, height: 88, unit: "px" }, textStyle, 10));
+    nodes.push(
+      textNode(
+        `${sectionId}-planned-headline`,
+        "Planned headline",
+        "headline",
+        section.headline,
+        zones.headline,
+        { ...textStyle, color: "#ffffff" },
+        10,
+        {
+          fills: [{ color: "#102532", opacity: 0.88 }],
+          cornerRadius: 18
+        }
+      )
+    );
   }
   if (section.subheadline) {
-    nodes.push(textNode(`${sectionId}-planned-subheadline`, "Planned subheadline", "subheadline", section.subheadline, { x: 36, y: 130, width: canvas.width - 72, height: 88, unit: "px" }, { ...textStyle, fontSize: 18, fontWeight: "500" }, 11));
+    nodes.push(
+      textNode(
+        `${sectionId}-planned-subheadline`,
+        "Planned subheadline",
+        "subheadline",
+        section.subheadline,
+        zones.subheadline,
+        { ...textStyle, fontSize: 18, fontWeight: "500", color: "#ffffff" },
+        11,
+        {
+          fills: [{ color: "#102532", opacity: 0.76 }],
+          cornerRadius: 16
+        }
+      )
+    );
+  }
+  const bulletCopies = section.bullets.map((bullet) => bullet.trim()).filter(Boolean).slice(0, 3);
+  for (const [index, bullet] of bulletCopies.entries()) {
+    nodes.push(
+      textNode(
+        `${sectionId}-planned-bullet-${index + 1}`,
+        `Planned bullet ${index + 1}`,
+        "bullet",
+        bullet,
+        buildBulletBounds(zones.bulletArea, index, bulletCopies.length, zones.template),
+        { ...textStyle, fontSize: 16, fontWeight: "700", lineHeight: 1.24, color: "#102532" },
+        12 + index,
+        {
+          fills: [{ color: "#ffffff", opacity: 0.86 }],
+          cornerRadius: 14
+        }
+      )
+    );
+  }
+  if (section.trust_or_objection_line) {
+    nodes.push(
+      textNode(
+        `${sectionId}-planned-trust`,
+        "Planned trust line",
+        "trust",
+        section.trust_or_objection_line,
+        zones.trust,
+        { ...textStyle, fontSize: 15, fontWeight: "700", lineHeight: 1.22, color: "#102532" },
+        16,
+        {
+          type: "proof",
+          fills: [{ color: "#ffffff", opacity: 0.88 }],
+          cornerRadius: 14
+        }
+      )
+    );
   }
   if (section.CTA) {
     nodes.push({
-      ...textNode(`${sectionId}-planned-cta`, "Planned CTA", "cta", section.CTA, { x: 120, y: canvas.height - 72, width: canvas.width - 240, height: 44, unit: "px" }, { ...textStyle, fontSize: 18, align: "center" }, 12),
+      ...textNode(
+        `${sectionId}-planned-cta`,
+        "Planned CTA",
+        "cta",
+        section.CTA,
+        zones.cta,
+        { ...textStyle, fontSize: 18, align: "center", color: "#ffffff" },
+        18
+      ),
       type: "cta",
       fills: [{ color: "#102532", opacity: 1 }],
       cornerRadius: 22
@@ -284,7 +454,8 @@ function textNode(
   text: string,
   bounds: PdpLayerBounds,
   textStyle: PdpLayerTextStyle,
-  zIndex: number
+  zIndex: number,
+  overrides: Partial<Pick<PdpLayerNode, "type" | "fills" | "cornerRadius">> = {}
 ): PdpLayerNode {
   return {
     id,
@@ -297,7 +468,70 @@ function textNode(
     zIndex,
     bounds,
     text,
-    textStyle
+    textStyle,
+    ...overrides
+  };
+}
+
+export function getSectionLayerZones(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"]): SectionLayerZones {
+  const template = normalizeLayoutTemplate(section.layout_template);
+  const config = LAYOUT_ZONE_MAP[template];
+  return {
+    template,
+    product: boundsFromRatio(config.product, canvas),
+    safeZone: boundsFromRatio(config.safeZone, canvas),
+    headline: boundsFromRatio(config.headline, canvas),
+    subheadline: boundsFromRatio(config.subheadline, canvas),
+    bulletArea: boundsFromRatio(config.bulletArea, canvas),
+    trust: boundsFromRatio(config.trust, canvas),
+    cta: boundsFromRatio(config.cta, canvas)
+  };
+}
+
+function normalizeLayoutTemplate(template: PdpLayoutTemplate | undefined): PdpLayoutTemplate {
+  return template && template in LAYOUT_ZONE_MAP ? template : DEFAULT_LAYOUT_TEMPLATE;
+}
+
+function boundsFromRatio(bounds: RatioBounds, canvas: PdpLayeredDocumentV2["canvas"]): PdpLayerBounds {
+  const x = Math.round(bounds.x * canvas.width);
+  const y = Math.round(bounds.y * canvas.height);
+  const maxWidth = Math.max(1, canvas.width - x);
+  const maxHeight = Math.max(1, canvas.height - y);
+  return {
+    x,
+    y,
+    width: Math.max(1, Math.min(maxWidth, Math.round(bounds.width * canvas.width))),
+    height: Math.max(1, Math.min(maxHeight, Math.round(bounds.height * canvas.height))),
+    unit: "px"
+  };
+}
+
+function buildBulletBounds(area: PdpLayerBounds, index: number, count: number, template: PdpLayoutTemplate): PdpLayerBounds {
+  const safeCount = Math.max(1, count);
+  const canUseColumns = safeCount > 1 && (template === "benefit" || template === "proof" || template === "use-case") && area.width >= 320;
+  const gap = 10;
+
+  if (canUseColumns) {
+    const columns = Math.min(2, safeCount);
+    const rows = Math.ceil(safeCount / columns);
+    const columnWidth = Math.floor((area.width - gap * (columns - 1)) / columns);
+    const rowHeight = Math.max(34, Math.floor((area.height - gap * (rows - 1)) / rows));
+    return {
+      x: area.x + (index % columns) * (columnWidth + gap),
+      y: area.y + Math.floor(index / columns) * (rowHeight + gap),
+      width: columnWidth,
+      height: rowHeight,
+      unit: "px"
+    };
+  }
+
+  const rowHeight = Math.max(34, Math.floor((area.height - gap * (safeCount - 1)) / safeCount));
+  return {
+    x: area.x,
+    y: area.y + index * (rowHeight + gap),
+    width: area.width,
+    height: rowHeight,
+    unit: "px"
   };
 }
 

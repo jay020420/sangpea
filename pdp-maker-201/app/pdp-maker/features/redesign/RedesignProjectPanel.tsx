@@ -11,9 +11,11 @@ export function RedesignProjectPanel({
   rolloutRequest,
   setRolloutRequest,
   editRequests,
+  editTargets,
   editingSectionId,
   isOpeningEditor,
   onEditRequestChange,
+  onEditTargetChange,
   onEditSection,
   onGenerateMissing,
   onOpenEditor,
@@ -24,9 +26,11 @@ export function RedesignProjectPanel({
   rolloutRequest: string;
   setRolloutRequest: (value: string) => void;
   editRequests: Record<string, string>;
+  editTargets: Record<string, string>;
   editingSectionId: string | null;
   isOpeningEditor: boolean;
   onEditRequestChange: (sectionId: string, value: string) => void;
+  onEditTargetChange: (sectionId: string, value: string) => void;
   onEditSection: (sectionId: string) => void;
   onGenerateMissing: () => void;
   onOpenEditor: () => void;
@@ -116,6 +120,21 @@ export function RedesignProjectPanel({
               {section.providerProof ? <span className={styles.providerProofPill}>{section.providerProof.model} · fallback off</span> : null}
             </div>
             <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel} htmlFor={`edit-target-${section.section_id}`}>
+                수정 대상 레이어
+              </label>
+              <select
+                className={styles.select}
+                id={`edit-target-${section.section_id}`}
+                onChange={(event) => onEditTargetChange(section.section_id, event.target.value)}
+                value={editTargets[section.section_id] || "section"}
+              >
+                {buildRedesignEditTargetOptions(section).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <label className={styles.fieldLabel} htmlFor={`edit-${section.section_id}`}>
                 섹션 수정 요청
               </label>
@@ -150,6 +169,22 @@ export function RedesignProjectPanel({
       ) : null}
     </div>
   );
+}
+
+function buildRedesignEditTargetOptions(section: RedesignSection) {
+  const sectionId = section.section_id || section.id;
+  const options = [
+    { value: "section", label: "전체 섹션" },
+    { value: `${sectionId}-product-source-reference`, label: "제품/화면 영역" }
+  ];
+  if (section.headline) options.push({ value: `${sectionId}-planned-headline`, label: "헤드라인" });
+  if (section.subheadline) options.push({ value: `${sectionId}-planned-subheadline`, label: "서브헤드라인" });
+  for (const [index, bullet] of (section.bullets ?? []).entries()) {
+    if (bullet.trim()) options.push({ value: `${sectionId}-planned-bullet-${index + 1}`, label: `불릿 ${index + 1}` });
+  }
+  if (section.trust) options.push({ value: `${sectionId}-planned-trust`, label: "신뢰/반박 문구" });
+  if (section.cta) options.push({ value: `${sectionId}-planned-cta`, label: "CTA" });
+  return options;
 }
 
 function PlaceholderThumb({ index }: { index: number }) {

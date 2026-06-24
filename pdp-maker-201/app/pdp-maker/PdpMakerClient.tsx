@@ -10,7 +10,16 @@ import {
   Sparkles,
   Sun
 } from "lucide-react";
-import type { AspectRatio, GeneratedResult, PdpAnalyzeResponse, ReferenceImageRole, ReferenceModelUsage } from "@runacademy/shared";
+import type {
+  AspectRatio,
+  GeneratedResult,
+  PdpAnalyzeResponse,
+  PdpLayerBounds,
+  PdpLayerNode,
+  PdpLayerPlanContext,
+  ReferenceImageRole,
+  ReferenceModelUsage
+} from "@runacademy/shared";
 import type { PdpDraftSummary, PdpEditorDraftState, PreparedImageDraft, PreparedReferenceImageDraft } from "./pdp-drafts";
 import { deletePdpDraft, getPdpDraft, listPdpDrafts, savePdpDraft } from "./pdp-drafts";
 import { PdpEditor } from "./PdpEditor";
@@ -26,7 +35,8 @@ import {
   REDESIGN_SECTION_TOTAL,
   type RedesignEditResponse,
   type RedesignGenerateResponse,
-  type RedesignProject
+  type RedesignProject,
+  type RedesignSection
 } from "./features/redesign/types";
 import { ProductUpload, MAX_PRODUCT_REFERENCE_UPLOADS } from "./features/upload/ProductUpload";
 import { RedesignUpload } from "./features/upload/RedesignUpload";
@@ -83,6 +93,7 @@ export function PdpMakerClient() {
   const [redesignProjects, setRedesignProjects] = useState<RedesignProject[]>([]);
   const [rolloutRequest, setRolloutRequest] = useState("");
   const [sectionEditRequests, setSectionEditRequests] = useState<Record<string, string>>({});
+  const [sectionEditTargets, setSectionEditTargets] = useState<Record<string, string>>({});
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [result, setResult] = useState<GeneratedResult | null>(null);
   const [productDescription, setProductDescription] = useState("");
@@ -565,6 +576,7 @@ export function PdpMakerClient() {
     setErrorDetail("");
 
     try {
+      const target = buildRedesignEditTargetPayload(project, section, sectionEditTargets[sectionId] || "section");
       const data = await apiJson<RedesignEditResponse>("/redesign/edit-section", {
         method: "POST",
         body: JSON.stringify({
@@ -572,7 +584,11 @@ export function PdpMakerClient() {
           request: editRequest,
           section,
           project,
-          aspectRatio
+          aspectRatio,
+          targetLayerId: target?.targetLayerId,
+          targetLayerRole: target?.targetLayerRole,
+          targetBounds: target?.targetBounds,
+          layerPlan: target?.layerPlan
         })
       });
       if (!data.ok) throw withDetail(data.error || "섹션 수정 실패", data.detail);
@@ -957,9 +973,11 @@ export function PdpMakerClient() {
                   <RedesignProjectPanel
                     editingSectionId={editingSectionId}
                     editRequests={sectionEditRequests}
+                    editTargets={sectionEditTargets}
                     isOpeningEditor={isOpeningEditor}
                     onActivateProject={activateRedesignProject}
                     onEditRequestChange={(sectionId, value) => setSectionEditRequests((current) => ({ ...current, [sectionId]: value }))}
+                    onEditTargetChange={(sectionId, value) => setSectionEditTargets((current) => ({ ...current, [sectionId]: value }))}
                     onEditSection={(sectionId) => void editRedesignSection(sectionId)}
                     onGenerateMissing={() => void generateRemainingSections()}
                     onOpenEditor={() => void openRedesignEditor()}
@@ -1152,6 +1170,51 @@ function isEditorReadyResult(result: GeneratedResult | null | undefined): result
 
 function hasAnalysisFallback(result: GeneratedResult) {
   return Boolean(result.generationTrace?.stages.some((stage) => stage.name === "fallback-section-blueprint"));
+}
+
+function buildRedesignEditTargetPayload(
+  project: RedesignProject,
+  section: RedesignSection,
+  targetLayerId: string
+): {
+  targetLayerId?: string;
+  targetLayerRole?: string;
+  targetBounds?: PdpLayerBounds;
+  layerPlan?: PdpLayerPlanContext;
+} | null {
+  const document = redesignProjectToResult(project).layeredDocumentV2;
+  if (!document) return null;
+
+  const sectionIndex = project.sections.findIndex((candidate) => candidate.section_id === section.section_id || candidate.id === section.id);
+  const layeredSection =
+    document.sections.find((candidate) => candidate.sectionId === section.section_id) ??
+    document.sections[Math.max(0, sectionIndex)] ??
+    null;
+  if (!layeredSection) return null;
+
+  const layerPlan = {
+    canvas: document.canvas,
+    sections: [layeredSection]
+  };
+  if (!targetLayerId || targetLayerId === "section") {
+    return { layerPlan };
+  }
+
+  const targetNode = layeredSection.nodes.flatMap(flattenPdpLayerNode).find((node) => node.id === targetLayerId);
+  if (!targetNode) {
+    return { layerPlan };
+  }
+
+  return {
+    targetLayerId: targetNode.id,
+    targetLayerRole: targetNode.role || targetNode.type,
+    targetBounds: targetNode.bounds,
+    layerPlan
+  };
+}
+
+function flattenPdpLayerNode(node: PdpLayerNode): PdpLayerNode[] {
+  return [node, ...(node.children ?? []).flatMap(flattenPdpLayerNode)];
 }
 
 function getProductGenerateBlockReason(input: {

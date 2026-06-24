@@ -9,12 +9,14 @@ import type {
   SectionBlueprint
 } from "@runacademy/shared";
 import {
+  buildEditableSafeZoneNode,
   createLayeredDocumentV2FromBlueprint,
   dataUrlMimeType,
   generatedAssetId,
   getCanvasHeight,
   hasImageAsset,
   mergeImageAssets,
+  buildProductPlacementNode,
   primaryProductAssetId
 } from "../../../../lib/pdp-layered-document";
 import type { CanvasLayer, ShapeLayer, TextOverlay } from "../../pdp-drafts";
@@ -143,7 +145,7 @@ export function buildEditorLayeredDocumentV2(input: {
         });
       }
       if (hasProductSourceAsset) {
-        children.push(buildHiddenProductSourceNode(sectionId, canvas, 2));
+        children.push(buildProductPlacementNode(section, canvas, 2));
       }
       children.push(buildEditableSafeZoneNode(section, canvas, 3));
       children.push(...(input.overlaysBySection[index] ?? []).map((layer, layerIndex) => canvasLayerToNode(layer, sectionId, layerIndex + 10)));
@@ -369,53 +371,6 @@ function offsetTopLevelFrameBounds(bounds: PdpLayerNode["bounds"], frameOffsetY:
 
 function sortByZIndex(left: PdpLayerNode, right: PdpLayerNode) {
   return left.zIndex - right.zIndex;
-}
-
-function buildHiddenProductSourceNode(sectionId: string, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
-  return {
-    id: `${sectionId}-product-source-reference`,
-    name: "Locked product source reference",
-    type: "product",
-    visible: false,
-    locked: true,
-    editable: false,
-    opacity: 1,
-    role: "product-source-reference",
-    zIndex,
-    bounds: {
-      x: Math.round(canvas.width * 0.16),
-      y: Math.round(canvas.height * 0.2),
-      width: Math.round(canvas.width * 0.68),
-      height: Math.round(canvas.height * 0.42),
-      unit: "px"
-    },
-    assetId: primaryProductAssetId(),
-    imageFit: "contain"
-  };
-}
-
-function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
-  const sectionId = section.section_id || "section";
-  return {
-    id: `${sectionId}-editable-safe-zone`,
-    name: "Editable copy safe zone",
-    type: "shape",
-    visible: false,
-    locked: true,
-    editable: false,
-    opacity: 0.18,
-    role: "safe-zone",
-    zIndex,
-    bounds: {
-      x: 28,
-      y: Math.round(canvas.height * 0.64),
-      width: canvas.width - 56,
-      height: Math.round(canvas.height * 0.27),
-      unit: "px"
-    },
-    fills: [{ color: "#4cb7aa", opacity: 0.18 }],
-    cornerRadius: 20
-  };
 }
 
 function nodeTypeToFigmaType(type: PdpLayerNode["type"]): FigmaExportNode["figmaType"] {
