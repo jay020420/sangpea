@@ -1,6 +1,8 @@
 import { getImageProvider } from "../../../../lib/image-providers";
 import { hasExpectedImageSignature } from "../../../../lib/image-validation";
 import { evaluateRedesignImageQuality } from "../../../../lib/redesign-service";
+import { REQUEST_LIMITS, jsonNoStore, readJsonBody, requestErrorResponse } from "../../../../lib/server/api-guards";
+import { withOperationGuard } from "../../../../lib/server/operation-guards";
 import type { PdpLayerBounds, PdpLayerNode, PdpLayerPlanContext } from "@runacademy/shared";
 
 export const dynamic = "force-dynamic";
@@ -18,16 +20,14 @@ export async function POST(request: Request) {
   try {
     let body: Record<string, unknown>;
     try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
-      return Response.json(
-        {
-          ok: false,
-          error: "요청 JSON을 읽지 못했습니다.",
-          code: "INVALID_REQUEST"
-        },
-        { status: 400 }
-      );
+      body = await readJsonBody<Record<string, unknown>>(request, {
+        maxBytes: REQUEST_LIMITS.redesignEditJson,
+        label: "리디자인 섹션 수정"
+      });
+    } catch (error) {
+      return requestErrorResponse(error, {
+        fallbackMessage: "요청 JSON을 읽지 못했습니다."
+      });
     }
 
     const image = parseDataUrl(String(body.imageUrl || ""));
@@ -67,41 +67,46 @@ export async function POST(request: Request) {
       "Preserve the product shape, package, color, visible factual information, or software screen structure, menus, colors, and visible text from the reference."
     ].join("\n");
 
-    const result = await getImageProvider().edit({
-      prompt,
-      sourceImage: image,
-      aspectRatio
-    });
-    const imageQualityReport = await evaluateRedesignImageQuality({
-      imageBase64: result.imageBase64,
-      mimeType: result.mimeType,
-      section: {
-        section_id: String(section.section_id || section.id || "S1"),
-        name: String(section.section_name || section.name || "리디자인 섹션"),
-        purpose: String(section.goal || section.purpose || ""),
-        headline: String(section.headline || ""),
-        subheadline: String(section.subheadline || ""),
-        bullets: Array.isArray(section.bullets) ? section.bullets.map(String) : [],
-        trust: String(section.trust || section.trust_or_objection_line || ""),
-        cta: String(section.cta || section.CTA || "")
-      },
-      aspectRatio,
-      channel: String(project.channel || "스마트스토어"),
-      requestText
-    });
+    return withOperationGuard(request, {
+      operation: "redesign.edit-section",
+      category: "generation"
+    }, async () => {
+      const result = await getImageProvider().edit({
+        prompt,
+        sourceImage: image,
+        aspectRatio
+      });
+      const imageQualityReport = await evaluateRedesignImageQuality({
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        section: {
+          section_id: String(section.section_id || section.id || "S1"),
+          name: String(section.section_name || section.name || "리디자인 섹션"),
+          purpose: String(section.goal || section.purpose || ""),
+          headline: String(section.headline || ""),
+          subheadline: String(section.subheadline || ""),
+          bullets: Array.isArray(section.bullets) ? section.bullets.map(String) : [],
+          trust: String(section.trust || section.trust_or_objection_line || ""),
+          cta: String(section.cta || section.CTA || "")
+        },
+        aspectRatio,
+        channel: String(project.channel || "스마트스토어"),
+        requestText
+      });
 
-    return Response.json({
-      ok: true,
-      imageUrl: `data:${result.mimeType};base64,${result.imageBase64}`,
-      mimeType: result.mimeType,
-      prompt,
-      targetLayerId: targetLayerId || undefined,
-      targetBounds: targetBounds ?? undefined,
-      imageQualityReport,
-      providerProof: result.providerProof
+      return jsonNoStore({
+        ok: true,
+        imageUrl: `data:${result.mimeType};base64,${result.imageBase64}`,
+        mimeType: result.mimeType,
+        prompt,
+        targetLayerId: targetLayerId || undefined,
+        targetBounds: targetBounds ?? undefined,
+        imageQualityReport,
+        providerProof: result.providerProof
+      });
     });
   } catch (error) {
-    return Response.json(
+    return jsonNoStore(
       {
         ok: false,
         error: error instanceof Error ? error.message : "섹션 수정 중 오류가 발생했습니다.",
@@ -225,6 +230,7 @@ function mapErrorStatus(error: unknown) {
   if (code === "INVALID_IMAGE_PAYLOAD" || code === "INVALID_REQUEST") return 400;
   if (code === "CODEX_AUTH_MISSING" || code === "CODEX_AUTH_STALE") return 401;
   if (code === "CODEX_MODEL_ACCESS_DENIED" || code === "CODEX_MODEL_NOT_FOUND") return 403;
+  if (code === "CODEX_USAGE_LIMIT") return 429;
   if (code === "CODEX_RESPONSE_INVALID" || code === "REDESIGN_EDIT_FAILED") return 502;
   return 500;
 }

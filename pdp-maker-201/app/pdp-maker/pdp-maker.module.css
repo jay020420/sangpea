@@ -1755,8 +1755,40 @@
 }
 
 .editorHeader {
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  grid-template-columns: minmax(320px, 1fr);
+  align-items: start;
+}
+
+.editorHeader > div:first-child,
+.editorHeaderMeta,
+.topbarActions {
+  min-width: 0;
+}
+
+.editorHeaderMeta,
+.topbarActions {
+  grid-column: 1 / -1;
+  justify-content: flex-start;
+}
+
+@media (min-width: 1440px) {
+  .editorHeader {
+    grid-template-columns: minmax(360px, 1fr) minmax(480px, auto);
+  }
+
+  .editorHeader > div:first-child {
+    grid-column: 1;
+  }
+
+  .editorHeaderMeta {
+    grid-column: 1 / -1;
+  }
+
+  .topbarActions {
+    grid-column: 2;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
 }
 
 .metaPill {
@@ -2268,17 +2300,43 @@
     linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(180deg, #0f1821, #14222e 52%, #162733);
   background-size: 24px 24px, 24px 24px, auto;
-  display: grid;
-  place-items: center;
-  overflow-x: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
 }
 
 .imageCanvas {
   position: relative;
-  width: 460px;
+  width: 860px;
   max-width: none;
   overflow: hidden;
   border-radius: 20px;
+  background: #f6f2ea;
+  box-shadow: 0 34px 72px rgba(0, 0, 0, 0.34);
+}
+
+.imageCanvas canvas {
+  display: block;
+  border-radius: 20px;
+}
+
+.canvasStatusBadge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(16, 37, 50, 0.84);
+  color: #fffaf2;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
 }
 
 .sectionImage {
@@ -2287,234 +2345,6 @@
   height: auto;
   border-radius: 20px;
   box-shadow: 0 34px 72px rgba(0, 0, 0, 0.34);
-}
-
-.overlayBox {
-  position: absolute;
-  z-index: 2;
-}
-
-.shapeLayerBox {
-  z-index: 1;
-}
-
-.textLayerBox {
-  z-index: 3;
-}
-
-.overlaySelected {
-  outline: 2px solid rgba(98, 233, 197, 0.88);
-  border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(9, 17, 24, 0.55), 0 18px 32px rgba(0, 0, 0, 0.26);
-}
-
-.overlayContent,
-.overlayEditing {
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  min-height: 100%;
-  overflow: hidden;
-  cursor: move;
-}
-
-.overlayContent {
-  display: block;
-}
-
-.overlayDragSurface {
-  user-select: none;
-}
-
-.overlayEditing {
-  cursor: text;
-}
-
-.overlayBackdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.overlayTextLayer {
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.shapeLayerSurface {
-  width: 100%;
-  height: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 28px rgba(8, 16, 28, 0.18);
-}
-
-.overlayTextarea {
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  resize: none;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  text-align: inherit;
-}
-
-.snapGuideVertical,
-.snapGuideHorizontal {
-  position: absolute;
-  z-index: 1;
-  pointer-events: none;
-  background: rgba(98, 233, 197, 0.92);
-  box-shadow: 0 0 0 1px rgba(9, 17, 24, 0.35), 0 0 22px rgba(98, 233, 197, 0.35);
-}
-
-.snapGuideVertical {
-  top: 0;
-  bottom: 0;
-  width: 1px;
-}
-
-.snapGuideHorizontal {
-  left: 0;
-  right: 0;
-  height: 1px;
-}
-
-.resizeHandleLeft,
-.resizeHandleRight,
-.resizeHandleTop,
-.resizeHandleBottom,
-.resizeHandleTopLeft,
-.resizeHandleTopRight,
-.resizeHandleBottomLeft,
-.resizeHandleBottomRight {
-  width: 14px !important;
-  height: 14px !important;
-  border-radius: 999px;
-  background: #fff;
-  border: 2px solid var(--teal);
-  box-shadow: 0 8px 18px rgba(18, 33, 47, 0.18);
-}
-
-.resizeHandleLeft,
-.resizeHandleRight {
-  width: 10px !important;
-  height: 42px !important;
-  border-radius: 999px;
-}
-
-.resizeHandleTop,
-.resizeHandleBottom {
-  width: 42px !important;
-  height: 10px !important;
-  border-radius: 999px;
-}
-
-.resizeHandleLeft {
-  left: -5px !important;
-  top: calc(50% - 21px) !important;
-}
-
-.resizeHandleRight {
-  right: -5px !important;
-  top: calc(50% - 21px) !important;
-}
-
-.resizeHandleTop {
-  top: -5px !important;
-  left: calc(50% - 21px) !important;
-}
-
-.resizeHandleBottom {
-  bottom: -5px !important;
-  left: calc(50% - 21px) !important;
-}
-
-.resizeHandleTopLeft {
-  left: -7px !important;
-  top: -7px !important;
-}
-
-.resizeHandleTopRight {
-  right: -7px !important;
-  top: -7px !important;
-}
-
-.resizeHandleBottomLeft {
-  left: -7px !important;
-  bottom: -7px !important;
-}
-
-.resizeHandleBottomRight {
-  right: -7px !important;
-  bottom: -7px !important;
-}
-
-.floatingEditorShell {
-  position: absolute;
-  z-index: 8;
-}
-
-.floatingEditorPanel {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 14px;
-  height: 100%;
-  padding: 16px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(18, 33, 47, 0.08);
-  box-shadow: 0 32px 64px rgba(18, 33, 47, 0.2);
-  backdrop-filter: blur(18px);
-}
-
-.floatingEditorHandle {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: move;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(18, 33, 47, 0.08);
-}
-
-.floatingEditorHandleCopy {
-  display: grid;
-  gap: 4px;
-}
-
-.floatingEditorHandleCopy strong {
-  font-size: 18px;
-  letter-spacing: -0.03em;
-  color: var(--ink);
-}
-
-.floatingEditorActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.floatingEditorBody {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  overflow: auto;
-  padding-right: 4px;
 }
 
 .floatingField {
@@ -2556,6 +2386,59 @@
   color: #102532;
   border-color: rgba(98, 233, 197, 0.44);
   box-shadow: 0 18px 34px rgba(20, 115, 108, 0.2);
+}
+
+.workbenchDockButton:disabled,
+.workbenchDockButtonActive:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.imageEditorOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 13, 18, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.imageEditorShell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1180px, calc(100vw - 48px));
+  height: min(820px, calc(100vh - 48px));
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 38px 96px rgba(0, 0, 0, 0.44);
+}
+
+.imageEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-strong);
+}
+
+.imageEditorHeader strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.imageEditorBody {
+  min-height: 0;
+  background: #101820;
 }
 
 .workbenchTab {
@@ -2701,6 +2584,81 @@
 .toolbarRow > .floatingHint {
   flex: 1 1 220px;
   margin: 0;
+}
+
+.layerStackPanel {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgba(18, 33, 47, 0.04);
+  border: 1px solid rgba(18, 33, 47, 0.07);
+}
+
+.layerStackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.layerStackHeader strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.layerStackList {
+  display: grid;
+  gap: 6px;
+}
+
+.layerStackItem,
+.layerStackItemActive {
+  appearance: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(18, 33, 47, 0.07);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.layerStackItemActive {
+  border-color: rgba(20, 115, 108, 0.32);
+  background: rgba(20, 115, 108, 0.1);
+}
+
+.layerStackKind {
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: rgba(18, 33, 47, 0.08);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.layerStackName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layerStackMeta {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .placeholderPanel,
@@ -2878,8 +2836,15 @@
   gap: 10px;
 }
 
+.templateOptionGrid {
+  display: grid;
+  gap: 8px;
+}
+
 .styleCard,
 .styleCardActive,
+.templateOption,
+.templateOptionActive,
 .countryCard,
 .countryCardActive,
 .segmentedButton,
@@ -2898,7 +2863,9 @@
 }
 
 .styleCard,
-.styleCardActive {
+.styleCardActive,
+.templateOption,
+.templateOptionActive {
   display: grid;
   gap: 6px;
   padding: 14px 15px;
@@ -2906,18 +2873,23 @@
 }
 
 .styleCard strong,
-.styleCardActive strong {
+.styleCardActive strong,
+.templateOption strong,
+.templateOptionActive strong {
   font-size: 16px;
   letter-spacing: -0.02em;
 }
 
 .styleCard small,
-.styleCardActive small {
+.styleCardActive small,
+.templateOption small,
+.templateOptionActive small {
   color: var(--muted);
   line-height: 1.55;
 }
 
 .styleCardActive,
+.templateOptionActive,
 .countryCardActive,
 .segmentedButtonActive,
 .alignButtonActive,
@@ -3780,6 +3752,10 @@
 
   .savedDraftActions {
     grid-column: auto;
+  }
+
+  .previewStage {
+    justify-content: flex-start;
   }
 }
 

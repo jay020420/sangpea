@@ -317,6 +317,7 @@ export class CodexProviderError extends Error {
       | "CODEX_AUTH_STALE"
       | "CODEX_MODEL_ACCESS_DENIED"
       | "CODEX_MODEL_NOT_FOUND"
+      | "CODEX_USAGE_LIMIT"
       | "CODEX_RESPONSE_INVALID",
     message: string,
     readonly detail?: string
@@ -553,6 +554,10 @@ function parseCodexSse(text: string) {
 
 async function toCodexError(response: Response, fallback: string) {
   const text = await response.text();
+  const usageLimit = parseCodexUsageLimit(text);
+  if (usageLimit) {
+    return new CodexProviderError("CODEX_USAGE_LIMIT", usageLimit.message, text);
+  }
   if (response.status === 401) {
     return new CodexProviderError("CODEX_AUTH_STALE", "Codex OAuth 인증이 만료되었습니다. `npx @openai/codex login`을 다시 실행해 주세요.", text);
   }
@@ -563,6 +568,63 @@ async function toCodexError(response: Response, fallback: string) {
     return new CodexProviderError("CODEX_MODEL_NOT_FOUND", "요청한 Codex 모델 또는 도구를 찾지 못했습니다.", text);
   }
   return new CodexProviderError("CODEX_RESPONSE_INVALID", fallback, text);
+}
+
+function parseCodexUsageLimit(text: string) {
+  try {
+    const parsed = JSON.parse(text) as {
+      error?: {
+        type?: unknown;
+        message?: unknown;
+        plan_type?: unknown;
+        resets_at?: unknown;
+        resets_in_seconds?: unknown;
+      };
+    };
+    const error = parsed.error;
+    if (error?.type !== "usage_limit_reached") return null;
+
+    const resetAt = typeof error.resets_at === "number" ? error.resets_at : null;
+    const resetText = resetAt ? formatKoreanResetTime(resetAt) : "";
+    const remainingText =
+      typeof error.resets_in_seconds === "number"
+        ? ` 약 ${formatDurationKo(error.resets_in_seconds)} 후 재시도할 수 있습니다.`
+        : "";
+    const planText = typeof error.plan_type === "string" && error.plan_type ? ` (${error.plan_type} 플랜)` : "";
+
+    return {
+      message: resetText
+        ? `Codex 사용 한도${planText}에 도달했습니다. ${resetText} 이후 다시 생성해 주세요.${remainingText}`
+        : `Codex 사용 한도${planText}에 도달했습니다. 잠시 후 다시 생성해 주세요.`
+    };
+  } catch {
+    return null;
+  }
+}
+
+function formatKoreanResetTime(unixSeconds: number) {
+  const date = new Date(unixSeconds * 1000);
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")} KST`;
+}
+
+function formatDurationKo(totalSeconds: number) {
+  const seconds = Math.max(0, Math.round(totalSeconds));
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours && minutes) return `${hours}시간 ${minutes}분`;
+  if (hours) return `${hours}시간`;
+  if (minutes) return `${minutes}분`;
+  return "1분 이내";
 }
 
 function findFirstBase64Image(value: unknown): string | null {

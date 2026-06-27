@@ -4,6 +4,7 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import JSZip from "jszip";
+import dynamic from "next/dynamic";
 import {
   AlignCenter,
   AlignLeft,
@@ -18,9 +19,12 @@ import {
   FileText,
   Globe2,
   Image as ImageIcon,
+  Layers,
+  LayoutTemplate,
   Loader2,
   Moon,
   Palette,
+  Redo2,
   RefreshCw,
   Save,
   Settings2,
@@ -29,6 +33,7 @@ import {
   Sun,
   Trash2,
   Type,
+  Undo2,
   User
 } from "lucide-react";
 import { Rnd } from "react-rnd";
@@ -41,6 +46,7 @@ import type {
   PdpGenerateImageRequest,
   PdpGenerateImageResponse,
   PdpImagePromptPreviewResponse,
+  PdpDesignTemplateId,
   PdpLayerPlanContext,
   PdpLayeredDocumentV2,
   ReferenceModelUsage,
@@ -57,11 +63,39 @@ import type {
   WorkbenchTab
 } from "./pdp-drafts";
 import { buildEditorLayeredDocumentV2, exportFigmaDocument } from "./features/layered/editor-layered-document";
+import {
+  applyDesignTemplateToSection,
+  getDesignTemplateById,
+  PDP_DESIGN_TEMPLATES,
+  resolveSectionDesignTemplate
+} from "./features/layered/design-template-registry";
+import type { PdpDesignTemplate } from "./features/layered/design-template-registry";
 import { buildLayerExportManifest } from "./features/layered/layered-export-manifest";
 import { canvasLayersFromLayeredDocumentV2 } from "./features/layered/layered-document-migration";
 import { buildLayerTreePreview, summarizeLayeredDocument } from "./features/layered/layered-document-summary";
 import styles from "./pdp-maker.module.css";
 import { apiJson, toDataUrl } from "./pdp-utils";
+import {
+  getPdpCanvasHeight,
+  PDP_EDITOR_CANVAS_SCALE,
+  PDP_EDITOR_CANVAS_WIDTH,
+  PDP_LEGACY_CANVAS_WIDTH,
+  scalePdpCanvasValue
+} from "../../lib/pdp-canvas-geometry";
+
+const PdpKonvaCanvas = dynamic(
+  () => import("./features/editor/PdpKonvaCanvas").then((module) => module.PdpKonvaCanvas),
+  {
+    ssr: false
+  }
+);
+
+const PdpImageAdjuster = dynamic(
+  () => import("./features/editor/PdpImageAdjuster").then((module) => module.PdpImageAdjuster),
+  {
+    ssr: false
+  }
+);
 
 interface PdpEditorProps {
   initialResult: GeneratedResult;
@@ -136,6 +170,19 @@ interface DeliveryReport {
   nextActions: string[];
 }
 
+interface EditorHistorySnapshot {
+  currentSectionIndex: number;
+  sections: SectionBlueprint[];
+  overlaysBySection: Record<number, CanvasLayer[]>;
+  selectedOverlayId: string | null;
+}
+
+interface DocumentQualityIssue {
+  severity: "blocked" | "review" | "info";
+  message: string;
+  fix: string;
+}
+
 const FONT_OPTIONS = [
   { label: "Pretendard", value: "'Pretendard', sans-serif" },
   { label: "Noto Sans KR", value: "'Noto Sans KR', sans-serif" },
@@ -192,6 +239,7 @@ const DEFAULT_COLOR_RECOMMENDATIONS: ImageColorRecommendations = {
   darkColor: "#102532",
   lightColor: "#f4efe6"
 };
+const HISTORY_LIMIT = 30;
 const BASIC_SOLID_COLORS = [
   "#ffffff",
   "#f4efe6",
@@ -261,8 +309,8 @@ export function PdpEditor({
   saveState = "idle"
 }: PdpEditorProps) {
   const initialSections = initialDraftState?.sections?.length
-    ? initialDraftState.sections.map((section) => normalizeSectionCopyFields({ ...section }))
-    : initialResult.blueprint.sections.map((section) => normalizeSectionCopyFields({ ...section }));
+    ? initialDraftState.sections.map((section, index) => normalizeSectionTemplate(normalizeSectionCopyFields({ ...section }), index))
+    : initialResult.blueprint.sections.map((section, index) => normalizeSectionTemplate(normalizeSectionCopyFields({ ...section }), index));
   const [currentSectionIndex, setCurrentSectionIndex] = useState(() => initialDraftState?.currentSectionIndex ?? 0);
   const [sections, setSections] = useState(() => initialSections);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -275,19 +323,24 @@ export function PdpEditor({
   );
   const [overlaysBySection, setOverlaysBySection] = useState<Record<number, CanvasLayer[]>>(
     () => {
-      const savedOverlays = normalizeOverlayRecord(initialDraftState?.overlaysBySection ?? {});
+      const sourceCanvasWidth = initialDraftState?.layeredDocumentV2?.canvas.width;
+      const savedOverlays = normalizeOverlayRecord(initialDraftState?.overlaysBySection ?? {}, sourceCanvasWidth);
       if (Object.keys(savedOverlays).length) {
         return savedOverlays;
       }
+      const sourceDocument = initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null;
       const recoveredOverlays = normalizeOverlayRecord(
         canvasLayersFromLayeredDocumentV2({
-          document: initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null,
+          document: sourceDocument,
           sections: initialSections
-        })
+        }),
+        sourceDocument?.canvas.width
       );
       return Object.keys(recoveredOverlays).length ? recoveredOverlays : buildAutoCopyOverlayRecord(initialSections, aspectRatio);
     }
   );
+  const [historyPast, setHistoryPast] = useState<EditorHistorySnapshot[]>([]);
+  const [historyFuture, setHistoryFuture] = useState<EditorHistorySnapshot[]>([]);
   const [defaultCopyLanguage, setDefaultCopyLanguage] = useState<PdpCopyLanguage>(
     () => initialDraftState?.defaultCopyLanguage ?? "ko"
   );
@@ -313,23 +366,22 @@ export function PdpEditor({
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [isDownloadingLongPage, setIsDownloadingLongPage] = useState(false);
+  const [isImageAdjusterOpen, setIsImageAdjusterOpen] = useState(false);
   const [batchGenerationMode, setBatchGenerationMode] = useState<null | "missing" | "quality">(null);
   const [isLoadingImagePromptPreview, setIsLoadingImagePromptPreview] = useState(false);
   const [imagePromptPreviewBySection, setImagePromptPreviewBySection] = useState<Record<number, string>>({});
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const previewStageRef = useRef<HTMLDivElement>(null);
-  const resizeSessionRef = useRef<Record<string, { width: number; height: number; fontSize: number }>>({});
 
   const safeCurrentSectionIndex = sections.length
     ? Math.min(Math.max(currentSectionIndex, 0), sections.length - 1)
     : 0;
   const currentSection = sections[safeCurrentSectionIndex];
   const currentLayers = overlaysBySection[safeCurrentSectionIndex] ?? [];
+  const currentDesignTemplate = currentSection ? resolveSectionDesignTemplate(currentSection, safeCurrentSectionIndex) : null;
   const currentCopyWarnings = (initialResult.copyWarnings ?? []).filter(
     (warning) => !warning.sectionId || warning.sectionId === currentSection?.section_id
   );
-  const currentTextLayers = currentLayers.filter(isTextLayer);
-  const currentShapeLayers = currentLayers.filter(isShapeLayer);
   const selectedLayer = currentLayers.find((overlay) => overlay.id === selectedOverlayId) ?? null;
   const selectedTextLayer = selectedLayer && isTextLayer(selectedLayer) ? selectedLayer : null;
   const selectedShapeLayer = selectedLayer && isShapeLayer(selectedLayer) ? selectedLayer : null;
@@ -371,6 +423,23 @@ export function PdpEditor({
       }),
     [figmaPayload, layeredDocumentSummary, layeredDocumentV2]
   );
+  const currentDocumentQualityIssues = useMemo(
+    () =>
+      currentSection
+        ? buildDocumentQualityIssues({
+            section: currentSection,
+            layers: currentLayers,
+            aspectRatio,
+            template: currentDesignTemplate
+          })
+        : [],
+    [aspectRatio, currentDesignTemplate, currentLayers, currentSection]
+  );
+  const currentDocumentQualityStatus = currentDocumentQualityIssues.some((issue) => issue.severity === "blocked")
+    ? "blocked"
+    : currentDocumentQualityIssues.some((issue) => issue.severity === "review")
+      ? "needs_review"
+      : "ready";
   const currentLayeredSectionSummary = layeredDocumentSummary.sections.find(
     (section) => section.sectionId === currentSection?.section_id
   );
@@ -385,6 +454,54 @@ export function PdpEditor({
     [currentSection?.section_id, layeredDocumentV2, safeCurrentSectionIndex]
   );
 
+  const captureEditorSnapshot = (): EditorHistorySnapshot => ({
+    currentSectionIndex: safeCurrentSectionIndex,
+    sections: cloneSectionsForHistory(sections),
+    overlaysBySection: cloneOverlayRecordForHistory(overlaysBySection),
+    selectedOverlayId
+  });
+
+  const commitEditorHistory = () => {
+    const snapshot = captureEditorSnapshot();
+    setHistoryPast((current) => [...current.slice(-(HISTORY_LIMIT - 1)), snapshot]);
+    setHistoryFuture([]);
+  };
+
+  const restoreEditorSnapshot = (snapshot: EditorHistorySnapshot) => {
+    setSections(cloneSectionsForHistory(snapshot.sections));
+    setOverlaysBySection(cloneOverlayRecordForHistory(snapshot.overlaysBySection));
+    setCurrentSectionIndex(snapshot.currentSectionIndex);
+    setSelectedOverlayId(snapshot.selectedOverlayId);
+    setEditingOverlayId(null);
+    setActiveColorPalette(null);
+  };
+
+  const handleUndo = () => {
+    if (!historyPast.length) {
+      setNotice("되돌릴 편집 내역이 없습니다.");
+      return;
+    }
+
+    const previous = historyPast[historyPast.length - 1];
+    setHistoryPast((current) => current.slice(0, -1));
+    setHistoryFuture((current) => [captureEditorSnapshot(), ...current.slice(0, HISTORY_LIMIT - 1)]);
+    restoreEditorSnapshot(previous);
+    setNotice("이전 편집 상태로 되돌렸습니다.");
+  };
+
+  const handleRedo = () => {
+    if (!historyFuture.length) {
+      setNotice("다시 실행할 편집 내역이 없습니다.");
+      return;
+    }
+
+    const next = historyFuture[0];
+    setHistoryFuture((current) => current.slice(1));
+    setHistoryPast((current) => [...current.slice(-(HISTORY_LIMIT - 1)), captureEditorSnapshot()]);
+    restoreEditorSnapshot(next);
+    setNotice("되돌린 편집을 다시 적용했습니다.");
+  };
+
   useEffect(() => {
     if (currentSectionIndex !== safeCurrentSectionIndex) {
       setCurrentSectionIndex(safeCurrentSectionIndex);
@@ -396,6 +513,7 @@ export function PdpEditor({
     setEditingOverlayId(null);
     setActiveColorPalette(null);
     setErrorMessage("");
+    setIsImageAdjusterOpen(false);
   }, [safeCurrentSectionIndex]);
 
   useEffect(() => {
@@ -512,7 +630,7 @@ export function PdpEditor({
   const updateCurrentSection = (updates: Partial<SectionBlueprint>) => {
     setSections((current) =>
       current.map((section, index) =>
-        index === safeCurrentSectionIndex ? normalizeSectionCopyFields({ ...section, ...updates }) : section
+        index === safeCurrentSectionIndex ? normalizeSectionTemplate(normalizeSectionCopyFields({ ...section, ...updates }), index) : section
       )
     );
   };
@@ -524,6 +642,53 @@ export function PdpEditor({
         .map((item) => item.trim())
         .filter(Boolean)
     } as Partial<SectionBlueprint>);
+  };
+
+  const handleApplyDesignTemplate = (templateId: PdpDesignTemplateId) => {
+    const template = getDesignTemplateById(templateId);
+    if (!template) return;
+
+    commitEditorHistory();
+    const nextSection = normalizeSectionTemplate(applyDesignTemplateToSection(currentSection, template), safeCurrentSectionIndex);
+    const nextTextLayers = buildAutoCopyOverlays(nextSection, aspectRatio);
+
+    setSections((current) => current.map((section, index) => (index === safeCurrentSectionIndex ? nextSection : section)));
+    setOverlaysBySection((current) => ({
+      ...current,
+      [safeCurrentSectionIndex]: [
+        ...(current[safeCurrentSectionIndex] ?? []).filter(isShapeLayer),
+        ...nextTextLayers
+      ]
+    }));
+    setSelectedOverlayId(null);
+    setEditingOverlayId(null);
+    setImagePromptPreviewBySection((current) => {
+      const next = { ...current };
+      delete next[safeCurrentSectionIndex];
+      return next;
+    });
+    setNotice(`${template.label} 템플릿을 적용했습니다. 카피 레이어를 새 슬롯에 맞춰 다시 배치했습니다.`);
+  };
+
+  const handleAddTextFromCurrentTemplate = () => {
+    const nextTextLayers = buildAutoCopyOverlays(currentSection, aspectRatio);
+    if (!nextTextLayers.length) {
+      setNotice(INSUFFICIENT_COPY_MESSAGE);
+      return;
+    }
+
+    commitEditorHistory();
+    setOverlaysBySection((current) => ({
+      ...current,
+      [safeCurrentSectionIndex]: [
+        ...(current[safeCurrentSectionIndex] ?? []).filter(isShapeLayer),
+        ...nextTextLayers
+      ]
+    }));
+    setSelectedOverlayId(nextTextLayers[0]?.id ?? null);
+    setEditingOverlayId(null);
+    setWorkbenchTab("layer");
+    setNotice("현재 템플릿 기준으로 카피 레이어를 다시 배치했습니다.");
   };
 
   const handleLoadFinalImagePromptPreview = async () => {
@@ -597,8 +762,8 @@ export function PdpEditor({
   };
 
   const handleTextAlignChange = (overlay: TextOverlay, nextAlign: OverlayTextAlign) => {
-    const currentWidth = toNumericSize(overlay.width, 320);
-    const recommendedWidth = clampValue(Math.round(overlay.fontSize * 10), 220, 520);
+    const currentWidth = toNumericSize(overlay.width, scaleCanvasValue(320));
+    const recommendedWidth = clampValue(Math.round(overlay.fontSize * 10), scaleCanvasValue(220), scaleCanvasValue(520));
     const nextWidth = Math.max(currentWidth, recommendedWidth);
 
     updateOverlay(overlay.id, {
@@ -619,6 +784,31 @@ export function PdpEditor({
     setSelectedOverlayId(null);
     setEditingOverlayId(null);
     setActiveColorPalette(null);
+  };
+
+  const handleCanvasLayerSelect = (layerId: string | null) => {
+    setSelectedOverlayId(layerId);
+    setActiveColorPalette(null);
+    if (layerId) {
+      setWorkbenchTab("layer");
+      setWorkbenchState((current) => ({
+        ...current,
+        isOpen: true
+      }));
+    }
+    if (!layerId) {
+      setEditingOverlayId(null);
+    }
+  };
+
+  const handleStartCanvasTextEdit = (layerId: string) => {
+    setSelectedOverlayId(layerId);
+    setEditingOverlayId(layerId);
+    setWorkbenchTab("layer");
+  };
+
+  const handleStopCanvasTextEdit = () => {
+    setEditingOverlayId(null);
   };
 
   const toggleInspectorSection = (key: keyof typeof inspectorSections) => {
@@ -781,12 +971,52 @@ export function PdpEditor({
     );
   };
 
+  const renderLayerStackPanel = () => (
+    <div className={styles.layerStackPanel}>
+      <div className={styles.layerStackHeader}>
+        <div>
+          <span className={styles.optionMiniLabel}>Layer stack</span>
+          <strong>{currentLayers.length}개 레이어</strong>
+        </div>
+        <button className={styles.inlineButton} onClick={handleAddTextFromCurrentTemplate} type="button">
+          <Type size={14} />
+          텍스트 재배치
+        </button>
+      </div>
+      {currentLayers.length ? (
+        <div className={styles.layerStackList}>
+          {[...currentLayers].reverse().map((layer, reverseIndex) => {
+            const originalIndex = currentLayers.length - 1 - reverseIndex;
+            const isSelected = selectedOverlayId === layer.id;
+            return (
+              <button
+                className={isSelected ? styles.layerStackItemActive : styles.layerStackItem}
+                key={layer.id}
+                onClick={() => handleCanvasLayerSelect(layer.id)}
+                type="button"
+              >
+                <span className={styles.layerStackKind}>{isTextLayer(layer) ? "TEXT" : "SHAPE"}</span>
+                <span className={styles.layerStackName}>
+                  {isTextLayer(layer) ? layer.text.trim().replace(/\s+/g, " ").slice(0, 42) || "텍스트 레이어" : "배경 사각형"}
+                </span>
+                <span className={styles.layerStackMeta}>#{originalIndex + 1}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p className={styles.floatingHint}>아직 편집 가능한 레이어가 없습니다. 카피 탭에서 텍스트를 추가하거나 템플릿을 적용하세요.</p>
+      )}
+    </div>
+  );
+
   const renderWorkbenchBody = () => {
     switch (workbenchTab) {
       case "image":
         return (
           <div className={styles.workbenchSectionStack}>
             <div className={styles.optionSummaryBar}>
+              <span className={styles.summaryChip}>{currentDesignTemplate?.shortLabel ?? "Auto template"}</span>
               <span className={styles.summaryChip}>
                 {STYLE_OPTIONS.find((option) => option.value === currentOptions.style)?.label ?? "스튜디오컷"}
               </span>
@@ -794,6 +1024,32 @@ export function PdpEditor({
               <span className={styles.summaryChip}>
                 {currentOptions.guidePriorityMode === "guide-first" ? "디자인 가이드 우선" : "컷 타입 우선"}
               </span>
+            </div>
+
+            <div className={styles.optionSurface}>
+              <div className={styles.optionSectionHeader}>
+                <div>
+                  <span className={styles.optionSectionEyebrow}>Design template</span>
+                  <strong>문서 템플릿</strong>
+                </div>
+                <LayoutTemplate size={16} />
+              </div>
+              <div className={styles.templateOptionGrid}>
+                {PDP_DESIGN_TEMPLATES.map((template) => (
+                  <button
+                    className={currentDesignTemplate?.id === template.id ? styles.templateOptionActive : styles.templateOption}
+                    key={template.id}
+                    onClick={() => handleApplyDesignTemplate(template.id)}
+                    type="button"
+                  >
+                    <strong>{template.label}</strong>
+                    <small>{template.description}</small>
+                  </button>
+                ))}
+              </div>
+              {currentDesignTemplate ? (
+                <p className={styles.collapsedHint}>{currentDesignTemplate.overlayLayoutHint}</p>
+              ) : null}
             </div>
 
             <div className={styles.optionSurface}>
@@ -967,6 +1223,16 @@ export function PdpEditor({
                   : "이미지 생성하기"}
             </button>
 
+            <button
+              className={styles.secondaryButtonWide}
+              disabled={!currentSection.generatedImage || isGenerationBusy}
+              onClick={() => setIsImageAdjusterOpen(true)}
+              type="button"
+            >
+              <ImageIcon size={16} />
+              Filerobot으로 배경 보정
+            </button>
+
             <p className={styles.inspectorHelper}>
               {usesReferenceModel
                 ? "업로드한 모델 이미지를 참조하면서 현재 섹션 컷만 다시 생성합니다."
@@ -977,7 +1243,18 @@ export function PdpEditor({
       case "layer":
         return selectedTextLayer ? (
             <div className={styles.workbenchSectionStack}>
+              {renderLayerStackPanel()}
               <div className={styles.toolbarRow}>
+                <button className={styles.inlineButton} onClick={() => duplicateOverlay(selectedTextLayer.id)} type="button">
+                  <Layers size={14} />
+                  복제
+                </button>
+                <button className={styles.inlineButton} onClick={() => moveOverlayOrder(selectedTextLayer.id, "backward")} type="button">
+                  뒤로
+                </button>
+                <button className={styles.inlineButton} onClick={() => moveOverlayOrder(selectedTextLayer.id, "forward")} type="button">
+                  앞으로
+                </button>
                 <button className={styles.inlineDangerButton} onClick={() => deleteOverlay(selectedTextLayer.id)} type="button">
                   <Trash2 size={14} />
                   삭제
@@ -1194,8 +1471,19 @@ export function PdpEditor({
           </div>
         ) : selectedShapeLayer ? (
           <div className={styles.workbenchSectionStack}>
+            {renderLayerStackPanel()}
             <div className={styles.toolbarRow}>
               <p className={styles.floatingHint}>사각형은 이미지 위, 텍스트 아래에 깔리는 독립 배경 오브젝트입니다.</p>
+              <button className={styles.inlineButton} onClick={() => duplicateOverlay(selectedShapeLayer.id)} type="button">
+                <Layers size={14} />
+                복제
+              </button>
+              <button className={styles.inlineButton} onClick={() => moveOverlayOrder(selectedShapeLayer.id, "backward")} type="button">
+                뒤로
+              </button>
+              <button className={styles.inlineButton} onClick={() => moveOverlayOrder(selectedShapeLayer.id, "forward")} type="button">
+                앞으로
+              </button>
               <button className={styles.inlineDangerButton} onClick={() => deleteOverlay(selectedShapeLayer.id)} type="button">
                 <Trash2 size={14} />
                 삭제
@@ -1243,6 +1531,7 @@ export function PdpEditor({
             <div>
               <strong>텍스트나 사각형을 선택해 주세요</strong>
               <p>캔버스의 텍스트나 배경 사각형을 클릭하면 이 패널에서 바로 편집할 수 있습니다.</p>
+              {renderLayerStackPanel()}
               <div className={styles.inspectorEmptyActions}>
                 <button className={styles.copyUtilityButton} onClick={handleAddShapeLayer} type="button">
                   <Square size={15} />
@@ -1368,6 +1657,37 @@ export function PdpEditor({
                 <strong>Prompt Source</strong>
                 <p>{currentOptions.guidePriorityMode === "guide-first" ? "섹션 가이드 반영" : "컷 타입 우선"}</p>
               </div>
+              <div>
+                <strong>Template</strong>
+                <p>{currentDesignTemplate?.label ?? "자동 추천"}</p>
+              </div>
+              <div>
+                <strong>Document QA</strong>
+                <p>{currentDocumentQualityStatus === "ready" ? "문서 구조 통과" : currentDocumentQualityStatus === "blocked" ? "문서 보강 필요" : "검수 후 사용"}</p>
+              </div>
+            </div>
+
+            <div className={styles.optionSurface}>
+              <div className={styles.optionSectionHeader}>
+                <div>
+                  <span className={styles.optionSectionEyebrow}>Layer QA</span>
+                  <strong>문서 품질 체크</strong>
+                </div>
+                <span className={getQualityBadgeClass(currentDocumentQualityStatus)}>
+                  {currentDocumentQualityStatus === "ready" ? "Ready" : currentDocumentQualityStatus === "blocked" ? "Blocked" : "Review"}
+                </span>
+              </div>
+              {currentDocumentQualityIssues.length ? (
+                <div className={styles.qualityIssueList}>
+                  {currentDocumentQualityIssues.slice(0, 6).map((issue, issueIndex) => (
+                    <span key={`${issue.severity}-${issueIndex}`}>
+                      {issue.message} {issue.fix}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.collapsedHint}>현재 섹션은 편집 가능한 카피 레이어, CTA, 안전영역 기준을 통과했습니다.</p>
+              )}
             </div>
 
             <div className={styles.optionSurface}>
@@ -1718,6 +2038,44 @@ export function PdpEditor({
     return response.imageQualityReport;
   };
 
+  const handleApplyAdjustedImage = async (imageDataUrl: string) => {
+    if (!currentSection?.generatedImage) {
+      setIsImageAdjusterOpen(false);
+      return;
+    }
+
+    commitEditorHistory();
+    setErrorMessage("");
+    setIsImageAdjusterOpen(false);
+
+    const layers = overlaysBySection[safeCurrentSectionIndex] ?? [];
+    let finalQualityReport = currentSection.imageQualityReport ?? buildFinalQualityFallbackReport(currentSection, null);
+
+    try {
+      finalQualityReport = await evaluateFinalCompositeQuality({
+        imageSrc: imageDataUrl,
+        layers,
+        section: currentSection,
+        backgroundQualityReport: currentSection.imageQualityReport
+      });
+    } catch (error) {
+      finalQualityReport = buildFinalQualityFallbackReport(currentSection, error, currentSection.imageQualityReport);
+    }
+
+    setSections((current) =>
+      current.map((section, index) =>
+        index === safeCurrentSectionIndex
+          ? {
+              ...section,
+              generatedImage: imageDataUrl,
+              imageQualityReport: finalQualityReport
+            }
+          : section
+      )
+    );
+    setNotice("Filerobot 보정 이미지를 현재 섹션 배경에 적용했습니다.");
+  };
+
   const generateSectionImageForIndex = async (sectionIndex: number) => {
     const targetSection = sections[sectionIndex];
     if (!targetSection) {
@@ -1787,6 +2145,7 @@ export function PdpEditor({
   };
 
   const handleGenerateImage = async () => {
+    commitEditorHistory();
     setIsGeneratingImage(true);
     setErrorMessage("");
 
@@ -1872,23 +2231,19 @@ export function PdpEditor({
     translations: Record<PdpCopyLanguage, string>,
     type: "headline" | "subheadline" | "keypoint" | "default" = "default"
   ) => {
-    if (!currentSection.generatedImage) {
-      setErrorMessage("이미지를 먼저 생성해야 텍스트를 올릴 수 있습니다.");
-      return;
-    }
-
     const usableTranslations = getUsableCopyPair(translations.ko, translations.en);
     if (!usableTranslations) {
       setNotice(INSUFFICIENT_COPY_MESSAGE);
       return;
     }
 
+    commitEditorHistory();
     const newOverlay = createTextOverlay({
       translations: usableTranslations,
       type,
       language: defaultCopyLanguage,
-      x: 52,
-      y: type === "headline" ? 52 : type === "subheadline" ? 148 : 238,
+      x: scaleCanvasValue(52),
+      y: type === "headline" ? scaleCanvasValue(52) : type === "subheadline" ? scaleCanvasValue(148) : scaleCanvasValue(238),
       textColor: "#ffffff",
       backgroundColor: shapeColorRecommendations[0] ?? "#102532",
       shadowColor: colorRecommendations.darkColor
@@ -1907,18 +2262,14 @@ export function PdpEditor({
   };
 
   const handleAddShapeLayer = () => {
-    if (!currentSection.generatedImage) {
-      setErrorMessage("이미지를 먼저 생성해야 배경 사각형을 배치할 수 있습니다.");
-      return;
-    }
-
+    commitEditorHistory();
     const newShape: ShapeLayer = normalizeShapeLayer({
       id: crypto.randomUUID(),
       kind: "shape",
-      x: 64,
-      y: 64,
-      width: 260,
-      height: 120,
+      x: scaleCanvasValue(64),
+      y: scaleCanvasValue(64),
+      width: scaleCanvasValue(260),
+      height: scaleCanvasValue(120),
       fillColor: shapeColorRecommendations[0] ?? colorRecommendations.darkColor,
       fillOpacity: 1,
       borderRadius: 0
@@ -1939,6 +2290,7 @@ export function PdpEditor({
   };
 
   const updateOverlay = (overlayId: string, updates: Partial<CanvasLayer>) => {
+    commitEditorHistory();
     setOverlaysBySection((current) => ({
       ...current,
       [safeCurrentSectionIndex]: (current[safeCurrentSectionIndex] ?? []).map((overlay) =>
@@ -1948,6 +2300,7 @@ export function PdpEditor({
   };
 
   const deleteOverlay = (overlayId: string) => {
+    commitEditorHistory();
     setOverlaysBySection((current) => ({
       ...current,
       [safeCurrentSectionIndex]: (current[safeCurrentSectionIndex] ?? []).filter((overlay) => overlay.id !== overlayId)
@@ -1958,77 +2311,52 @@ export function PdpEditor({
     }
   };
 
-  const handleResizeStart = (overlay: CanvasLayer) => {
-    resizeSessionRef.current[overlay.id] = {
-      width: toNumericSize(overlay.width, 320),
-      height: toNumericSize(overlay.height, 92),
-      fontSize: isTextLayer(overlay) ? overlay.fontSize : 0
-    };
-  };
+  const duplicateOverlay = (overlayId: string) => {
+    const source = currentLayers.find((layer) => layer.id === overlayId);
+    if (!source) return;
 
-  const handleResize = (
-    overlay: CanvasLayer,
-    direction: string,
-    ref: HTMLElement,
-    position: { x: number; y: number }
-  ) => {
-    const base = resizeSessionRef.current[overlay.id] ?? {
-      width: toNumericSize(overlay.width, 320),
-      height: toNumericSize(overlay.height, 92),
-      fontSize: isTextLayer(overlay) ? overlay.fontSize : 0
-    };
-
-    const nextWidth = ref.offsetWidth;
-    const nextHeight = ref.offsetHeight;
-    const isHorizontalOnly = direction === "left" || direction === "right";
-    const isVerticalOnly = direction === "top" || direction === "bottom";
-
-    if (isHorizontalOnly) {
-      updateOverlay(overlay.id, {
-        width: nextWidth,
-        x: position.x
-      });
-      return;
-    }
-
-    if (isVerticalOnly) {
-      updateOverlay(overlay.id, {
-        height: nextHeight,
-        y: position.y
-      });
-      return;
-    }
-
-    if (isShapeLayer(overlay)) {
-      updateOverlay(overlay.id, {
-        width: nextWidth,
-        height: nextHeight,
-        x: position.x,
-        y: position.y
-      });
-      return;
-    }
-
-    const scale = Math.max(nextWidth / Math.max(base.width, 1), nextHeight / Math.max(base.height, 1));
-    const nextFontSize = clampValue(Math.round(base.fontSize * scale), 10, 180);
-
-    updateOverlay(overlay.id, {
-      width: nextWidth,
-      height: nextHeight,
-      x: position.x,
-      y: position.y,
-      fontSize: nextFontSize
+    commitEditorHistory();
+    const duplicate = normalizeCanvasLayer({
+      ...source,
+      id: crypto.randomUUID(),
+      x: source.x + scaleCanvasValue(18),
+      y: source.y + scaleCanvasValue(18)
     });
+    if (!duplicate) return;
+
+    setOverlaysBySection((current) => ({
+      ...current,
+      [safeCurrentSectionIndex]: [...(current[safeCurrentSectionIndex] ?? []), duplicate]
+    }));
+    setSelectedOverlayId(duplicate.id);
+    setWorkbenchTab("layer");
+    setNotice("선택한 레이어를 복제했습니다.");
   };
 
-  const handleResizeStop = (overlayId: string) => {
-    delete resizeSessionRef.current[overlayId];
-  };
+  const moveOverlayOrder = (overlayId: string, direction: "front" | "back" | "forward" | "backward") => {
+    const currentIndex = currentLayers.findIndex((layer) => layer.id === overlayId);
+    if (currentIndex < 0) return;
 
-  const handleOverlayDrag = (overlay: CanvasLayer, x: number, y: number) => {
-    updateOverlay(overlay.id, {
-      x,
-      y
+    commitEditorHistory();
+    setOverlaysBySection((current) => {
+      const layers = [...(current[safeCurrentSectionIndex] ?? [])];
+      const index = layers.findIndex((layer) => layer.id === overlayId);
+      if (index < 0) return current;
+
+      const [layer] = layers.splice(index, 1);
+      const nextIndex =
+        direction === "front"
+          ? layers.length
+          : direction === "back"
+            ? 0
+            : direction === "forward"
+              ? Math.min(layers.length, index + 1)
+              : Math.max(0, index - 1);
+      layers.splice(nextIndex, 0, layer);
+      return {
+        ...current,
+        [safeCurrentSectionIndex]: layers
+      };
     });
   };
 
@@ -2631,7 +2959,7 @@ export function PdpEditor({
             </details>
           </aside>
 
-          <section className={styles.canvasColumn}>
+          <section className={styles.canvasColumn} onClick={stopShellClick}>
             <article className={styles.canvasPanel}>
               <div className={styles.canvasHeader}>
                 <div>
@@ -2665,6 +2993,24 @@ export function PdpEditor({
 
               <div className={styles.canvasToolbar}>
                 <button
+                  className={styles.workbenchDockButton}
+                  disabled={!historyPast.length}
+                  onClick={handleUndo}
+                  type="button"
+                >
+                  <Undo2 size={15} />
+                  실행 취소
+                </button>
+                <button
+                  className={styles.workbenchDockButton}
+                  disabled={!historyFuture.length}
+                  onClick={handleRedo}
+                  type="button"
+                >
+                  <Redo2 size={15} />
+                  다시 실행
+                </button>
+                <button
                   className={workbenchTab === "image" && workbenchState.isOpen ? styles.workbenchDockButtonActive : styles.workbenchDockButton}
                   onClick={() => openWorkbench("image")}
                   type="button"
@@ -2673,12 +3019,21 @@ export function PdpEditor({
                   이미지
                 </button>
                 <button
+                  className={styles.workbenchDockButton}
+                  disabled={!currentSection.generatedImage}
+                  onClick={() => setIsImageAdjusterOpen(true)}
+                  type="button"
+                >
+                  <ImageIcon size={15} />
+                  이미지 보정
+                </button>
+                <button
                   className={workbenchTab === "layer" && workbenchState.isOpen ? styles.workbenchDockButtonActive : styles.workbenchDockButton}
                   onClick={() => openWorkbench("layer")}
                   type="button"
                 >
-                  <Type size={15} />
-                  텍스트 편집
+                  <Layers size={15} />
+                  레이어
                 </button>
                 <button
                   className={workbenchTab === "copy" && workbenchState.isOpen ? styles.workbenchDockButtonActive : styles.workbenchDockButton}
@@ -2703,145 +3058,32 @@ export function PdpEditor({
               </div>
 
               <div className={styles.previewStage} ref={previewStageRef}>
-                {currentSection.generatedImage ? (
-                  <div className={styles.imageCanvas} ref={imageContainerRef}>
-                    <img
-                      alt={currentSection.section_name}
-                      className={styles.sectionImage}
-                      draggable={false}
-                      src={currentSection.generatedImage}
-                    />
-
-                    {[...currentShapeLayers, ...currentTextLayers].map((overlay) => (
-                      <Rnd
-                        bounds="parent"
-                        className={`${styles.overlayBox} ${isShapeLayer(overlay) ? styles.shapeLayerBox : styles.textLayerBox} ${selectedOverlayId === overlay.id ? styles.overlaySelected : ""}`}
-                        enableUserSelectHack={false}
-                        enableResizing={
-                          selectedOverlayId === overlay.id
-                            ? {
-                                top: true,
-                                right: true,
-                                bottom: true,
-                                left: true,
-                                topRight: true,
-                                bottomRight: true,
-                                bottomLeft: true,
-                                topLeft: true
-                              }
-                            : false
-                        }
-                        key={overlay.id}
-                        onClick={(event: ReactMouseEvent<HTMLDivElement>) => {
-                          event.stopPropagation();
-                          setSelectedOverlayId(overlay.id);
-                        }}
-                        onDragStart={() => {
-                          setSelectedOverlayId(overlay.id);
-                          setActiveColorPalette(null);
-                        }}
-                        onDrag={(_, data) => handleOverlayDrag(overlay, data.x, data.y)}
-                        onDragStop={(_, data) => handleOverlayDrag(overlay, data.x, data.y)}
-                        onResize={(_, direction, ref, __, position) => handleResize(overlay, direction, ref, position)}
-                        onResizeStart={() => {
-                          handleResizeStart(overlay);
-                        }}
-                        onResizeStop={(_, direction, ref, __, position) => {
-                          handleResize(overlay, direction, ref, position);
-                          handleResizeStop(overlay.id);
-                        }}
-                        position={{ x: overlay.x, y: overlay.y }}
-                        resizeHandleClasses={{
-                          top: styles.resizeHandleTop,
-                          bottom: styles.resizeHandleBottom,
-                          left: styles.resizeHandleLeft,
-                          right: styles.resizeHandleRight,
-                          topLeft: styles.resizeHandleTopLeft,
-                          topRight: styles.resizeHandleTopRight,
-                          bottomLeft: styles.resizeHandleBottomLeft,
-                          bottomRight: styles.resizeHandleBottomRight
-                        }}
-                        style={{
-                          zIndex: isShapeLayer(overlay)
-                            ? selectedOverlayId === overlay.id
-                              ? 2
-                              : 1
-                            : selectedOverlayId === overlay.id
-                              ? 5
-                              : 4
-                        }}
-                        size={{ width: overlay.width, height: overlay.height }}
-                      >
-                        {isShapeLayer(overlay) ? (
-                          <div className={`${styles.overlayContent} ${styles.overlayDragSurface}`}>
-                            <div className={styles.shapeLayerSurface} style={buildShapeLayerStyle(overlay)} />
-                          </div>
-                        ) : (
-                          <div
-                            className={`${editingOverlayId === overlay.id ? styles.overlayEditing : styles.overlayContent} ${styles.overlayDragSurface}`}
-                            onDoubleClick={(event) => {
-                              event.stopPropagation();
-                              setSelectedOverlayId(overlay.id);
-                              setEditingOverlayId(overlay.id);
-                            }}
-                            style={buildOverlayShellStyle(overlay)}
-                          >
-                            {overlay.backgroundEnabled ? (
-                              <div className={styles.overlayBackdrop} style={buildOverlayBackgroundStyle(overlay)} />
-                            ) : null}
-                            {editingOverlayId === overlay.id ? (
-                              <textarea
-                                autoFocus
-                                className={styles.overlayTextarea}
-                                onBlur={() => setEditingOverlayId(null)}
-                                onChange={(event) => updateTextOverlayContent(overlay.id, event.target.value)}
-                                onKeyDown={(event) => {
-                                  if (event.key === "Enter" && !event.shiftKey) {
-                                    event.preventDefault();
-                                    setEditingOverlayId(null);
-                                  }
-                                }}
-                                style={buildOverlayTextStyle(overlay)}
-                                value={overlay.text}
-                              />
-                            ) : (
-                              <div className={styles.overlayTextLayer} style={buildOverlayTextStyle(overlay)}>
-                                {overlay.text}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </Rnd>
-                    ))}
-
-                  </div>
-                ) : (
-                  <div className={styles.placeholderPanel}>
-                    <div className={styles.placeholderIcon}>
-                      {isGenerationBusy ? <Loader2 className={styles.spinIcon} size={28} /> : <ImageIcon size={28} />}
+                <div className={styles.imageCanvas} ref={imageContainerRef}>
+                  <PdpKonvaCanvas
+                    backgroundFill={currentDesignTemplate?.id === "faq-final-cta" ? "#f7f1e8" : "#f6f2ea"}
+                    canvasWidth={OVERLAY_CANVAS_WIDTH}
+                    editingLayerId={editingOverlayId}
+                    fallbackCanvasHeight={getOverlayCanvasHeight(aspectRatio)}
+                    imageAlt={currentSection.section_name}
+                    imageSrc={currentSection.generatedImage}
+                    layeredDocument={layeredDocumentV2}
+                    layers={currentLayers}
+                    onChangeLayer={updateOverlay}
+                    onChangeText={updateTextOverlayContent}
+                    onSelectLayer={handleCanvasLayerSelect}
+                    onStartTextEdit={handleStartCanvasTextEdit}
+                    onStopTextEdit={handleStopCanvasTextEdit}
+                    sectionId={currentSection.section_id}
+                    sectionIndex={safeCurrentSectionIndex}
+                    selectedLayerId={selectedOverlayId}
+                  />
+                  {!currentSection.generatedImage ? (
+                    <div className={styles.canvasStatusBadge}>
+                      {isGenerationBusy ? <Loader2 className={styles.spinIcon} size={14} /> : <LayoutTemplate size={14} />}
+                      {isGenerationBusy ? "배경 plate 생성 중" : "템플릿 문서 먼저 편집 중"}
                     </div>
-                    <div className={styles.placeholderCopy}>
-                      <strong>{isGenerationBusy ? "이미지를 생성하는 중입니다." : "이 섹션의 이미지를 아직 만들지 않았습니다."}</strong>
-                      <p>
-                        {isGenerationBusy
-                          ? "Codex OAuth로 OpenAI 이미지 모델을 호출하고 있습니다. 보통 1~2분 정도 걸립니다."
-                          : "기본 옵션으로 바로 만들거나, 아래 이미지 탭에서 세부 옵션을 조정할 수 있습니다."}
-                      </p>
-                      <div className={styles.placeholderActions}>
-                        <button className={styles.primaryButtonWide} disabled={isGenerationBusy} onClick={handleGenerateImage} type="button">
-                          {isGenerationBusy ? <Loader2 className={styles.spinIcon} size={16} /> : <ImageIcon size={16} />}
-                          {isGenerationBusy ? "생성 중" : "이미지 생성하기"}
-                        </button>
-                        {!workbenchState.isOpen ? (
-                          <button className={styles.secondaryButtonWide} onClick={() => openWorkbench("image")} type="button">
-                            <Settings2 size={16} />
-                            생성 옵션 열기
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  ) : null}
+                </div>
 
                 {workbenchState.isOpen ? (
                   <Rnd
@@ -2887,7 +3129,7 @@ export function PdpEditor({
                             {workbenchTab === "image"
                               ? "이미지 옵션"
                               : workbenchTab === "layer"
-                                ? "텍스트 편집"
+                                ? "레이어 편집"
                                 : workbenchTab === "copy"
                                   ? "카피 라이브러리"
                                   : "섹션 가이드"}
@@ -2932,7 +3174,7 @@ export function PdpEditor({
                           type="button"
                         >
                           <Type size={15} />
-                          텍스트 편집
+                          레이어
                         </button>
                         <button
                           className={workbenchTab === "copy" ? styles.workbenchTabActive : styles.workbenchTab}
@@ -2960,6 +3202,8 @@ export function PdpEditor({
 
               <div className={styles.canvasFooter}>
                 <span className={styles.footerStatus}>{currentSection.generatedImage ? "이미지 준비 완료" : "이미지 생성 필요"}</span>
+                <span className={styles.footerStatus}>템플릿 {currentDesignTemplate?.shortLabel ?? "Auto"}</span>
+                <span className={styles.footerStatus}>문서 QA {currentDocumentQualityStatus === "ready" ? "통과" : currentDocumentQualityStatus === "blocked" ? "보강" : "검수"}</span>
                 <span className={styles.footerStatus}>레이어 {currentLayers.length}개</span>
                 <span className={styles.footerStatus}>문서 노드 {currentLayeredSectionSummary?.totalNodes ?? 0}개</span>
                 <span className={styles.footerStatus}>Asset {layeredDocumentSummary.assetCount}개</span>
@@ -2969,6 +3213,14 @@ export function PdpEditor({
           </section>
         </div>
       </section>
+      {isImageAdjusterOpen && currentSection.generatedImage ? (
+        <PdpImageAdjuster
+          imageSrc={currentSection.generatedImage}
+          onApply={handleApplyAdjustedImage}
+          onClose={() => setIsImageAdjusterOpen(false)}
+          sectionName={getDisplaySectionName(currentSection)}
+        />
+      ) : null}
     </main>
   );
 }
@@ -2990,15 +3242,6 @@ function buildOverlayBackgroundStyle(overlay: TextOverlay): CSSProperties {
   return {
     backgroundColor: toRgba(overlay.backgroundColor, overlay.backgroundOpacity),
     borderRadius: `${overlay.backgroundRadius}px`
-  };
-}
-
-function buildShapeLayerStyle(layer: ShapeLayer): CSSProperties {
-  return {
-    width: "100%",
-    height: "100%",
-    backgroundColor: toRgba(layer.fillColor, layer.fillOpacity),
-    borderRadius: `${layer.borderRadius}px`
   };
 }
 
@@ -3032,10 +3275,7 @@ async function buildExportNode(input: {
   imageEl.style.objectFit = "cover";
   container.appendChild(imageEl);
 
-  const shapeLayers = input.layers.filter(isShapeLayer);
-  const textLayers = input.layers.filter(isTextLayer);
-
-  for (const layer of [...shapeLayers, ...textLayers]) {
+  for (const layer of input.layers.filter((layer) => isShapeLayer(layer) || isTextLayer(layer))) {
     const layerEl = document.createElement("div");
     layerEl.style.position = "absolute";
     layerEl.style.left = `${layer.x}px`;
@@ -3349,22 +3589,16 @@ function buildDeliverySummaryText(report: DeliveryReport) {
   return `${lines.join("\n")}\n`;
 }
 
-const OVERLAY_CANVAS_WIDTH = 460;
+const LEGACY_OVERLAY_CANVAS_WIDTH = PDP_LEGACY_CANVAS_WIDTH;
+const OVERLAY_CANVAS_WIDTH = PDP_EDITOR_CANVAS_WIDTH;
+const OVERLAY_CANVAS_SCALE = PDP_EDITOR_CANVAS_SCALE;
+
+function scaleCanvasValue(value: number) {
+  return scalePdpCanvasValue(value);
+}
 
 function getOverlayCanvasHeight(aspectRatio: AspectRatio) {
-  switch (aspectRatio) {
-    case "1:1":
-      return 460;
-    case "4:3":
-      return 345;
-    case "16:9":
-      return 259;
-    case "3:4":
-      return 613;
-    case "9:16":
-    default:
-      return 818;
-  }
+  return getPdpCanvasHeight(aspectRatio);
 }
 
 function getQualityStatusLabel(status: NonNullable<GeneratedResult["qualityReport"]>["status"]) {
@@ -3409,12 +3643,12 @@ function hasAnalysisFallback(result: GeneratedResult) {
 }
 
 function getOverlaySafeArea(canvasHeight: number) {
-  const horizontalInset = canvasHeight < 400 ? 24 : 34;
+  const horizontalInset = canvasHeight < scaleCanvasValue(400) ? scaleCanvasValue(24) : scaleCanvasValue(34);
   return {
     left: horizontalInset,
-    top: canvasHeight < 400 ? 24 : 38,
+    top: canvasHeight < scaleCanvasValue(400) ? scaleCanvasValue(24) : scaleCanvasValue(38),
     width: OVERLAY_CANVAS_WIDTH - horizontalInset * 2,
-    bottom: Math.max(24, canvasHeight - 28)
+    bottom: Math.max(scaleCanvasValue(24), canvasHeight - scaleCanvasValue(28))
   };
 }
 
@@ -3472,11 +3706,11 @@ function getHeadlineOverlaySlot(role: SectionStoryRole, safe: ReturnType<typeof 
   switch (role) {
     case "reason":
     case "demo":
-      return { x: safe.left + 18, y: safe.top + 10, maxWidth: safe.width - 40, backgroundOpacity: 0.86 };
+      return { x: safe.left + scaleCanvasValue(18), y: safe.top + scaleCanvasValue(10), maxWidth: safe.width - scaleCanvasValue(40), backgroundOpacity: 0.86 };
     case "proof":
-      return { x: safe.left, y: safe.top + 20, maxWidth: safe.width - 16, backgroundOpacity: 0.9 };
+      return { x: safe.left, y: safe.top + scaleCanvasValue(20), maxWidth: safe.width - scaleCanvasValue(16), backgroundOpacity: 0.9 };
     case "cta":
-      return { x: safe.left, y: safe.top + 34, maxWidth: safe.width, backgroundOpacity: 0.9, textAlign: "center" };
+      return { x: safe.left, y: safe.top + scaleCanvasValue(34), maxWidth: safe.width, backgroundOpacity: 0.9, textAlign: "center" };
     default:
       return { x: safe.left, y: safe.top, maxWidth: safe.width, backgroundOpacity: 0.88 };
   }
@@ -3489,44 +3723,44 @@ function getSubheadlineOverlaySlot(
   headlineSlot: OverlaySlot,
   headlineHeight: number
 ): OverlaySlot {
-  const stackedY = clampValue(headlineSlot.y + headlineHeight + 10, safe.top + 54, Math.max(safe.top + 54, canvasHeight - 260));
+  const stackedY = clampValue(headlineSlot.y + headlineHeight + scaleCanvasValue(10), safe.top + scaleCanvasValue(54), Math.max(safe.top + scaleCanvasValue(54), canvasHeight - scaleCanvasValue(260)));
   if (role === "cta") {
-    return { x: safe.left + 16, y: stackedY, maxWidth: safe.width - 32, backgroundOpacity: 0.78, textAlign: "center" };
+    return { x: safe.left + scaleCanvasValue(16), y: stackedY, maxWidth: safe.width - scaleCanvasValue(32), backgroundOpacity: 0.78, textAlign: "center" };
   }
   if (role === "proof" || role === "reason") {
-    return { x: safe.left + 18, y: stackedY, maxWidth: safe.width - 52, backgroundOpacity: 0.74 };
+    return { x: safe.left + scaleCanvasValue(18), y: stackedY, maxWidth: safe.width - scaleCanvasValue(52), backgroundOpacity: 0.74 };
   }
-  return { x: safe.left, y: stackedY, maxWidth: safe.width - 18, backgroundOpacity: 0.76 };
+  return { x: safe.left, y: stackedY, maxWidth: safe.width - scaleCanvasValue(18), backgroundOpacity: 0.76 };
 }
 
 function getCtaOverlaySlot(role: SectionStoryRole, safe: ReturnType<typeof getOverlaySafeArea>, canvasHeight: number): OverlaySlot {
-  const y = clampValue(canvasHeight - 82, safe.top + 240, canvasHeight - 58);
+  const y = clampValue(canvasHeight - scaleCanvasValue(82), safe.top + scaleCanvasValue(240), canvasHeight - scaleCanvasValue(58));
   if (role === "cta") {
-    return { x: safe.left + 18, y, maxWidth: safe.width - 36, backgroundRadius: 999, textAlign: "center" };
+    return { x: safe.left + scaleCanvasValue(18), y, maxWidth: safe.width - scaleCanvasValue(36), backgroundRadius: 999, textAlign: "center" };
   }
   if (role === "proof" || role === "reason") {
-    return { x: safe.left + 18, y, maxWidth: Math.min(240, safe.width - 40), backgroundRadius: 999, textAlign: "center" };
+    return { x: safe.left + scaleCanvasValue(18), y, maxWidth: Math.min(scaleCanvasValue(240), safe.width - scaleCanvasValue(40)), backgroundRadius: 999, textAlign: "center" };
   }
-  return { x: safe.left, y, maxWidth: Math.min(220, safe.width - 86), backgroundRadius: 999, textAlign: "center" };
+  return { x: safe.left, y, maxWidth: Math.min(scaleCanvasValue(220), safe.width - scaleCanvasValue(86)), backgroundRadius: 999, textAlign: "center" };
 }
 
 function getBulletOverlaySlots(role: SectionStoryRole, safe: ReturnType<typeof getOverlaySafeArea>, canvasHeight: number, ctaY: number): OverlaySlot[] {
-  const compact = canvasHeight < 560;
+  const compact = canvasHeight < scaleCanvasValue(560);
   const startY = clampValue(
-    role === "demo" ? Math.round(canvasHeight * 0.42) : role === "proof" || role === "usecase" ? Math.round(canvasHeight * 0.48) : Math.max(safe.top + 216, Math.round(canvasHeight * 0.56)),
-    safe.top + 142,
-    Math.max(safe.top + 142, ctaY - 122)
+    role === "demo" ? Math.round(canvasHeight * 0.42) : role === "proof" || role === "usecase" ? Math.round(canvasHeight * 0.48) : Math.max(safe.top + scaleCanvasValue(216), Math.round(canvasHeight * 0.56)),
+    safe.top + scaleCanvasValue(142),
+    Math.max(safe.top + scaleCanvasValue(142), ctaY - scaleCanvasValue(122))
   );
   const slots: OverlaySlot[] = [];
   const maxCount = compact ? 1 : role === "proof" || role === "usecase" || role === "demo" ? 3 : 2;
-  const availableCount = Math.max(1, Math.min(maxCount, Math.floor((ctaY - startY - 8) / 46) + 1));
+  const availableCount = Math.max(1, Math.min(maxCount, Math.floor((ctaY - startY - scaleCanvasValue(8)) / scaleCanvasValue(46)) + 1));
 
   for (let index = 0; index < availableCount; index += 1) {
     if ((role === "benefit" || role === "usecase" || role === "proof") && !compact) {
-      const columnWidth = Math.floor((safe.width - 14) / 2);
+      const columnWidth = Math.floor((safe.width - scaleCanvasValue(14)) / 2);
       slots.push({
-        x: safe.left + (index % 2) * (columnWidth + 14),
-        y: startY + Math.floor(index / 2) * 54,
+        x: safe.left + (index % 2) * (columnWidth + scaleCanvasValue(14)),
+        y: startY + Math.floor(index / 2) * scaleCanvasValue(54),
         maxWidth: columnWidth,
         backgroundOpacity: role === "proof" ? 0.9 : 0.86
       });
@@ -3534,9 +3768,9 @@ function getBulletOverlaySlots(role: SectionStoryRole, safe: ReturnType<typeof g
     }
 
     slots.push({
-      x: role === "reason" ? safe.left + 30 : safe.left,
-      y: startY + index * 50,
-      maxWidth: role === "reason" ? safe.width - 60 : safe.width - 42,
+      x: role === "reason" ? safe.left + scaleCanvasValue(30) : safe.left,
+      y: startY + index * scaleCanvasValue(50),
+      maxWidth: role === "reason" ? safe.width - scaleCanvasValue(60) : safe.width - scaleCanvasValue(42),
       backgroundOpacity: role === "problem" ? 0.9 : 0.86
     });
   }
@@ -3546,9 +3780,7 @@ function getBulletOverlaySlots(role: SectionStoryRole, safe: ReturnType<typeof g
 
 function buildAutoCopyOverlayRecord(sections: SectionBlueprint[], aspectRatio: AspectRatio): Record<number, CanvasLayer[]> {
   return sections.reduce<Record<number, CanvasLayer[]>>((record, section, index) => {
-    if (section.generatedImage) {
-      record[index] = buildAutoCopyOverlays(section, aspectRatio);
-    }
+    record[index] = buildAutoCopyOverlays(section, aspectRatio);
     return record;
   }, {});
 }
@@ -4042,10 +4274,10 @@ function buildAutoCopyOverlays(section: SectionBlueprint, aspectRatio: AspectRat
 }
 
 function clampTextOverlayToCanvas(overlay: TextOverlay, canvasHeight: number): TextOverlay {
-  const width = clampValue(toNumericSize(overlay.width, 320), 120, OVERLAY_CANVAS_WIDTH - overlay.x - 24);
-  const height = clampValue(toNumericSize(overlay.height, 96), 34, Math.max(34, canvasHeight - overlay.y - 24));
-  const x = clampValue(overlay.x, 12, Math.max(12, OVERLAY_CANVAS_WIDTH - width - 12));
-  const y = clampValue(overlay.y, 12, Math.max(12, canvasHeight - height - 12));
+  const width = clampValue(toNumericSize(overlay.width, scaleCanvasValue(320)), scaleCanvasValue(120), OVERLAY_CANVAS_WIDTH - overlay.x - scaleCanvasValue(24));
+  const height = clampValue(toNumericSize(overlay.height, scaleCanvasValue(96)), scaleCanvasValue(34), Math.max(scaleCanvasValue(34), canvasHeight - overlay.y - scaleCanvasValue(24)));
+  const x = clampValue(overlay.x, scaleCanvasValue(12), Math.max(scaleCanvasValue(12), OVERLAY_CANVAS_WIDTH - width - scaleCanvasValue(12)));
+  const y = clampValue(overlay.y, scaleCanvasValue(12), Math.max(scaleCanvasValue(12), canvasHeight - height - scaleCanvasValue(12)));
 
   return fitTextOverlayToBox(ensureReadableTextOverlay({
     ...overlay,
@@ -4057,9 +4289,9 @@ function clampTextOverlayToCanvas(overlay: TextOverlay, canvasHeight: number): T
 }
 
 function fitTextOverlayToBox(overlay: TextOverlay): TextOverlay {
-  const width = toNumericSize(overlay.width, 320);
-  const height = toNumericSize(overlay.height, 96);
-  let fontSize = clampValue(overlay.fontSize, 11, 34);
+  const width = toNumericSize(overlay.width, scaleCanvasValue(320));
+  const height = toNumericSize(overlay.height, scaleCanvasValue(96));
+  let fontSize = clampValue(overlay.fontSize, scaleCanvasValue(11), scaleCanvasValue(34));
   let fitted = overlay;
 
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -4070,7 +4302,7 @@ function fitTextOverlayToBox(overlay: TextOverlay): TextOverlay {
       lineHeight: fitted.lineHeight,
       maxWidth: width
     });
-    if (estimated.height <= height + 2 || fontSize <= 11) break;
+    if (estimated.height <= height + 2 || fontSize <= scaleCanvasValue(11)) break;
     fontSize -= 1;
     fitted = { ...fitted, fontSize };
   }
@@ -4194,19 +4426,19 @@ function cleanOverlayCopyEnding(value: string) {
 function getOverlayFontSize(text: string, type: "headline" | "subheadline" | "keypoint" | "default") {
   const length = text.replace(/\s+/g, "").length;
   if (type === "headline") {
-    if (length > 16) return 20;
-    if (length > 12) return 23;
-    return 26;
+    if (length > 16) return scaleCanvasValue(20);
+    if (length > 12) return scaleCanvasValue(23);
+    return scaleCanvasValue(26);
   }
   if (type === "subheadline") {
-    if (length > 28) return 13;
-    if (length > 20) return 15;
-    return 17;
+    if (length > 28) return scaleCanvasValue(13);
+    if (length > 20) return scaleCanvasValue(15);
+    return scaleCanvasValue(17);
   }
   if (type === "keypoint") {
-    return length > 14 ? 14 : 16;
+    return length > 14 ? scaleCanvasValue(14) : scaleCanvasValue(16);
   }
-  return length > 10 ? 15 : 17;
+  return length > 10 ? scaleCanvasValue(15) : scaleCanvasValue(17);
 }
 
 function isGenericVisibleCopy(value: string) {
@@ -4258,7 +4490,7 @@ function createTextOverlay(input: {
   const displayText = normalizedTranslations[input.language] || normalizedTranslations.ko;
   const defaultFontWeight = input.fontWeight ?? (input.type === "subheadline" ? "500" : "700");
   const lineHeight = input.lineHeight ?? 1.18;
-  const maxWidth = input.maxWidth ?? (input.type === "headline" ? 360 : input.type === "subheadline" ? 320 : 280);
+  const maxWidth = input.maxWidth ?? (input.type === "headline" ? scaleCanvasValue(360) : input.type === "subheadline" ? scaleCanvasValue(320) : scaleCanvasValue(280));
   const estimatedBox = estimateOverlayBox(displayText, {
     fontSize: defaultFontSize,
     fontWeight: defaultFontWeight,
@@ -4282,7 +4514,7 @@ function createTextOverlay(input: {
     backgroundColor: input.backgroundColor,
     backgroundEnabled: input.backgroundEnabled ?? false,
     backgroundOpacity: input.backgroundOpacity ?? 0.82,
-    backgroundRadius: input.backgroundRadius ?? 18,
+    backgroundRadius: input.backgroundRadius ?? scaleCanvasValue(18),
     fontFamily: "'Pretendard', sans-serif",
     fontWeight: defaultFontWeight,
     textAlign: input.textAlign ?? "left",
@@ -4290,8 +4522,8 @@ function createTextOverlay(input: {
     shadowEnabled: true,
     shadowColor: input.shadowColor,
     shadowOpacity: 0.42,
-    shadowBlur: 18,
-    shadowOffsetY: 6
+    shadowBlur: scaleCanvasValue(18),
+    shadowOffsetY: scaleCanvasValue(6)
   });
 }
 
@@ -4326,19 +4558,76 @@ function buildOverlayTextStyle(overlay: TextOverlay): CSSProperties {
   };
 }
 
-function normalizeOverlayRecord(record: Record<number, CanvasLayer[]>) {
+function normalizeOverlayRecord(record: Record<number, CanvasLayer[]>, sourceCanvasWidth = OVERLAY_CANVAS_WIDTH) {
   if (!record || typeof record !== "object" || Array.isArray(record)) {
     return {};
   }
+
+  const sourceScale = getSourceCanvasScale(sourceCanvasWidth);
 
   return Object.fromEntries(
     Object.entries(record).map(([key, overlays]) => [
       Number(key),
       (Array.isArray(overlays) ? overlays : [])
         .map((overlay) => normalizeCanvasLayer(overlay))
+        .map((overlay) => (overlay ? scaleCanvasLayer(overlay, sourceScale) : overlay))
         .filter((overlay): overlay is CanvasLayer => Boolean(overlay))
     ])
   ) as Record<number, CanvasLayer[]>;
+}
+
+function getSourceCanvasScale(sourceCanvasWidth: number | undefined) {
+  if (!sourceCanvasWidth || !Number.isFinite(sourceCanvasWidth) || sourceCanvasWidth <= 0) {
+    return 1;
+  }
+  return Math.abs(sourceCanvasWidth - OVERLAY_CANVAS_WIDTH) < 1 ? 1 : OVERLAY_CANVAS_WIDTH / sourceCanvasWidth;
+}
+
+function scaleCanvasLayer(layer: CanvasLayer, scale: number): CanvasLayer {
+  if (!Number.isFinite(scale) || Math.abs(scale - 1) < 0.01) {
+    return layer;
+  }
+
+  const base = {
+    ...layer,
+    x: Math.round(layer.x * scale),
+    y: Math.round(layer.y * scale),
+    width: Math.round(toNumericSize(layer.width, 1) * scale),
+    height: Math.round(toNumericSize(layer.height, 1) * scale)
+  };
+
+  if (isShapeLayer(layer)) {
+    return normalizeShapeLayer({
+      ...base,
+      kind: "shape",
+      fillColor: layer.fillColor,
+      fillOpacity: layer.fillOpacity,
+      borderRadius: Math.round(layer.borderRadius * scale)
+    });
+  }
+
+  return normalizeTextOverlay({
+    ...base,
+    kind: "text",
+    text: layer.text,
+    language: layer.language,
+    translations: layer.translations,
+    fontSize: clampValue(Math.round(layer.fontSize * scale), 10, 180),
+    color: layer.color,
+    backgroundColor: layer.backgroundColor,
+    backgroundEnabled: layer.backgroundEnabled,
+    backgroundOpacity: layer.backgroundOpacity,
+    backgroundRadius: Math.round(layer.backgroundRadius * scale),
+    fontFamily: layer.fontFamily,
+    fontWeight: layer.fontWeight,
+    textAlign: layer.textAlign,
+    lineHeight: layer.lineHeight,
+    shadowEnabled: layer.shadowEnabled,
+    shadowColor: layer.shadowColor,
+    shadowOpacity: layer.shadowOpacity,
+    shadowBlur: Math.round(layer.shadowBlur * scale),
+    shadowOffsetY: Math.round(layer.shadowOffsetY * scale)
+  });
 }
 
 function normalizeCanvasLayer(layer: Partial<CanvasLayer> & Pick<CanvasLayer, "id" | "x" | "y" | "width" | "height">) {
@@ -4360,7 +4649,7 @@ function normalizeTextOverlay(overlay: Partial<TextOverlay> & Pick<TextOverlay, 
   const hasLegacyBackground = Boolean(overlay.backgroundColor && overlay.backgroundColor !== "transparent");
   const translations = normalizeOverlayTranslations(overlay.translations, overlay.text);
   const language = overlay.language === "en" ? "en" : "ko";
-  const fontSize = Number.isFinite(Number(overlay.fontSize)) ? Number(overlay.fontSize) : 24;
+  const fontSize = Number.isFinite(Number(overlay.fontSize)) ? Number(overlay.fontSize) : scaleCanvasValue(24);
 
   const normalized: TextOverlay = {
     ...overlay,
@@ -4369,10 +4658,10 @@ function normalizeTextOverlay(overlay: Partial<TextOverlay> & Pick<TextOverlay, 
     language,
     text: translations[language] || translations.ko,
     translations,
-    x: Number.isFinite(Number(overlay.x)) ? Number(overlay.x) : 48,
-    y: Number.isFinite(Number(overlay.y)) ? Number(overlay.y) : 48,
-    width: toNumericSize(overlay.width, 320),
-    height: toNumericSize(overlay.height, 96),
+    x: Number.isFinite(Number(overlay.x)) ? Number(overlay.x) : scaleCanvasValue(48),
+    y: Number.isFinite(Number(overlay.y)) ? Number(overlay.y) : scaleCanvasValue(48),
+    width: toNumericSize(overlay.width, scaleCanvasValue(320)),
+    height: toNumericSize(overlay.height, scaleCanvasValue(96)),
     fontSize,
     color: overlay.color ?? "#ffffff",
     fontFamily: overlay.fontFamily || "'Pretendard', sans-serif",
@@ -4382,12 +4671,12 @@ function normalizeTextOverlay(overlay: Partial<TextOverlay> & Pick<TextOverlay, 
     backgroundColor: !overlay.backgroundColor || overlay.backgroundColor === "transparent" ? "#102532" : overlay.backgroundColor,
     backgroundEnabled: overlay.backgroundEnabled ?? hasLegacyBackground,
     backgroundOpacity: overlay.backgroundOpacity ?? 0.72,
-    backgroundRadius: overlay.backgroundRadius ?? 18,
+    backgroundRadius: overlay.backgroundRadius ?? scaleCanvasValue(18),
     shadowEnabled: overlay.shadowEnabled ?? false,
     shadowColor: overlay.shadowColor ?? "#102532",
     shadowOpacity: overlay.shadowOpacity ?? 0.4,
-    shadowBlur: overlay.shadowBlur ?? 18,
-    shadowOffsetY: overlay.shadowOffsetY ?? 6
+    shadowBlur: overlay.shadowBlur ?? scaleCanvasValue(18),
+    shadowOffsetY: overlay.shadowOffsetY ?? scaleCanvasValue(6)
   };
 
   return fitTextOverlayToBox(ensureReadableTextOverlay(normalized));
@@ -4419,10 +4708,10 @@ function normalizeShapeLayer(layer: Partial<ShapeLayer> & Pick<ShapeLayer, "id" 
     ...layer,
     id: typeof layer.id === "string" && layer.id ? layer.id : crypto.randomUUID(),
     kind: "shape",
-    x: Number.isFinite(Number(layer.x)) ? Number(layer.x) : 64,
-    y: Number.isFinite(Number(layer.y)) ? Number(layer.y) : 64,
-    width: toNumericSize(layer.width, 260),
-    height: toNumericSize(layer.height, 120),
+    x: Number.isFinite(Number(layer.x)) ? Number(layer.x) : scaleCanvasValue(64),
+    y: Number.isFinite(Number(layer.y)) ? Number(layer.y) : scaleCanvasValue(64),
+    width: toNumericSize(layer.width, scaleCanvasValue(260)),
+    height: toNumericSize(layer.height, scaleCanvasValue(120)),
     fillColor: layer.fillColor ?? "#102532",
     fillOpacity: layer.fillOpacity ?? 1,
     borderRadius: layer.borderRadius ?? 0
@@ -4431,8 +4720,8 @@ function normalizeShapeLayer(layer: Partial<ShapeLayer> & Pick<ShapeLayer, "id" 
 
 function getOverlayPadding(fontSize: number) {
   return {
-    horizontal: clampValue(Math.round(fontSize * 0.32), 10, 24),
-    vertical: clampValue(Math.round(fontSize * 0.18), 8, 18)
+    horizontal: clampValue(Math.round(fontSize * 0.32), scaleCanvasValue(10), scaleCanvasValue(24)),
+    vertical: clampValue(Math.round(fontSize * 0.18), scaleCanvasValue(8), scaleCanvasValue(18))
   };
 }
 
@@ -4472,9 +4761,9 @@ function estimateOverlayBox(
     maxWidth: number;
   }
 ) {
-  const horizontalPadding = 20;
-  const verticalPadding = 12;
-  const availableLineWidth = Math.max(120, options.maxWidth - horizontalPadding);
+  const horizontalPadding = scaleCanvasValue(20);
+  const verticalPadding = scaleCanvasValue(12);
+  const availableLineWidth = Math.max(scaleCanvasValue(120), options.maxWidth - horizontalPadding);
   const lines = text.split("\n").map((line) => line.trimEnd());
   const measure = createTextMeasure(options);
 
@@ -4493,12 +4782,12 @@ function estimateOverlayBox(
   return {
     width: Math.round(
       clampValue(
-        Math.max(widestLine + horizontalPadding, Math.min(options.maxWidth, Math.max(220, options.fontSize * 8))),
-        96,
+        Math.max(widestLine + horizontalPadding, Math.min(options.maxWidth, Math.max(scaleCanvasValue(220), options.fontSize * 8))),
+        scaleCanvasValue(96),
         options.maxWidth
       )
     ),
-    height: Math.round(clampValue(wrappedLineCount * lineHeightPx + verticalPadding, 40, 220))
+    height: Math.round(clampValue(wrappedLineCount * lineHeightPx + verticalPadding, scaleCanvasValue(40), scaleCanvasValue(220)))
   };
 }
 
@@ -4927,6 +5216,128 @@ function normalizeSectionCopyFields(section: GeneratedResult["blueprint"]["secti
     trust_or_objection_line_en: section.trust_or_objection_line_en || section.trust_or_objection_line,
     CTA_en: section.CTA_en || section.CTA
   };
+}
+
+function normalizeSectionTemplate(section: SectionBlueprint, sectionIndex: number): SectionBlueprint {
+  const template = resolveSectionDesignTemplate(section, sectionIndex);
+  return {
+    ...section,
+    design_template_id: section.design_template_id ?? template.id,
+    layout_template: section.layout_template ?? template.layoutTemplate,
+    story_role: section.story_role || template.storyRole,
+    overlay_layout_hint: section.overlay_layout_hint || template.overlayLayoutHint
+  };
+}
+
+function cloneSectionsForHistory(sections: SectionBlueprint[]) {
+  return sections.map((section) => ({
+    ...section,
+    source_fact_refs: [...(section.source_fact_refs ?? [])],
+    bullets: [...section.bullets],
+    bullets_en: [...section.bullets_en],
+    editableLayers: section.editableLayers ? section.editableLayers.map((layer) => ({ ...layer, bounds: layer.bounds ? { ...layer.bounds } : undefined })) : undefined,
+    imageQualityReport: section.imageQualityReport
+      ? {
+          ...section.imageQualityReport,
+          checks: [...section.imageQualityReport.checks],
+          issues: section.imageQualityReport.issues.map((issue) => ({ ...issue })),
+          nextActions: [...section.imageQualityReport.nextActions],
+          rejectedAttempts: section.imageQualityReport.rejectedAttempts?.map((attempt) => ({ ...attempt }))
+        }
+      : undefined,
+    providerProof: section.providerProof ? { ...section.providerProof, capabilities: section.providerProof.capabilities ? [...section.providerProof.capabilities] : undefined } : undefined
+  }));
+}
+
+function cloneOverlayRecordForHistory(record: Record<number, CanvasLayer[]>) {
+  return Object.fromEntries(
+    Object.entries(record).map(([sectionIndex, layers]) => [
+      Number(sectionIndex),
+      layers.map((layer) =>
+        isTextLayer(layer)
+          ? {
+              ...layer,
+              translations: { ...layer.translations }
+            }
+          : { ...layer }
+      )
+    ])
+  ) as Record<number, CanvasLayer[]>;
+}
+
+function buildDocumentQualityIssues(input: {
+  section: SectionBlueprint;
+  layers: CanvasLayer[];
+  aspectRatio: AspectRatio;
+  template: PdpDesignTemplate | null;
+}): DocumentQualityIssue[] {
+  const issues: DocumentQualityIssue[] = [];
+  const canvasHeight = getOverlayCanvasHeight(input.aspectRatio);
+  const textLayers = input.layers.filter(isTextLayer);
+  const ctaCopy = getUsableCopy(input.section.CTA);
+  const ctaLayer = textLayers.find((layer) => /구매|도입|신청|문의|보기|확인|시작|다운|상담|CTA/i.test(layer.text));
+
+  if (!textLayers.length) {
+    issues.push({
+      severity: "blocked",
+      message: "편집 가능한 텍스트 레이어가 없습니다.",
+      fix: "카피 탭에서 텍스트를 추가하거나 현재 템플릿 기준으로 카피 레이어를 재배치하세요."
+    });
+  }
+
+  if (ctaCopy && !ctaLayer) {
+    issues.push({
+      severity: "review",
+      message: "CTA 카피가 있지만 CTA로 보이는 레이어가 없습니다.",
+      fix: "최종 행동 문구를 별도 버튼형 텍스트 레이어로 추가하세요."
+    });
+  }
+
+  for (const layer of textLayers) {
+    const width = toNumericSize(layer.width, scaleCanvasValue(320));
+    const height = toNumericSize(layer.height, scaleCanvasValue(96));
+    const estimated = estimateOverlayBox(layer.text, {
+      fontSize: layer.fontSize,
+      fontWeight: layer.fontWeight,
+      fontFamily: layer.fontFamily,
+      lineHeight: layer.lineHeight,
+      maxWidth: width
+    });
+    if (estimated.height > height + scaleCanvasValue(8)) {
+      issues.push({
+        severity: "review",
+        message: `"${layer.text.slice(0, 18)}" 텍스트가 박스보다 큽니다.`,
+        fix: "박스를 키우거나 글자 크기/줄 간격을 줄이세요."
+      });
+    }
+    if (layer.x < 0 || layer.y < 0 || layer.x + width > OVERLAY_CANVAS_WIDTH || layer.y + height > canvasHeight) {
+      issues.push({
+        severity: "blocked",
+        message: `"${layer.text.slice(0, 18)}" 레이어가 캔버스 밖으로 나갑니다.`,
+        fix: "레이어를 안전영역 안으로 이동하세요."
+      });
+    }
+    if (layer.backgroundEnabled && isHexColor(layer.backgroundColor) && isHexColor(layer.color)) {
+      const ratio = getContrastRatio(hexToRgb(layer.backgroundColor), hexToRgb(layer.color));
+      if (ratio < 4.5) {
+        issues.push({
+          severity: "review",
+          message: `"${layer.text.slice(0, 18)}" 텍스트 대비가 낮습니다.`,
+          fix: "추천 팔레트에서 더 진하거나 밝은 글자색을 선택하세요."
+        });
+      }
+    }
+  }
+
+  if (input.template?.id === "hero-product-focus" && textLayers.length < 2) {
+    issues.push({
+      severity: "review",
+      message: "히어로 템플릿에는 최소 헤드라인과 보조 카피가 필요합니다.",
+      fix: "헤드라인/서브카피 레이어를 추가하세요."
+    });
+  }
+
+  return issues.slice(0, 10);
 }
 
 function getLocalizedCopy(korean: string, english: string | undefined, language: PdpCopyLanguage) {

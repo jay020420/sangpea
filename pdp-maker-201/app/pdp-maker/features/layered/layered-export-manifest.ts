@@ -33,6 +33,7 @@ export type LayerExportManifest = {
   sections: Array<{
     sectionId: string;
     name: string;
+    templateId?: PdpLayeredDocumentV2["sections"][number]["templateId"];
     frameNodeId: string;
     nodes: ManifestNode[];
   }>;
@@ -90,6 +91,7 @@ export function buildLayerExportManifest(input: {
     sections: input.document.sections.map((section) => ({
       sectionId: section.sectionId,
       name: section.name,
+      templateId: section.templateId,
       frameNodeId: section.frameNodeId,
       nodes: section.nodes.slice().sort(sortByZIndex).map(nodeToManifestNode)
     }))

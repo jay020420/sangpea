@@ -124,7 +124,7 @@ export function PdpMakerClient() {
   const redesignInputRef = useRef<HTMLInputElement>(null);
   const knowledgeInputRef = useRef<HTMLInputElement>(null);
 
-  const apiConnectionLabel = config.auth?.ok ? "Codex OAuth" : "로그인 필요";
+  const apiConnectionLabel = config.auth?.ok ? "Codex OAuth" : config.auth ? "로그인 필요" : "확인 중";
   const productInputReadiness = useMemo(
     () =>
       buildProductInputReadiness({

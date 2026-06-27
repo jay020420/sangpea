@@ -15,6 +15,14 @@ export type PdpQualityMetricKey = "textReadability" | "ctaVisibility" | "mobileR
 export type PdpLayerNodeType = "frame" | "group" | "image" | "text" | "shape" | "cta" | "proof" | "product";
 export type PdpLayerBoundsUnit = "px" | "percent";
 export type PdpImageFit = "cover" | "contain" | "fill";
+export type PdpDesignTemplateId =
+  | "hero-product-focus"
+  | "problem-checklist"
+  | "benefit-card-grid"
+  | "proof-spec-panel"
+  | "demo-step-flow"
+  | "usecase-split-scene"
+  | "faq-final-cta";
 
 export interface ProductBrief {
   productName: string;
@@ -221,6 +229,7 @@ export interface PdpLayeredDocumentV2 {
     id: string;
     sectionId: string;
     name: string;
+    templateId?: PdpDesignTemplateId;
     frameNodeId: string;
     nodes: PdpLayerNode[];
   }>;
@@ -246,6 +255,7 @@ export interface SectionBlueprint {
   section_id: string;
   section_name: string;
   layout_template?: PdpLayoutTemplate;
+  design_template_id?: PdpDesignTemplateId;
   source_fact_refs?: string[];
   goal: string;
   headline: string;
@@ -406,6 +416,7 @@ export type PdpErrorCode =
   | "CODEX_AUTH_STALE"
   | "CODEX_MODEL_ACCESS_DENIED"
   | "CODEX_MODEL_NOT_FOUND"
+  | "CODEX_USAGE_LIMIT"
   | "CODEX_RESPONSE_INVALID"
   | "INVALID_IMAGE_PAYLOAD"
   | "INVALID_REQUEST"

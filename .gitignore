@@ -15,6 +15,7 @@ output
 .local
 .data
 .codex-dev-server*.log
+.codex-prod-server*.log
 .codex-reference-image.b64
 coverage
 .DS_Store

@@ -10,8 +10,7 @@ import type {
   PdpReferenceImage,
   SectionBlueprint
 } from "./shared";
-
-const DEFAULT_CANVAS_WIDTH = 460;
+import { getPdpCanvasHeight, PDP_EDITOR_CANVAS_WIDTH } from "./pdp-canvas-geometry";
 
 type RatioBounds = {
   x: number;
@@ -128,7 +127,7 @@ export function createLayeredDocumentV2FromBlueprint(input: {
 }): PdpLayeredDocumentV2 {
   const now = new Date().toISOString();
   const canvas = {
-    width: DEFAULT_CANVAS_WIDTH,
+    width: PDP_EDITOR_CANVAS_WIDTH,
     height: getCanvasHeight(input.aspectRatio),
     unit: "px" as const,
     aspectRatio: input.aspectRatio
@@ -174,19 +173,7 @@ export function createLayeredDocumentV2FromBlueprint(input: {
 }
 
 export function getCanvasHeight(aspectRatio: AspectRatio | undefined) {
-  switch (aspectRatio) {
-    case "1:1":
-      return 460;
-    case "4:3":
-      return 345;
-    case "16:9":
-      return 259;
-    case "3:4":
-      return 613;
-    case "9:16":
-    default:
-      return 818;
-  }
+  return getPdpCanvasHeight(aspectRatio);
 }
 
 export function generatedAssetId(sectionId: string) {
@@ -310,6 +297,7 @@ function buildSectionFrame(section: SectionBlueprint, index: number, canvas: Pdp
     id: `${sectionId}-section`,
     sectionId,
     name: section.section_name || sectionId,
+    templateId: section.design_template_id,
     frameNodeId,
     nodes: [frame]
   };

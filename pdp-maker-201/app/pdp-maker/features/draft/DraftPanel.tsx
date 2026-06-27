@@ -9,7 +9,7 @@ export function DraftPanel({ drafts, onOpen, onDelete }: { drafts: PdpDraftSumma
     <div className={styles.modelUsagePanel}>
       <div className={styles.modelUsageHeader}>
         <strong>Drafts</strong>
-        <span>로컬 저장 초안</span>
+        <span>저장 초안</span>
       </div>
       {drafts.length ? (
         <div className={styles.metaList}>

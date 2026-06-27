@@ -46,6 +46,8 @@ pnpm build
 
 If `/api/config` reports missing auth, run `npx @openai/codex login` again. If image generation returns 403, treat it as a Codex OAuth profile, workspace, or model-access issue rather than a prompt issue.
 
+For internal deployment notes, review `docs/PRODUCTION_READINESS.md`. `GET /api/ops/status` shows recent generation requests, limit hits, and failures for quick troubleshooting.
+
 ## OpenClaw Reference
 
 The Codex OAuth image transport was implemented by referencing OpenClaw's OpenAI image-generation provider behavior. OpenClaw is MIT licensed:

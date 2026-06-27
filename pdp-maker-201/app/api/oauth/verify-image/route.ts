@@ -1,4 +1,6 @@
 import { getImageProvider } from "../../../../lib/image-providers";
+import { REQUEST_LIMITS, jsonNoStore, readJsonBody, requestErrorResponse } from "../../../../lib/server/api-guards";
+import { withOperationGuard } from "../../../../lib/server/operation-guards";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -15,16 +17,14 @@ export async function POST(request: Request) {
   try {
     let body: Record<string, unknown>;
     try {
-      body = (await request.json()) as Record<string, unknown>;
-    } catch {
-      return Response.json(
-        {
-          ok: false,
-          error: "요청 JSON을 읽지 못했습니다.",
-          code: "INVALID_REQUEST"
-        },
-        { status: 400 }
-      );
+      body = await readJsonBody<Record<string, unknown>>(request, {
+        maxBytes: REQUEST_LIMITS.verifyImageJson,
+        label: "이미지 OAuth 검증"
+      });
+    } catch (error) {
+      return requestErrorResponse(error, {
+        fallbackMessage: "요청 JSON을 읽지 못했습니다."
+      });
     }
 
     const prompt =
@@ -36,20 +36,27 @@ export async function POST(request: Request) {
         ? [validateImagePayload(body.referenceImageBase64, body.referenceImageMimeType, "검증용 참조 이미지")]
         : [];
 
-    const result = await getImageProvider().generate({
-      prompt,
-      referenceImages: referenceImage,
-      aspectRatio: "1:1"
-    });
+    return withOperationGuard(request, {
+      operation: "oauth.verify-image",
+      category: "generation",
+      maxConcurrent: 1,
+      rateLimitMax: 5
+    }, async () => {
+      const result = await getImageProvider().generate({
+        prompt,
+        referenceImages: referenceImage,
+        aspectRatio: "1:1"
+      });
 
-    return Response.json({
-      ok: true,
-      imageBase64: result.imageBase64,
-      mimeType: result.mimeType,
-      providerProof: result.providerProof
+      return jsonNoStore({
+        ok: true,
+        imageBase64: result.imageBase64,
+        mimeType: result.mimeType,
+        providerProof: result.providerProof
+      });
     });
   } catch (error) {
-    return Response.json(
+    return jsonNoStore(
       {
         ok: false,
         error: error instanceof Error ? error.message : "이미지 OAuth 검증 실패",
@@ -66,6 +73,7 @@ function mapErrorStatus(error: unknown) {
   if (code === "INVALID_IMAGE_PAYLOAD" || code === "INVALID_REQUEST") return 400;
   if (code === "CODEX_AUTH_MISSING" || code === "CODEX_AUTH_STALE") return 401;
   if (code === "CODEX_MODEL_ACCESS_DENIED" || code === "CODEX_MODEL_NOT_FOUND") return 403;
+  if (code === "CODEX_USAGE_LIMIT") return 429;
   if (code === "CODEX_RESPONSE_INVALID") return 502;
   return 500;
 }

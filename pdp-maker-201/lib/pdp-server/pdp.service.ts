@@ -11,6 +11,7 @@ import {
 } from "../codex-oauth";
 import { getImageProvider, type ImageProvider } from "../image-providers";
 import { hasExpectedImageSignature } from "../image-validation";
+import { humanizeKoreanCopy, type KoreanCopyKind } from "../korean-humanize";
 import { buildKnowledgeContextWithSources } from "../local-rag";
 import { createLayeredDocumentV2FromBlueprint } from "../pdp-layered-document";
 import type {
@@ -22,6 +23,7 @@ import type {
   ImageGenOptions,
   LandingPageBlueprint,
   PdpAnalyzeRequest,
+  PdpDesignTemplateId,
   PdpErrorCode,
   PdpEditableLayer,
   PdpFinalQualityRequest,
@@ -54,6 +56,15 @@ const SCHEMA_REPAIR_TIMEOUT_MS = 30_000;
 const IMAGE_QUALITY_TIMEOUT_MS = 45_000;
 const LAYOUT_TEMPLATES = ["hero", "problem", "benefit", "proof", "spec", "demo", "use-case", "faq-cta"] as const;
 const ALLOWED_LAYOUT_TEMPLATE_TEXT = LAYOUT_TEMPLATES.join(", ");
+const DESIGN_TEMPLATE_IDS = [
+  "hero-product-focus",
+  "problem-checklist",
+  "benefit-card-grid",
+  "proof-spec-panel",
+  "demo-step-flow",
+  "usecase-split-scene",
+  "faq-final-cta"
+] as const satisfies readonly PdpDesignTemplateId[];
 const SUPPORTED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 const StringArraySchema = z.preprocess((value) => {
@@ -143,6 +154,7 @@ const SectionBlueprintSchema = z.object({
   section_id: z.string().default(""),
   section_name: z.string().default(""),
   layout_template: z.string().optional(),
+  design_template_id: z.string().optional(),
   source_fact_refs: StringArraySchema.optional().default([]),
   goal: z.string().default(""),
   headline: z.string().default(""),
@@ -259,8 +271,9 @@ type BlueprintJson = z.infer<typeof BlueprintSchema>;
 type CombinedAnalysisJson = z.infer<typeof CombinedAnalysisSchema>;
 type StoryCopyRefinementJson = z.infer<typeof StoryCopyRefinementSchema>;
 type ImageQualityReportJson = z.infer<typeof ImageQualityReportSchema>;
-type NormalizableSection = Partial<Omit<SectionBlueprint, "layout_template" | "source_fact_refs" | "bullets" | "bullets_en">> & {
+type NormalizableSection = Partial<Omit<SectionBlueprint, "layout_template" | "design_template_id" | "source_fact_refs" | "bullets" | "bullets_en">> & {
   layout_template?: unknown;
+  design_template_id?: unknown;
   source_fact_refs?: unknown;
   bullets?: unknown;
   bullets_en?: unknown;
@@ -1115,6 +1128,7 @@ function buildStoryCopyRefinementPrompt(input: {
     "Make the page read like one conversion story: S1 hook/value, S2 customer problem, S3 concrete benefit, S4 choice reason, S5 proof/spec/trust including review/certification/numeric proof-style copy when useful, S6 usage/demo, S7 use case, S8 final objection and CTA. If there are fewer sections, keep the same order without duplicating roles.",
     "One section = one argument. Do not repeat the same headline idea. Each section should answer the natural next question raised by the previous section.",
     "Write as final composited PDP copy, not editor notes. The app will place this text onto the generated section image, so every line must be worth showing to a paying customer.",
+    "Apply the epoko77-ai/im-not-ai Korean humanizing principles: preserve meaning and facts, remove translationese such as '~를 통해/~에 대해/~에 있어서', avoid mechanical connectors like '또한/따라서/결론적으로', avoid AI-style hype such as '혁신적인/압도적인/차원이 다른', and keep natural Korean rhythm.",
     "Korean copy length limits for final app-composited text: headline 8-22 characters when possible and never over 28, subheadline 24-44 and never over 58, each bullet 8-18 and never over 24, trust line never over 34, CTA 4-10 and never over 14.",
     "Use concrete customer language. Avoid generic claims like 프리미엄, 혁신, 완벽, 차원이 다른, 놀라운, 압도적 unless made concrete by source facts.",
     "Do not ask the image model to render this Korean text directly. This copy is for app-composited editable layers that export as final image pixels.",
@@ -1194,6 +1208,7 @@ async function buildSectionImagePromptBundle(request: PdpGenerateImageRequest): 
     [
       "Stage: section image generation. RAG is only visual/layout guidance, not product facts.",
       `Layout template: ${request.layoutTemplate || request.section.layout_template || "auto"}`,
+      request.section.design_template_id ? `Design template: ${request.section.design_template_id}` : "",
       `Product brief: ${briefToPromptText(productBrief)}`,
       request.productDescription ? `User product facts:\n${request.productDescription}` : ""
     ]
@@ -1377,6 +1392,7 @@ function buildImagePrompt(input: {
     "If no real software screenshot or UI reference is provided, do not invent a detailed fake dashboard. Use neutral device/browser frames with empty panels and source-faithful product context instead.",
     "Do not introduce decorative icons, skulls, crosshairs, combat/game symbols, target reticles, badges, notification pills, chat bubbles, or fictional controls unless they are clearly present in the uploaded source. Software PDP visuals should feel like a product workflow, not a game poster.",
     `Layout template: ${template}.`,
+    section.design_template_id ? `Design template: ${section.design_template_id}.` : "",
     `Story role: ${storyRole}.`,
     `Role-specific visual layout: ${roleLayoutDirection}`,
     `Product brief:\n${briefToPromptText(input.productBrief)}`,
@@ -1394,6 +1410,7 @@ function buildImagePrompt(input: {
     `Goal: ${section.goal || section.purpose}.`,
     `Style guide: ${section.style_guide}.`,
     `Layout notes: ${section.layout_notes}.`,
+    section.overlay_layout_hint ? `Editable overlay layout hint: ${section.overlay_layout_hint}.` : "",
     `Prompt direction: ${section.prompt_en || section.prompt_ko}.`,
     referenceInventory ? `Reference inventory:\n${referenceInventory}` : "",
     input.knowledgeText ? `Korean commerce RAG guidance:\n${input.knowledgeText.slice(0, 12000)}` : "",
@@ -2003,6 +2020,7 @@ function normalizeSection(section: NormalizableSection, index: number, aspectRat
     section_id: id,
     section_name: name,
     layout_template: layoutTemplate,
+    design_template_id: normalizeDesignTemplateId(section.design_template_id || defaults.design_template_id),
     source_fact_refs: normalizeStringArray(section.source_fact_refs, plan?.source_fact_refs ?? []),
     goal: section.goal || plan?.goal || defaults.goal,
     headline: section.headline || "",
@@ -2385,9 +2403,19 @@ function cleanVisibleCopy(value: string | undefined, kind: CopyFieldKind) {
     .trim();
 
   if (!normalized) return "";
-  const withoutTerminal = removeDanglingCopyEnding(kind === "headline" || kind === "cta" ? normalized.replace(/[.!?。！？]+$/g, "") : normalized);
+  const humanized = humanizeKoreanCopy(normalized, {
+    kind: toKoreanHumanizeKind(kind),
+    maxLength: limit
+  });
+  const withoutTerminal = removeDanglingCopyEnding(kind === "headline" || kind === "cta" ? humanized.replace(/[.!?。！？]+$/g, "") : humanized);
   if (withoutTerminal.length <= limit) return withoutTerminal;
   return removeDanglingCopyEnding(trimCopyAtBoundary(withoutTerminal, limit));
+}
+
+function toKoreanHumanizeKind(kind: CopyFieldKind): KoreanCopyKind {
+  return kind === "bullet" || kind === "cta" || kind === "headline" || kind === "subheadline" || kind === "trust"
+    ? kind
+    : "body";
 }
 
 function trimCopyAtBoundary(value: string, limit: number) {
@@ -3827,6 +3855,11 @@ function normalizeLayoutTemplate(value: unknown): PdpLayoutTemplate {
   return "benefit";
 }
 
+function normalizeDesignTemplateId(value: unknown): PdpDesignTemplateId | undefined {
+  const normalized = String(value ?? "").trim();
+  return DESIGN_TEMPLATE_IDS.includes(normalized as PdpDesignTemplateId) ? (normalized as PdpDesignTemplateId) : undefined;
+}
+
 function normalizePdpReferenceImages(request: PdpAnalyzeRequest): PdpReferenceImage[] {
   const references = (request.referenceImages ?? [])
     .map((reference, index) => normalizeReferenceImage(reference, index))
@@ -4026,6 +4059,7 @@ const SECTION_PLAN_REPAIR_SHAPE = {
       section_id: "S1",
       section_name: "",
       layout_template: "hero",
+      design_template_id: "hero-product-focus",
       goal: "",
       purpose: "",
       source_fact_refs: []
@@ -4041,6 +4075,7 @@ const BLUEPRINT_REPAIR_SHAPE = {
       section_id: "S1",
       section_name: "",
       layout_template: "hero",
+      design_template_id: "hero-product-focus",
       source_fact_refs: [],
       goal: "",
       headline: "",

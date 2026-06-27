@@ -2,555 +2,244 @@
   - Local:        http://localhost:3001
 
  ✓ Starting...
- ✓ Ready in 4.5s
+ ✓ Ready in 9s
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 8.3s (37 modules)
+ GET /api/health 200 in 8777ms
+ ✓ Compiled /api/drafts in 223ms (41 modules)
+ POST /api/drafts 200 in 401ms
+ GET /api/drafts 200 in 67ms
+ GET /api/health 200 in 86ms
  ○ Compiling /pdp-maker ...
- ✓ Compiled /pdp-maker in 8.4s (712 modules)
- GET /pdp-maker 200 in 41ms
- ✓ Compiled /api/pdp/images in 327ms (403 modules)
- ✓ Compiled (486 modules)
- POST /api/pdp/images 400 in 1059ms
- GET /api/config 200 in 2316ms
- ✓ Compiled /api/pdp/analyze in 175ms (488 modules)
- POST /api/pdp/analyze 200 in 136362ms
- POST /api/pdp/images 502 in 108996ms
- GET /api/config 200 in 636ms
- POST /api/pdp/images 502 in 825ms
- POST /api/pdp/images 502 in 2917ms
- POST /api/pdp/images 200 in 101957ms
- GET /pdp-maker 200 in 165ms
- ✓ Compiled /api/knowledge in 212ms (405 modules)
- GET /api/knowledge 200 in 283ms
- GET /api/knowledge 200 in 13ms
- GET /api/config 200 in 410ms
- GET /api/config 200 in 267ms
- ✓ Compiled in 721ms (714 modules)
- GET /api/knowledge 200 in 43ms
- GET /api/knowledge 200 in 15ms
- GET /api/knowledge 200 in 17ms
- GET /api/config 200 in 314ms
- GET /api/config 200 in 178ms
- GET /api/config 200 in 123ms
- GET /pdp-maker 200 in 138ms
- GET /api/knowledge 200 in 28ms
- GET /api/knowledge 200 in 14ms
- GET /api/config 200 in 242ms
- GET /api/config 200 in 171ms
- GET /pdp-maker 200 in 64ms
- GET /api/knowledge 200 in 39ms
- GET /api/knowledge 200 in 27ms
- GET /api/config 200 in 250ms
- GET /api/config 200 in 191ms
- ✓ Compiled /api/pdp/analyze in 206ms (484 modules)
- POST /api/pdp/analyze 200 in 196626ms
- ✓ Compiled /api/pdp/images in 182ms (484 modules)
- POST /api/pdp/images 200 in 120865ms
- ✓ Compiled in 1288ms (703 modules)
- ✓ Compiled in 608ms (703 modules)
- ✓ Compiled in 784ms (703 modules)
- ✓ Compiled in 1066ms (703 modules)
- ✓ Compiled in 850ms (703 modules)
- ✓ Compiled in 941ms (712 modules)
- ✓ Compiled /api/knowledge in 299ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 546ms
- GET /api/knowledge 200 in 553ms
- GET /api/config 200 in 720ms
- GET /api/config 200 in 725ms
- ✓ Compiled in 263ms (309 modules)
- ✓ Compiled in 197ms (309 modules)
- ✓ Compiled in 150ms (309 modules)
- GET /pdp-maker 200 in 151ms
- GET /api/knowledge 200 in 36ms
- GET /api/knowledge 200 in 14ms
- GET /api/config 200 in 235ms
- GET /api/config 200 in 150ms
- ✓ Compiled in 1138ms (714 modules)
- GET /pdp-maker 200 in 181ms
- GET /api/knowledge 200 in 47ms
- GET /api/knowledge 200 in 17ms
- GET /api/config 200 in 204ms
- GET /api/config 200 in 121ms
- ✓ Compiled in 692ms (309 modules)
- ✓ Compiled in 199ms (309 modules)
- ✓ Compiled in 571ms (309 modules)
- ✓ Compiled in 174ms (309 modules)
- ✓ Compiled in 342ms (309 modules)
- ✓ Compiled in 1047ms (712 modules)
- ✓ Compiled /api/knowledge in 155ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 377ms
- GET /api/knowledge 200 in 378ms
- GET /api/config 200 in 1297ms
- GET /api/config 200 in 1397ms
- ✓ Compiled in 750ms (714 modules)
- GET /pdp-maker 200 in 234ms
- ○ Compiling /api/pdp/analyze ...
- ✓ Compiled /api/pdp/analyze in 645ms (484 modules)
- POST /api/pdp/analyze 200 in 184205ms
- ✓ Compiled in 461ms (703 modules)
- ✓ Compiled in 195ms (309 modules)
- GET /pdp-maker 200 in 199ms
- ○ Compiling /api/knowledge ...
- ✓ Compiled /api/knowledge in 593ms (424 modules)
- ✓ Compiled (433 modules)
- GET /pdp-maker/icon.svg 200 in 762ms
- GET /api/knowledge 200 in 716ms
- GET /pdp-maker/icon.svg 200 in 37ms
- GET /api/knowledge 200 in 37ms
- GET /api/config 200 in 930ms
- GET /api/config 200 in 136ms
- ✓ Compiled in 772ms (742 modules)
- GET /pdp-maker 200 in 157ms
- GET /api/knowledge 200 in 43ms
- GET /api/knowledge 200 in 21ms
- GET /api/config 200 in 221ms
- GET /api/config 200 in 162ms
- ✓ Compiled in 262ms (309 modules)
- ✓ Compiled in 203ms (309 modules)
- ✓ Compiled in 197ms (309 modules)
- ✓ Compiled in 151ms (309 modules)
- ✓ Compiled in 580ms (309 modules)
- ✓ Compiled in 170ms (309 modules)
- ✓ Compiled in 583ms (703 modules)
- ✓ Compiled in 404ms (703 modules)
- ✓ Compiled in 398ms (703 modules)
- ✓ Compiled in 706ms (712 modules)
- ✓ Compiled /api/knowledge in 320ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 564ms
- GET /api/knowledge 200 in 566ms
- GET /api/config 200 in 709ms
- GET /api/config 200 in 721ms
- ✓ Compiled in 727ms (714 modules)
- GET /api/knowledge 200 in 77ms
- GET /api/knowledge 200 in 88ms
- GET /api/knowledge 200 in 53ms
- GET /api/knowledge 200 in 44ms
- GET /api/knowledge 200 in 45ms
- GET /api/knowledge 200 in 31ms
- GET /api/config 200 in 261ms
- GET /api/config 200 in 270ms
- GET /api/config 200 in 129ms
- GET /api/config 200 in 158ms
- GET /api/config 200 in 123ms
- GET /api/config 200 in 133ms
- ✓ Compiled in 276ms (309 modules)
- ✓ Compiled /api/pdp/analyze in 478ms (484 modules)
- POST /api/pdp/analyze 200 in 181360ms
- ✓ Compiled in 375ms (703 modules)
- ✓ Compiled in 232ms (309 modules)
- ✓ Compiled in 232ms (309 modules)
- GET /pdp-maker 200 in 203ms
- ✓ Compiled /api/knowledge in 158ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 386ms
- GET /api/knowledge 200 in 28ms
- GET /api/config 200 in 611ms
- GET /api/config 200 in 143ms
- ✓ Compiled in 241ms (309 modules)
- ✓ Compiled in 211ms (309 modules)
- ✓ Compiled in 152ms (309 modules)
- ✓ Compiled in 166ms (309 modules)
- ✓ Compiled in 231ms (309 modules)
- ✓ Compiled in 196ms (309 modules)
- ✓ Compiled in 163ms (309 modules)
- ✓ Compiled in 710ms (703 modules)
- ✓ Compiled in 490ms (703 modules)
- ✓ Compiled in 666ms (712 modules)
- ✓ Compiled /api/knowledge in 185ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 497ms
- GET /api/knowledge 200 in 498ms
- GET /api/config 200 in 658ms
- GET /api/config 200 in 674ms
- ✓ Compiled /api/pdp/images in 416ms (484 modules)
- POST /api/pdp/images 200 in 120756ms
- ✓ Compiled in 695ms (703 modules)
- ✓ Compiled /api/pdp/images in 413ms (484 modules)
- POST /api/pdp/images 200 in 102260ms
- GET /pdp-maker 200 in 247ms
- ✓ Compiled /api/knowledge in 222ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 575ms
- GET /api/knowledge 200 in 44ms
- GET /api/config 200 in 780ms
- GET /api/config 200 in 181ms
- ✓ Compiled in 384ms (309 modules)
- ✓ Compiled in 305ms (309 modules)
- ✓ Compiled in 285ms (309 modules)
- ✓ Compiled in 743ms (309 modules)
- ✓ Compiled in 1379ms (703 modules)
- ✓ Compiled in 759ms (703 modules)
- ✓ Compiled in 356ms (309 modules)
+ ✓ Compiled /pdp-maker in 12.5s (3471 modules)
+ GET /pdp-maker 200 in 12794ms
+ ✓ Compiled /api/knowledge in 445ms (1771 modules)
+ ✓ Compiled (1778 modules)
+ GET /api/knowledge 200 in 735ms
+ GET /api/drafts 200 in 771ms
+ GET /api/drafts 200 in 797ms
+ GET /api/knowledge 200 in 25ms
+ GET /api/config 200 in 2510ms
+ GET /api/config 200 in 698ms
+ ✓ Compiled /api/health in 296ms (1781 modules)
+ GET /api/health 200 in 819ms
+ GET /pdp-maker 200 in 815ms
+ GET /api/drafts?id=qa-layered-editor-1782548115423 200 in 28ms
+ ✓ Compiled in 2.9s (3436 modules)
+ GET /pdp-maker 200 in 206ms
+ ✓ Compiled /api/knowledge in 484ms (1789 modules)
+ ✓ Compiled (1806 modules)
+ GET /pdp-maker/icon.svg 200 in 750ms
+ GET /api/knowledge 200 in 722ms
+ GET /api/drafts 200 in 766ms
+ GET /api/drafts 200 in 798ms
+ GET /pdp-maker/icon.svg 200 in 109ms
+ GET /api/knowledge 200 in 32ms
+ GET /api/config 200 in 1207ms
+ GET /api/config 200 in 454ms
  ○ Compiling /api/pdp/images ...
- ✓ Compiled /api/pdp/images in 765ms (484 modules)
- POST /api/pdp/images 200 in 228408ms
- GET /pdp-maker 200 in 272ms
- ✓ Compiled /api/knowledge in 244ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 631ms
- GET /api/knowledge 200 in 36ms
- GET /api/config 200 in 1808ms
- GET /api/config 200 in 220ms
- ✓ Compiled in 1324ms (703 modules)
- ✓ Compiled in 875ms (703 modules)
- ✓ Compiled in 1271ms (703 modules)
- ✓ Compiled in 878ms (703 modules)
- ✓ Compiled in 1449ms (712 modules)
- ✓ Compiled /api/knowledge in 335ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 640ms
- GET /api/knowledge 200 in 642ms
- GET /api/config 200 in 894ms
- GET /api/config 200 in 932ms
- GET /pdp-maker 200 in 306ms
- GET /api/knowledge 200 in 73ms
- GET /api/knowledge 200 in 46ms
- GET /api/config 200 in 372ms
- GET /api/config 200 in 279ms
- ✓ Compiled in 1529ms (703 modules)
- ✓ Compiled /api/knowledge in 171ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 427ms
- GET /api/knowledge 200 in 414ms
- GET /api/knowledge 200 in 54ms
- GET /api/knowledge 200 in 54ms
- GET /api/knowledge 200 in 44ms
- GET /api/knowledge 200 in 45ms
- GET /api/config 200 in 677ms
- GET /api/config 200 in 725ms
- GET /api/config 200 in 210ms
- GET /api/config 200 in 229ms
- GET /api/config 200 in 208ms
- GET /api/config 200 in 477ms
- ✓ Compiled in 789ms (714 modules)
- GET /pdp-maker 500 in 931ms
- GET /pdp-maker 500 in 933ms
- ✓ Compiled in 660ms (714 modules)
- GET /pdp-maker 500 in 332ms
- GET /pdp-maker 500 in 343ms
- ✓ Compiled in 721ms (714 modules)
- GET /pdp-maker 500 in 364ms
- GET /pdp-maker 500 in 372ms
- ✓ Compiled in 1585ms (703 modules)
- GET /pdp-maker 200 in 580ms
- GET /pdp-maker 200 in 590ms
- ○ Compiling /api/config ...
- ✓ Compiled /api/config in 596ms (424 modules)
- ✓ Compiled (433 modules)
- GET /pdp-maker/icon.svg 200 in 832ms
- GET /api/knowledge 200 in 807ms
- GET /api/knowledge 200 in 389ms
- GET /pdp-maker/icon.svg 200 in 75ms
- GET /api/knowledge 200 in 82ms
- GET /api/knowledge 200 in 84ms
- GET /api/config 200 in 1082ms
- GET /api/config 200 in 703ms
- GET /api/config 200 in 238ms
- GET /api/config 200 in 218ms
- ✓ Compiled in 1631ms (751 modules)
- ✓ Compiled in 0ms (433 modules)
- ✓ Compiled in 1ms (433 modules)
- ✓ Compiled in 0ms (433 modules)
- GET /api/knowledge 200 in 1219ms
- GET /api/knowledge 200 in 1219ms
- GET /api/config 200 in 2149ms
- GET /api/config 200 in 2184ms
- GET /pdp-maker 200 in 288ms
- GET /api/knowledge 200 in 86ms
- GET /api/knowledge 200 in 54ms
- GET /api/config 200 in 392ms
- GET /api/config 200 in 318ms
- ✓ Compiled in 440ms (309 modules)
- ✓ Compiled in 278ms (309 modules)
- ✓ Compiled in 385ms (309 modules)
- ✓ Compiled in 625ms (309 modules)
- ✓ Compiled in 136ms (309 modules)
- ✓ Compiled in 1666ms (703 modules)
- ✓ Compiled /api/knowledge in 281ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 704ms
- GET /api/knowledge 200 in 680ms
- GET /api/config 200 in 1111ms
- GET /api/config 200 in 1616ms
- ✓ Compiled in 994ms (714 modules)
- ✓ Compiled in 0ms (405 modules)
- ✓ Compiled in 0ms (405 modules)
- ✓ Compiled in 0ms (405 modules)
- GET /api/knowledge 200 in 862ms
- GET /api/knowledge 200 in 867ms
- GET /api/config 200 in 1785ms
- GET /api/config 200 in 1787ms
- ✓ Compiled in 877ms (714 modules)
- GET /api/knowledge 200 in 135ms
- GET /api/knowledge 200 in 129ms
- GET /api/knowledge 200 in 75ms
- GET /api/knowledge 200 in 77ms
- GET /api/knowledge 200 in 52ms
- GET /api/knowledge 200 in 55ms
- GET /api/config 200 in 1035ms
- GET /api/config 200 in 1038ms
- GET /api/config 200 in 909ms
- GET /api/config 200 in 896ms
- GET /api/config 200 in 912ms
- GET /api/config 200 in 937ms
- ✓ Compiled in 1130ms (714 modules)
- ✓ Compiled in 1ms (405 modules)
- ✓ Compiled in 1ms (405 modules)
- ✓ Compiled in 1ms (405 modules)
- GET /api/knowledge 200 in 1187ms
- GET /api/knowledge 200 in 1187ms
- GET /api/config 200 in 1578ms
- GET /api/config 200 in 1585ms
- ✓ Compiled in 1032ms (714 modules)
- GET /api/knowledge 200 in 213ms
- GET /api/knowledge 200 in 210ms
- GET /api/knowledge 200 in 41ms
- GET /api/knowledge 200 in 36ms
- GET /api/config 200 in 516ms
- GET /api/config 200 in 826ms
- GET /api/config 200 in 371ms
- GET /api/config 200 in 497ms
- GET /pdp-maker 200 in 513ms
- GET /api/knowledge 200 in 83ms
- GET /api/knowledge 200 in 53ms
- GET /api/config 200 in 618ms
- GET /api/config 200 in 332ms
- ✓ Compiled in 1519ms (703 modules)
- ✓ Compiled in 1218ms (703 modules)
- ✓ Compiled in 1897ms (703 modules)
- ✓ Compiled in 1534ms (703 modules)
- GET /pdp-maker 200 in 289ms
- ✓ Compiled /api/knowledge in 400ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 706ms
- GET /api/knowledge 200 in 47ms
- GET /api/config 200 in 1016ms
- GET /api/config 200 in 268ms
- ✓ Compiled in 1471ms (703 modules)
- ✓ Compiled in 839ms (703 modules)
- ✓ Compiled in 1612ms (703 modules)
- ✓ Compiled in 1026ms (703 modules)
- ✓ Compiled in 1039ms (703 modules)
- ✓ Compiled in 1565ms (703 modules)
- ✓ Compiled in 1091ms (703 modules)
- ✓ Compiled in 1467ms (703 modules)
- GET /pdp-maker 200 in 288ms
- ✓ Compiled /api/knowledge in 345ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 628ms
- GET /api/knowledge 200 in 45ms
- GET /api/config 200 in 852ms
- GET /api/config 200 in 170ms
- ✓ Compiled in 1889ms (703 modules)
- GET /pdp-maker 200 in 412ms
- ✓ Compiled /api/knowledge in 384ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 810ms
- GET /api/knowledge 200 in 84ms
- GET /api/config 200 in 1268ms
- GET /api/config 200 in 296ms
- ✓ Compiled /api/pdp/validate-key in 362ms (484 modules)
- ✓ Compiled in 0ms (486 modules)
- ✓ Compiled in 0ms (486 modules)
- ✓ Compiled in 1ms (486 modules)
- POST /api/pdp/analyze 400 in 1197ms
- GET /api/pdp/validate-key 200 in 1362ms
- POST /api/pdp/analyze 200 in 867ms
- ✓ Compiled in 392ms (703 modules)
- ✓ Compiled in 185ms (309 modules)
- ✓ Compiled /api/pdp/analyze in 375ms (484 modules)
- POST /api/pdp/analyze 200 in 1095ms
- ✓ Compiled in 390ms (703 modules)
- ✓ Compiled in 169ms (309 modules)
- ✓ Compiled /api/pdp/analyze in 283ms (484 modules)
- POST /api/pdp/analyze 200 in 2170ms
- ✓ Compiled in 786ms (703 modules)
- ✓ Compiled in 668ms (703 modules)
- ✓ Compiled in 396ms (703 modules)
- ✓ Compiled in 538ms (703 modules)
- ✓ Compiled /api/knowledge in 149ms (403 modules)
- ✓ Compiled (405 modules)
- GET /api/knowledge 200 in 294ms
- GET /api/knowledge 200 in 294ms
- GET /api/knowledge 200 in 36ms
- GET /api/knowledge 200 in 38ms
- GET /api/knowledge 200 in 27ms
- GET /api/knowledge 200 in 28ms
- GET /api/config 200 in 686ms
- GET /api/config 200 in 764ms
- GET /api/config 200 in 224ms
- GET /api/config 200 in 198ms
- GET /api/config 200 in 206ms
- GET /api/config 200 in 195ms
- ✓ Compiled in 421ms (714 modules)
- GET /api/knowledge 200 in 68ms
- GET /api/knowledge 200 in 78ms
- GET /api/knowledge 200 in 47ms
- GET /api/knowledge 200 in 43ms
- GET /api/knowledge 200 in 35ms
- GET /api/knowledge 200 in 27ms
- GET /api/config 200 in 289ms
- GET /api/config 200 in 287ms
- GET /api/config 200 in 209ms
- GET /api/config 200 in 219ms
- GET /api/config 200 in 215ms
- GET /api/config 200 in 211ms
- ✓ Compiled in 352ms (714 modules)
- ✓ Compiled in 0ms (405 modules)
- ✓ Compiled in 0ms (405 modules)
- ✓ Compiled in 0ms (405 modules)
- GET /api/knowledge 200 in 350ms
- GET /api/knowledge 200 in 349ms
- GET /api/config 200 in 570ms
- GET /api/config 200 in 573ms
- ✓ Compiled /api/pdp/analyze in 282ms (488 modules)
- POST /api/pdp/analyze 400 in 346ms
- GET /pdp-maker 200 in 168ms
- GET /api/knowledge 200 in 40ms
- GET /api/knowledge 200 in 24ms
- GET /api/config 200 in 250ms
- GET /api/config 200 in 201ms
- GET /api/config 200 in 297ms
- ✓ Compiled in 323ms (703 modules)
- ✓ Compiled /api/pdp/analyze in 184ms (484 modules)
- POST /api/pdp/analyze 200 in 944ms
- ✓ Compiled in 710ms (703 modules)
- ✓ Compiled in 375ms (309 modules)
- ○ Compiling /_not-found ...
- ✓ Compiled /_not-found in 882ms (692 modules)
- GET /pdp-maker 200 in 207ms
- GET /pdp-maker 200 in 208ms
- ✓ Compiled /api/knowledge in 174ms (404 modules)
- ✓ Compiled in 0ms (406 modules)
- ✓ Compiled in 0ms (406 modules)
- ✓ Compiled in 0ms (406 modules)
- GET /api/knowledge 200 in 803ms
- GET /api/knowledge 200 in 37ms
- GET /api/knowledge 200 in 40ms
- GET /api/knowledge 200 in 19ms
- GET /api/config 200 in 1306ms
- GET /api/config 200 in 326ms
- GET /api/config 200 in 178ms
- GET /api/config 200 in 159ms
- ✓ Compiled in 387ms (309 modules)
- ✓ Compiled /_not-found in 285ms (692 modules)
- GET /pdp-maker 200 in 221ms
- GET /pdp-maker 200 in 229ms
- ✓ Compiled /api/knowledge in 98ms (404 modules)
- ✓ Compiled (406 modules)
- GET /api/knowledge 200 in 275ms
- GET /api/knowledge 200 in 28ms
- GET /api/knowledge 200 in 40ms
- GET /api/knowledge 200 in 27ms
- GET /api/config 200 in 520ms
- GET /api/config 200 in 268ms
- GET /api/config 200 in 223ms
- GET /api/config 200 in 265ms
- ✓ Compiled in 342ms (309 modules)
- ✓ Compiled /_not-found in 301ms (692 modules)
- GET /pdp-maker 200 in 189ms
- GET /pdp-maker 200 in 195ms
- ✓ Compiled /api/knowledge in 110ms (404 modules)
- ✓ Compiled (406 modules)
- GET /api/knowledge 200 in 306ms
- GET /api/knowledge 200 in 26ms
- GET /api/config 200 in 559ms
- GET /api/knowledge 200 in 55ms
- GET /api/knowledge 200 in 36ms
- GET /api/config 200 in 263ms
- GET /api/config 200 in 334ms
- GET /api/config 200 in 238ms
- ✓ Compiled in 486ms (703 modules)
- ✓ Compiled in 190ms (309 modules)
- ✓ Compiled in 359ms (309 modules)
- ✓ Compiled /_not-found in 226ms (692 modules)
- GET /pdp-maker 200 in 252ms
- GET /pdp-maker 200 in 262ms
- ✓ Compiled /api/knowledge in 247ms (404 modules)
- ✓ Compiled in 0ms (406 modules)
- ✓ Compiled in 0ms (406 modules)
- ✓ Compiled in 0ms (406 modules)
- GET /api/knowledge 200 in 778ms
- GET /api/knowledge 200 in 501ms
- GET /api/knowledge 200 in 47ms
- GET /api/knowledge 200 in 48ms
- GET /api/config 200 in 854ms
- GET /api/config 200 in 589ms
- GET /api/config 200 in 230ms
- GET /api/config 200 in 261ms
- ✓ Compiled in 228ms (311 modules)
- ○ Compiling /_error ...
- ✓ Compiled /_error in 3.2s (924 modules)
- GET /api/config 404 in 3530ms
- ✓ Compiled in 1040ms (924 modules)
- ✓ Compiled in 279ms (491 modules)
- ✓ Compiled in 249ms (491 modules)
- ○ Compiling /_error ...
- ✓ Compiled /_error in 2s (912 modules)
- GET /pdp-maker 200 in 232ms
+ ✓ Compiled /api/pdp/images in 1435ms (1858 modules)
+ POST /api/pdp/images 502 in 2513ms
+ POST /api/pdp/images 502 in 736ms
+ ✓ Compiled in 928ms (1677 modules)
+ ✓ Compiled in 1012ms (3436 modules)
+ ✓ Compiled in 540ms (1677 modules)
+ ✓ Compiled in 386ms (1677 modules)
+ ✓ Compiled in 432ms (1677 modules)
+ ○ Compiling /api/pdp/images ...
+ ✓ Compiled /api/pdp/images in 592ms (1858 modules)
+ POST /api/pdp/images 429 in 1408ms
+ POST /api/pdp/images 429 in 661ms
+ ✓ Compiled /api/drafts in 322ms (1861 modules)
+ POST /api/drafts 200 in 447ms
+ GET /pdp-maker 200 in 196ms
  ○ Compiling /api/knowledge ...
- ✓ Compiled /api/knowledge in 1703ms (443 modules)
- ✓ Compiled in 1ms (445 modules)
- ✓ Compiled in 1ms (445 modules)
- ✓ Compiled in 0ms (445 modules)
- GET /api/knowledge 200 in 2404ms
- GET /api/knowledge 200 in 37ms
- GET /api/config 200 in 2820ms
- GET /api/config 200 in 302ms
- ✓ Compiled in 337ms (492 modules)
- ✓ Compiled in 300ms (492 modules)
- ✓ Compiled in 238ms (492 modules)
- ✓ Compiled in 257ms (491 modules)
- ✓ Compiled in 418ms (491 modules)
- ✓ Compiled in 294ms (491 modules)
- ✓ Compiled in 307ms (491 modules)
- ✓ Compiled in 360ms (491 modules)
- ✓ Compiled in 299ms (491 modules)
- ✓ Compiled in 246ms (491 modules)
- ✓ Compiled in 1972ms (924 modules)
- ✓ Compiled in 1842ms (933 modules)
- ✓ Compiled /api/knowledge in 155ms (442 modules)
- ✓ Compiled (444 modules)
- GET /api/knowledge 200 in 299ms
- GET /api/config 200 in 512ms
- ✓ Compiled in 584ms (491 modules)
- ✓ Compiled in 208ms (491 modules)
- ✓ Compiled in 183ms (491 modules)
- ✓ Compiled in 183ms (491 modules)
- ✓ Compiled in 2s (924 modules)
- ✓ Compiled in 222ms (491 modules)
- ✓ Compiled in 307ms (491 modules)
- ✓ Compiled in 237ms (491 modules)
- ✓ Compiled in 556ms (491 modules)
- ✓ Compiled in 195ms (491 modules)
- ✓ Compiled in 361ms (491 modules)
- ✓ Compiled in 296ms (491 modules)
- ✓ Compiled in 251ms (491 modules)
- ✓ Compiled in 244ms (491 modules)
- ✓ Compiled in 638ms (491 modules)
- ✓ Compiled in 332ms (491 modules)
- ✓ Compiled in 233ms (491 modules)
- ✓ Compiled in 272ms (491 modules)
- ✓ Compiled in 269ms (491 modules)
- ✓ Compiled in 208ms (491 modules)
- ✓ Compiled in 309ms (491 modules)
- ✓ Compiled in 194ms (491 modules)
- ✓ Compiled in 207ms (491 modules)
- ✓ Compiled in 2.3s (924 modules)
- ✓ Compiled in 1797ms (924 modules)
- ✓ Compiled in 237ms (491 modules)
- ✓ Compiled in 206ms (491 modules)
- ✓ Compiled in 140ms (491 modules)
- ✓ Compiled in 207ms (491 modules)
- ✓ Compiled in 163ms (491 modules)
- ✓ Compiled in 1768ms (924 modules)
- ✓ Compiled in 593ms (491 modules)
- ✓ Compiled in 2.3s (924 modules)
- ✓ Compiled in 379ms (491 modules)
- ✓ Compiled in 278ms (491 modules)
- ✓ Compiled in 211ms (491 modules)
- ✓ Compiled in 1907ms (924 modules)
- ✓ Compiled in 236ms (491 modules)
- ✓ Compiled in 204ms (491 modules)
- ✓ Compiled in 173ms (491 modules)
+ ✓ Compiled /api/knowledge in 643ms (1889 modules)
+ ✓ Compiled (1894 modules)
+ GET /pdp-maker/icon.svg 200 in 1045ms
+ GET /api/knowledge 200 in 1062ms
+ GET /api/drafts 200 in 1094ms
+ GET /api/drafts 200 in 1121ms
+ GET /pdp-maker/icon.svg 200 in 132ms
+ GET /api/knowledge 200 in 62ms
+ GET /pdp-maker/icon.svg 200 in 14ms
+ GET /pdp-maker/icon.svg 200 in 12ms
+ GET /pdp-maker/icon.svg 200 in 7ms
+ GET /api/drafts?id=qa-layered-export-1782549056212 200 in 21ms
+ GET /api/config 200 in 1830ms
+ GET /api/config 200 in 684ms
+ ○ Compiling /api/health ...
+ ✓ Compiled /api/health in 775ms (1773 modules)
+ GET /api/health 200 in 907ms
+ ⨯ Error: Cannot find module './853.js'
+Require stack:
+- H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+- H:\programming\sangpea\pdp-maker-201\.next\server\app\api\health\route.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\hot-middleware.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\hot-reloader-webpack.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-utils\setup-dev-bundler.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js
+- H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js
+    at Function.<anonymous> (node:internal/modules/cjs/loader:1225:15)
+    at H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require-hook.js:55:36
+    at Function._load (node:internal/modules/cjs/loader:1055:27)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1311:12)
+    at mod.require (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:136:16)
+    at __webpack_require__.f.require (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:198:28)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:111:40
+    at Array.reduce (<anonymous>)
+    at __webpack_require__.e (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:110:67)
+    at Array.map (<anonymous>)
+    at __webpack_require__.X (H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js:162:22)
+    at H:\programming\sangpea\pdp-maker-201\.next\server\app\pdp-maker\page.js:1:2957
+    at Object.<anonymous> (H:\programming\sangpea\pdp-maker-201\.next\server\app\pdp-maker\page.js:1:3009)
+    at Module._compile (node:internal/modules/cjs/loader:1554:14)
+    at Object..js (node:internal/modules/cjs/loader:1706:10)
+    at Module.load (node:internal/modules/cjs/loader:1289:32)
+    at Function._load (node:internal/modules/cjs/loader:1108:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1311:12)
+    at mod.require (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require-hook.js:65:28)
+    at require (node:internal/modules/helpers:136:16)
+    at requirePage (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js:109:84)
+    at H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:84
+    at async loadComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js:98:26)
+    at async DevServer.findPageComponentsImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:710:36)
+    at async DevServer.findPageComponents (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:577:20)
+    at async DevServer.renderPageComponent (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1917:24)
+    at async DevServer.renderToResponseImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:1969:32)
+    at async DevServer.pipeImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:920:25)
+    at async NextNodeServer.handleCatchallRenderRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\next-server.js:272:17)
+    at async DevServer.handleRequestImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\base-server.js:816:17)
+    at async H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:339:20
+    at async Span.traceAsyncFn (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\trace\trace.js:154:20)
+    at async DevServer.handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\dev\next-dev-server.js:336:24)
+    at async invokeRender (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:174:21)
+    at async handleRequest (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:353:24)
+    at async requestHandlerImpl (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\router-server.js:377:13)
+    at async Server.requestListener (H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\lib\start-server.js:141:13) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'H:\\programming\\sangpea\\pdp-maker-201\\.next\\server\\webpack-runtime.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\.next\\server\\app\\api\\health\\route.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\require.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\dev\\hot-middleware.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\dev\\hot-reloader-webpack.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\lib\\router-utils\\setup-dev-bundler.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\lib\\router-server.js',
+    'H:\\programming\\sangpea\\pdp-maker-201\\node_modules\\.pnpm\\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\\node_modules\\next\\dist\\server\\lib\\start-server.js'
+  ],
+  page: '/pdp-maker'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 3.1s (3659 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, lstat 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\clsx@2.1.1.js'
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/clsx@2.1.1' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\clsx@2.1.1.js', but to 'Error: Can't resolve './vendor-chunks/clsx@2.1.1' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/clsx@2.1.1 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\clsx@2.1.1.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/core-util-is@1.0.3' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\core-util-is@1.0.3.js', but to 'Error: Can't resolve './vendor-chunks/core-util-is@1.0.3' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/core-util-is@1.0.3 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\core-util-is@1.0.3.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/html2canvas@1.4.1' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\html2canvas@1.4.1.js', but to 'Error: Can't resolve './vendor-chunks/html2canvas@1.4.1' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/html2canvas@1.4.1 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\html2canvas@1.4.1.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/immediate@3.0.6' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\immediate@3.0.6.js', but to 'Error: Can't resolve './vendor-chunks/immediate@3.0.6' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/immediate@3.0.6 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\immediate@3.0.6.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/isarray@1.0.0' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\isarray@1.0.0.js', but to 'Error: Can't resolve './vendor-chunks/isarray@1.0.0' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/isarray@1.0.0 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\isarray@1.0.0.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w> [webpack.cache.PackFileCacheStrategy/webpack.FileSystemInfo] Resolving './vendor-chunks/lie@3.3.0' in H:\programming\sangpea\pdp-maker-201\.next\server for build dependencies doesn't lead to expected result 'H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\lie@3.3.0.js', but to 'Error: Can't resolve './vendor-chunks/lie@3.3.0' in 'H:\programming\sangpea\pdp-maker-201\.next\server'' instead. Resolving dependencies are ignored for this path.
+<w>  at resolve commonjs file ./vendor-chunks/lie@3.3.0 (expected H:\programming\sangpea\pdp-maker-201\.next\server\vendor-chunks\lie@3.3.0.js)
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\webpack-runtime.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\.next\server\pages\_error.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\require.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\server\load-components.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\utils.js
+<w>  at file dependencies H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at file H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+<w>  at resolve commonjs H:\programming\sangpea\pdp-maker-201\node_modules\.pnpm\next@14.2.5_@babel+core@7.29.7_react-dom@18.3.1_react@18.3.1__react@18.3.1\node_modules\next\dist\build\webpack\loaders\next-route-loader\index.js
+ ○ Compiling / ...
+ ✓ Compiled / in 1123ms (3645 modules)
+ GET / 200 in 1383ms
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 1616ms (3648 modules)
+ GET /_next/static/css/app/layout.css?v=1782550115431 404 in 1722ms
+ GET /_next/static/chunks/main-app.js?v=1782550115431 404 in 1691ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 1690ms
+ ✓ Compiled /icon.svg in 328ms (1831 modules)
+ GET /icon.svg?ba4be35cda228b6c 200 in 411ms

@@ -15,6 +15,7 @@ const PDP_DRAFT_DB = "codex-pdp-maker";
 const PDP_DRAFT_STORE = "drafts";
 const PDP_DRAFT_VERSION = 3;
 const MAX_DRAFT_REFERENCE_IMAGES = 20;
+const SERVER_DRAFTS_ENDPOINT = "/api/drafts";
 
 export type PdpAppState = "upload" | "processing" | "editor";
 export type OverlayTextAlign = "left" | "center" | "right";
@@ -131,7 +132,8 @@ export type PdpDraftInput = Omit<PdpDraftRecord, "id" | "title" | "createdAt" | 
 };
 
 export async function listPdpDrafts(): Promise<PdpDraftSummary[]> {
-  const records = await withStore("readonly", (store) => requestAsPromise<PdpDraftRecord[]>(store.getAll()));
+  const [localRecords, serverRecords] = await Promise.all([readLocalDraftRecords(), readServerDraftRecords()]);
+  const records = mergeDraftRecords(localRecords, serverRecords);
   return records
     .map((record) => normalizeDraftRecord(record))
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
@@ -163,9 +165,16 @@ export async function listPdpDrafts(): Promise<PdpDraftSummary[]> {
 }
 
 export async function getPdpDraft(id: string): Promise<PdpDraftRecord | null> {
-  return withStore("readonly", (store) =>
+  const localDraft = await withStore("readonly", (store) =>
     requestAsPromise<PdpDraftRecord | undefined>(store.get(id)).then((record) => (record ? normalizeDraftRecord(record) : null))
-  );
+  ).catch(() => null);
+  if (localDraft) return localDraft;
+
+  const serverDraft = await readServerDraftRecord(id);
+  if (!serverDraft) return null;
+  const normalized = normalizeDraftRecord(serverDraft);
+  await writeLocalDraftRecord(normalized).catch(() => undefined);
+  return normalized;
 }
 
 export async function savePdpDraft(input: PdpDraftInput): Promise<PdpDraftRecord> {
@@ -192,12 +201,72 @@ export async function savePdpDraft(input: PdpDraftInput): Promise<PdpDraftRecord
 
   const normalizedRecord = normalizeDraftRecord(nextRecord);
 
-  await withStore("readwrite", (store) => requestAsPromise(store.put(normalizedRecord)));
+  await writeLocalDraftRecord(normalizedRecord);
+  await writeServerDraftRecord(normalizedRecord).catch(() => undefined);
   return normalizedRecord;
 }
 
 export async function deletePdpDraft(id: string): Promise<void> {
-  await withStore("readwrite", (store) => requestAsPromise(store.delete(id)));
+  await withStore("readwrite", (store) => requestAsPromise(store.delete(id))).catch(() => undefined);
+  await deleteServerDraftRecord(id).catch(() => undefined);
+}
+
+async function readLocalDraftRecords() {
+  return withStore("readonly", (store) => requestAsPromise<PdpDraftRecord[]>(store.getAll())).catch(() => []);
+}
+
+async function writeLocalDraftRecord(record: PdpDraftRecord) {
+  await withStore("readwrite", (store) => requestAsPromise(store.put(record)));
+}
+
+function mergeDraftRecords(localRecords: PdpDraftRecord[], serverRecords: PdpDraftRecord[]) {
+  const merged = new Map<string, PdpDraftRecord>();
+  for (const record of [...localRecords, ...serverRecords]) {
+    const normalized = normalizeDraftRecord(record);
+    const current = merged.get(normalized.id);
+    if (!current || normalized.updatedAt.localeCompare(current.updatedAt) > 0) {
+      merged.set(normalized.id, normalized);
+    }
+  }
+  return Array.from(merged.values());
+}
+
+async function readServerDraftRecords() {
+  try {
+    const response = await fetch(SERVER_DRAFTS_ENDPOINT, { cache: "no-store" });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { drafts?: PdpDraftRecord[] };
+    return Array.isArray(data.drafts) ? data.drafts : [];
+  } catch {
+    return [];
+  }
+}
+
+async function readServerDraftRecord(id: string) {
+  try {
+    const response = await fetch(`${SERVER_DRAFTS_ENDPOINT}?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { draft?: PdpDraftRecord | null };
+    return data.draft ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeServerDraftRecord(record: PdpDraftRecord) {
+  await fetch(SERVER_DRAFTS_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(record)
+  });
+}
+
+async function deleteServerDraftRecord(id: string) {
+  await fetch(SERVER_DRAFTS_ENDPOINT, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id })
+  });
 }
 
 function buildDraftTitle(input: PdpDraftInput) {

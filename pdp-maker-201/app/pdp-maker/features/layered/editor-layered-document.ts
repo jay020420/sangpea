@@ -19,9 +19,9 @@ import {
   buildProductPlacementNode,
   primaryProductAssetId
 } from "../../../../lib/pdp-layered-document";
+import { PDP_EDITOR_CANVAS_WIDTH } from "../../../../lib/pdp-canvas-geometry";
 import type { CanvasLayer, ShapeLayer, TextOverlay } from "../../pdp-drafts";
 
-const EDITOR_CANVAS_WIDTH = 460;
 const FIGMA_FRAME_GAP = 80;
 
 export type FigmaPluginPayload = {
@@ -100,7 +100,7 @@ export function buildEditorLayeredDocumentV2(input: {
   });
   const canvas = {
     ...baseDocument.canvas,
-    width: EDITOR_CANVAS_WIDTH,
+    width: PDP_EDITOR_CANVAS_WIDTH,
     height: getCanvasHeight(input.aspectRatio),
     aspectRatio: input.aspectRatio
   };
@@ -154,6 +154,7 @@ export function buildEditorLayeredDocumentV2(input: {
         id: `${sectionId}-section`,
         sectionId,
         name: section.section_name || sectionId,
+        templateId: section.design_template_id,
         frameNodeId,
         nodes: [
           {

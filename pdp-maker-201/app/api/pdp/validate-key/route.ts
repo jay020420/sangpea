@@ -21,6 +21,8 @@ function mapErrorCodeToStatus(code?: string) {
     case "CODEX_MODEL_ACCESS_DENIED":
     case "CODEX_MODEL_NOT_FOUND":
       return 403;
+    case "CODEX_USAGE_LIMIT":
+      return 429;
     case "CODEX_RESPONSE_INVALID":
       return 502;
     default:
