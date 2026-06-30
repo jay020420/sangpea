@@ -21,6 +21,16 @@ export type PdpAppState = "upload" | "processing" | "editor";
 export type OverlayTextAlign = "left" | "center" | "right";
 export type WorkbenchTab = "image" | "layer" | "copy" | "guide";
 export type CanvasLayerKind = "text" | "shape";
+export type PdpReviewApprovalStatus = "pending" | "approved" | "needs_revision";
+
+export interface PdpWorkflowReviewState {
+  storylineStatus: PdpReviewApprovalStatus;
+  storylineFeedback: string;
+  imagePlanStatus: PdpReviewApprovalStatus;
+  imagePlanFeedback: string;
+  finalReviewStatus: PdpReviewApprovalStatus;
+  finalReviewFeedback: string;
+}
 
 interface CanvasLayerBase {
   id: string;
@@ -80,6 +90,7 @@ export interface PdpEditorDraftState {
   notice: string;
   workbenchTab: WorkbenchTab;
   workbenchState: FloatingWorkbenchState;
+  workflowReview?: PdpWorkflowReviewState;
 }
 
 export interface PreparedImageDraft {
@@ -456,8 +467,24 @@ function normalizeEditorState(editorState: PdpEditorDraftState | null | undefine
       width: editorState?.workbenchState?.width ?? 332,
       height: editorState?.workbenchState?.height ?? 500,
       isOpen: editorState?.workbenchState?.isOpen ?? true
-    }
+    },
+    workflowReview: normalizeWorkflowReviewState(editorState?.workflowReview)
   };
+}
+
+function normalizeWorkflowReviewState(state: PdpWorkflowReviewState | null | undefined): PdpWorkflowReviewState {
+  return {
+    storylineStatus: normalizeReviewApprovalStatus(state?.storylineStatus),
+    storylineFeedback: state?.storylineFeedback ?? "",
+    imagePlanStatus: normalizeReviewApprovalStatus(state?.imagePlanStatus),
+    imagePlanFeedback: state?.imagePlanFeedback ?? "",
+    finalReviewStatus: normalizeReviewApprovalStatus(state?.finalReviewStatus),
+    finalReviewFeedback: state?.finalReviewFeedback ?? ""
+  };
+}
+
+function normalizeReviewApprovalStatus(status: unknown): PdpReviewApprovalStatus {
+  return status === "approved" || status === "needs_revision" ? status : "pending";
 }
 
 function buildFallbackDraftTitle(preparedImage: PreparedImageDraft | null, sections: SectionBlueprint[]) {

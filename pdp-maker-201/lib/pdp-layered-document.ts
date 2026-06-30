@@ -21,7 +21,6 @@ type RatioBounds = {
 
 type LayoutZoneConfig = {
   product: RatioBounds;
-  safeZone: RatioBounds;
   headline: RatioBounds;
   subheadline: RatioBounds;
   bulletArea: RatioBounds;
@@ -32,12 +31,21 @@ type LayoutZoneConfig = {
 type SectionLayerZones = {
   template: PdpLayoutTemplate;
   product: PdpLayerBounds;
-  safeZone: PdpLayerBounds;
   headline: PdpLayerBounds;
   subheadline: PdpLayerBounds;
   bulletArea: PdpLayerBounds;
   trust: PdpLayerBounds;
   cta: PdpLayerBounds;
+};
+
+type TemplatePalette = {
+  background: string;
+  panel: string;
+  elevatedPanel: string;
+  accent: string;
+  heading: string;
+  body: string;
+  muted: string;
 };
 
 const DEFAULT_LAYOUT_TEMPLATE: PdpLayoutTemplate = "benefit";
@@ -49,8 +57,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.14, y: 0.29, width: 0.72, height: 0.3 },
     bulletArea: { x: 0.08, y: 0.64, width: 0.84, height: 0.14 },
     trust: { x: 0.08, y: 0.79, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.62, width: 0.88, height: 0.34 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   problem: {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.11 },
@@ -58,8 +65,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.12, y: 0.31, width: 0.76, height: 0.24 },
     bulletArea: { x: 0.08, y: 0.58, width: 0.84, height: 0.16 },
     trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.56, width: 0.88, height: 0.34 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   benefit: {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
@@ -67,8 +73,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.13, y: 0.25, width: 0.74, height: 0.27 },
     bulletArea: { x: 0.08, y: 0.56, width: 0.84, height: 0.18 },
     trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.54, width: 0.88, height: 0.36 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   proof: {
     headline: { x: 0.08, y: 0.04, width: 0.84, height: 0.1 },
@@ -76,8 +81,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.14, y: 0.28, width: 0.72, height: 0.22 },
     bulletArea: { x: 0.08, y: 0.53, width: 0.84, height: 0.18 },
     trust: { x: 0.08, y: 0.73, width: 0.84, height: 0.09 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.58, width: 0.88, height: 0.32 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   spec: {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
@@ -85,8 +89,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.12, y: 0.22, width: 0.76, height: 0.26 },
     bulletArea: { x: 0.08, y: 0.51, width: 0.84, height: 0.22 },
     trust: { x: 0.08, y: 0.75, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.5, width: 0.88, height: 0.4 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   demo: {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
@@ -94,8 +97,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.1, y: 0.24, width: 0.8, height: 0.27 },
     bulletArea: { x: 0.08, y: 0.55, width: 0.84, height: 0.2 },
     trust: { x: 0.08, y: 0.77, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.54, width: 0.88, height: 0.36 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   "use-case": {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
@@ -103,8 +105,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.12, y: 0.25, width: 0.76, height: 0.25 },
     bulletArea: { x: 0.08, y: 0.53, width: 0.84, height: 0.2 },
     trust: { x: 0.08, y: 0.76, width: 0.84, height: 0.07 },
-    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 },
-    safeZone: { x: 0.06, y: 0.52, width: 0.88, height: 0.38 }
+    cta: { x: 0.24, y: 0.89, width: 0.52, height: 0.06 }
   },
   "faq-cta": {
     headline: { x: 0.08, y: 0.05, width: 0.84, height: 0.1 },
@@ -112,8 +113,7 @@ const LAYOUT_ZONE_MAP: Record<PdpLayoutTemplate, LayoutZoneConfig> = {
     product: { x: 0.16, y: 0.27, width: 0.68, height: 0.2 },
     bulletArea: { x: 0.08, y: 0.5, width: 0.84, height: 0.18 },
     trust: { x: 0.08, y: 0.7, width: 0.84, height: 0.08 },
-    cta: { x: 0.18, y: 0.84, width: 0.64, height: 0.07 },
-    safeZone: { x: 0.06, y: 0.7, width: 0.88, height: 0.26 }
+    cta: { x: 0.18, y: 0.84, width: 0.64, height: 0.07 }
   }
 };
 
@@ -139,7 +139,7 @@ export function createLayeredDocumentV2FromBlueprint(input: {
     .map((section, index) =>
       buildImageAsset({
         id: generatedAssetId(section.section_id),
-        name: `${section.section_id || `S${index + 1}`} generated background`,
+        name: `${section.section_id || `S${index + 1}`} generated visual asset`,
         dataUrl: section.generatedImage || "",
         sourceRole: "generated",
         sectionId: section.section_id
@@ -177,7 +177,7 @@ export function getCanvasHeight(aspectRatio: AspectRatio | undefined) {
 }
 
 export function generatedAssetId(sectionId: string) {
-  return `${sectionId || "section"}-generated-background`;
+  return `${sectionId || "section"}-generated-visual-asset`;
 }
 
 export function primaryProductAssetId() {
@@ -256,28 +256,15 @@ function buildImageAsset(input: {
 function buildSectionFrame(section: SectionBlueprint, index: number, canvas: PdpLayeredDocumentV2["canvas"], hasProductSourceAsset: boolean) {
   const sectionId = section.section_id || `S${index + 1}`;
   const frameNodeId = `${sectionId}-frame`;
-  const children: PdpLayerNode[] = [];
+  const children: PdpLayerNode[] = buildTemplateStructureNodes(section, canvas);
 
   if (section.generatedImage) {
-    children.push({
-      id: `${sectionId}-background-image`,
-      name: "Generated background",
-      type: "image",
-      visible: true,
-      locked: false,
-      editable: false,
-      role: "background",
-      zIndex: 0,
-      bounds: fullBounds(canvas),
-      assetId: generatedAssetId(sectionId),
-      imageFit: "cover"
-    });
+    children.push(buildGeneratedVisualAssetNode(section, canvas, 6));
   }
 
-  if (hasProductSourceAsset) {
-    children.push(buildProductPlacementNode(section, canvas, 2));
+  if (!section.generatedImage && hasProductSourceAsset) {
+    children.push(buildProductPlacementNode(section, canvas, 6));
   }
-  children.push(buildEditableSafeZoneNode(section, canvas, 3));
   children.push(...buildTextPlanningNodes(section, canvas));
 
   const frame: PdpLayerNode = {
@@ -322,29 +309,76 @@ export function buildProductPlacementNode(section: SectionBlueprint, canvas: Pdp
   };
 }
 
-export function buildEditableSafeZoneNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
+export function buildGeneratedVisualAssetNode(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"], zIndex: number): PdpLayerNode {
   const sectionId = section.section_id || "section";
   const zones = getSectionLayerZones(section, canvas);
   return {
-    id: `${sectionId}-editable-safe-zone`,
-    name: "Editable copy safe zone",
-    type: "shape",
-    visible: false,
-    locked: true,
+    id: `${sectionId}-generated-visual-asset`,
+    name: "Generated visual asset",
+    type: "image",
+    visible: true,
+    locked: false,
     editable: false,
-    opacity: 0.18,
-    role: "safe-zone",
+    role: "visual-asset",
     zIndex,
-    bounds: zones.safeZone,
-    fills: [{ color: "#4cb7aa", opacity: 0.18 }],
-    cornerRadius: 20
+    bounds: zones.product,
+    assetId: generatedAssetId(sectionId),
+    imageFit: "cover"
   };
+}
+
+export function buildTemplateStructureNodes(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"]): PdpLayerNode[] {
+  const sectionId = section.section_id || "section";
+  const zones = getSectionLayerZones(section, canvas);
+  const palette = getTemplatePalette(zones.template);
+  const bulletCopies = section.bullets.map((bullet) => bullet.trim()).filter(Boolean).slice(0, 3);
+  const nodes: PdpLayerNode[] = [
+    shapeNode(`${sectionId}-document-background`, "Document background", "section-background", fullBounds(canvas), 0, palette.background, 1, 0, {
+      locked: true,
+      editable: false
+    }),
+    shapeNode(`${sectionId}-visual-asset-frame`, "Visual asset frame", "visual-frame", expandBounds(zones.product, canvas, 12), 1, palette.elevatedPanel, 0.74, 22, {
+      locked: true,
+      editable: false
+    })
+  ];
+
+  for (const [index, _bullet] of bulletCopies.entries()) {
+    nodes.push(
+      shapeNode(
+        `${sectionId}-copy-card-${index + 1}`,
+        `Editable copy card ${index + 1}`,
+        "copy-card",
+        buildBulletBounds(zones.bulletArea, index, bulletCopies.length, zones.template),
+        4 + index,
+        palette.panel,
+        zones.template === "hero" || zones.template === "demo" ? 0.62 : 0.9,
+        14,
+        {
+          locked: true,
+          editable: false
+        }
+      )
+    );
+  }
+
+  if (section.trust_or_objection_line) {
+    nodes.push(
+      shapeNode(`${sectionId}-trust-surface`, "Trust copy surface", "proof-surface", zones.trust, 8, palette.panel, 0.82, 14, {
+        locked: true,
+        editable: false
+      })
+    );
+  }
+
+  return nodes;
 }
 
 function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDocumentV2["canvas"]): PdpLayerNode[] {
   const textStyle = defaultTextStyles()[0];
   const sectionId = section.section_id || "section";
   const zones = getSectionLayerZones(section, canvas);
+  const palette = getTemplatePalette(zones.template);
   const nodes: PdpLayerNode[] = [];
   if (section.headline) {
     nodes.push(
@@ -354,12 +388,8 @@ function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDoc
         "headline",
         section.headline,
         zones.headline,
-        { ...textStyle, color: "#ffffff" },
-        10,
-        {
-          fills: [{ color: "#102532", opacity: 0.88 }],
-          cornerRadius: 18
-        }
+        { ...textStyle, color: palette.heading },
+        10
       )
     );
   }
@@ -371,12 +401,8 @@ function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDoc
         "subheadline",
         section.subheadline,
         zones.subheadline,
-        { ...textStyle, fontSize: 18, fontWeight: "500", color: "#ffffff" },
-        11,
-        {
-          fills: [{ color: "#102532", opacity: 0.76 }],
-          cornerRadius: 16
-        }
+        { ...textStyle, fontSize: 18, fontWeight: "500", color: palette.muted },
+        11
       )
     );
   }
@@ -389,12 +415,8 @@ function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDoc
         "bullet",
         bullet,
         buildBulletBounds(zones.bulletArea, index, bulletCopies.length, zones.template),
-        { ...textStyle, fontSize: 16, fontWeight: "700", lineHeight: 1.24, color: "#102532" },
-        12 + index,
-        {
-          fills: [{ color: "#ffffff", opacity: 0.86 }],
-          cornerRadius: 14
-        }
+        { ...textStyle, fontSize: 16, fontWeight: "700", lineHeight: 1.24, color: palette.body },
+        12 + index
       )
     );
   }
@@ -406,12 +428,10 @@ function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDoc
         "trust",
         section.trust_or_objection_line,
         zones.trust,
-        { ...textStyle, fontSize: 15, fontWeight: "700", lineHeight: 1.22, color: "#102532" },
+        { ...textStyle, fontSize: 15, fontWeight: "700", lineHeight: 1.22, color: palette.body },
         16,
         {
-          type: "proof",
-          fills: [{ color: "#ffffff", opacity: 0.88 }],
-          cornerRadius: 14
+          type: "proof"
         }
       )
     );
@@ -428,11 +448,37 @@ function buildTextPlanningNodes(section: SectionBlueprint, canvas: PdpLayeredDoc
         18
       ),
       type: "cta",
-      fills: [{ color: "#102532", opacity: 1 }],
+      fills: [{ color: palette.accent, opacity: 1 }],
       cornerRadius: 22
     });
   }
   return nodes;
+}
+
+function shapeNode(
+  id: string,
+  name: string,
+  role: string,
+  bounds: PdpLayerBounds,
+  zIndex: number,
+  color: string,
+  opacity: number,
+  cornerRadius: number,
+  overrides: Partial<Pick<PdpLayerNode, "locked" | "editable">> = {}
+): PdpLayerNode {
+  return {
+    id,
+    name,
+    type: "shape",
+    visible: true,
+    locked: overrides.locked ?? false,
+    editable: overrides.editable ?? true,
+    role,
+    zIndex,
+    bounds,
+    fills: [{ color, opacity }],
+    cornerRadius
+  };
 }
 
 function textNode(
@@ -467,7 +513,6 @@ export function getSectionLayerZones(section: SectionBlueprint, canvas: PdpLayer
   return {
     template,
     product: boundsFromRatio(config.product, canvas),
-    safeZone: boundsFromRatio(config.safeZone, canvas),
     headline: boundsFromRatio(config.headline, canvas),
     subheadline: boundsFromRatio(config.subheadline, canvas),
     bulletArea: boundsFromRatio(config.bulletArea, canvas),
@@ -490,6 +535,20 @@ function boundsFromRatio(bounds: RatioBounds, canvas: PdpLayeredDocumentV2["canv
     y,
     width: Math.max(1, Math.min(maxWidth, Math.round(bounds.width * canvas.width))),
     height: Math.max(1, Math.min(maxHeight, Math.round(bounds.height * canvas.height))),
+    unit: "px"
+  };
+}
+
+function expandBounds(bounds: PdpLayerBounds, canvas: PdpLayeredDocumentV2["canvas"], amount: number): PdpLayerBounds {
+  const x = Math.max(0, bounds.x - amount);
+  const y = Math.max(0, bounds.y - amount);
+  const right = Math.min(canvas.width, bounds.x + bounds.width + amount);
+  const bottom = Math.min(canvas.height, bounds.y + bounds.height + amount);
+  return {
+    x,
+    y,
+    width: Math.max(1, right - x),
+    height: Math.max(1, bottom - y),
     unit: "px"
   };
 }
@@ -544,6 +603,83 @@ function defaultTextStyles(): PdpLayerTextStyle[] {
       align: "left"
     }
   ];
+}
+
+function getTemplatePalette(template: PdpLayoutTemplate): TemplatePalette {
+  switch (template) {
+    case "hero":
+      return {
+        background: "#07131d",
+        panel: "#102532",
+        elevatedPanel: "#0e2231",
+        accent: "#2f8f86",
+        heading: "#ffffff",
+        body: "#f6fbff",
+        muted: "#d8e6ea"
+      };
+    case "problem":
+      return {
+        background: "#f3f0e8",
+        panel: "#ffffff",
+        elevatedPanel: "#e6edf0",
+        accent: "#c8474d",
+        heading: "#17202a",
+        body: "#21343f",
+        muted: "#53646c"
+      };
+    case "proof":
+    case "spec":
+      return {
+        background: "#f6f1e7",
+        panel: "#fffaf0",
+        elevatedPanel: "#ebe2d1",
+        accent: "#425f70",
+        heading: "#1b2830",
+        body: "#263840",
+        muted: "#5c6d74"
+      };
+    case "demo":
+      return {
+        background: "#08131c",
+        panel: "#12283a",
+        elevatedPanel: "#0f2130",
+        accent: "#4cb7aa",
+        heading: "#ffffff",
+        body: "#eef8f7",
+        muted: "#c8dbe0"
+      };
+    case "use-case":
+      return {
+        background: "#eef4f2",
+        panel: "#ffffff",
+        elevatedPanel: "#dce8e5",
+        accent: "#2f8f86",
+        heading: "#102532",
+        body: "#1f3a43",
+        muted: "#536a70"
+      };
+    case "faq-cta":
+      return {
+        background: "#f7f1e8",
+        panel: "#ffffff",
+        elevatedPanel: "#eadfcc",
+        accent: "#102532",
+        heading: "#16242c",
+        body: "#263840",
+        muted: "#5c6b70"
+      };
+    case "benefit":
+    default:
+      return {
+        background: "#eef4f2",
+        panel: "#ffffff",
+        elevatedPanel: "#dce7e5",
+        accent: "#2f8f86",
+        heading: "#102532",
+        body: "#1f3a43",
+        muted: "#536a70"
+      };
+  }
 }
 
 function mergeColors(left: string[], right: string[]) {

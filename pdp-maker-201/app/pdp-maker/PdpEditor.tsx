@@ -47,6 +47,7 @@ import type {
   PdpGenerateImageResponse,
   PdpImagePromptPreviewResponse,
   PdpDesignTemplateId,
+  PdpLayerNode,
   PdpLayerPlanContext,
   PdpLayeredDocumentV2,
   ReferenceModelUsage,
@@ -57,6 +58,8 @@ import type {
   FloatingWorkbenchState,
   OverlayTextAlign,
   PdpEditorDraftState,
+  PdpReviewApprovalStatus,
+  PdpWorkflowReviewState,
   PreparedImageDraft,
   ShapeLayer,
   TextOverlay,
@@ -256,6 +259,43 @@ const BASIC_SOLID_COLORS = [
 ];
 
 const INSUFFICIENT_COPY_MESSAGE = "제품 관련 카피를 만들 정보가 부족합니다. 요청사항이나 제품 자료를 더 넣고 재분석하세요.";
+const DEFAULT_WORKFLOW_REVIEW_STATE: PdpWorkflowReviewState = {
+  storylineStatus: "pending",
+  storylineFeedback: "",
+  imagePlanStatus: "pending",
+  imagePlanFeedback: "",
+  finalReviewStatus: "pending",
+  finalReviewFeedback: ""
+};
+const STORYLINE_REVIEW_FIELDS = new Set<keyof SectionBlueprint>([
+  "section_name",
+  "goal",
+  "headline",
+  "headline_en",
+  "subheadline",
+  "subheadline_en",
+  "bullets",
+  "bullets_en",
+  "trust_or_objection_line",
+  "trust_or_objection_line_en",
+  "CTA",
+  "CTA_en",
+  "purpose",
+  "story_role",
+  "source_fact_refs"
+]);
+const IMAGE_PLAN_REVIEW_FIELDS = new Set<keyof SectionBlueprint>([
+  "layout_template",
+  "design_template_id",
+  "layout_notes",
+  "style_guide",
+  "reference_usage",
+  "prompt_ko",
+  "prompt_en",
+  "negative_prompt",
+  "overlay_layout_hint",
+  "image_prompt_override"
+]);
 const GENERIC_COPY_TOKENS = new Set([
   "hero",
   "benefit",
@@ -363,6 +403,9 @@ export function PdpEditor({
         isOpen: true
       }
   );
+  const [workflowReview, setWorkflowReview] = useState<PdpWorkflowReviewState>(() =>
+    normalizeWorkflowReviewState(initialDraftState?.workflowReview)
+  );
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = useState(false);
   const [isDownloadingLongPage, setIsDownloadingLongPage] = useState(false);
@@ -372,6 +415,10 @@ export function PdpEditor({
   const [imagePromptPreviewBySection, setImagePromptPreviewBySection] = useState<Record<number, string>>({});
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const previewStageRef = useRef<HTMLDivElement>(null);
+  const lastDraftStateSignatureRef = useRef("");
+  const initialLayeredDocumentRef = useRef<PdpLayeredDocumentV2 | null>(
+    initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null
+  );
 
   const safeCurrentSectionIndex = sections.length
     ? Math.min(Math.max(currentSectionIndex, 0), sections.length - 1)
@@ -391,6 +438,12 @@ export function PdpEditor({
   const reviewGeneratedSections = sections.filter((section) => section.generatedImage && getSectionQualityStatus(section) === "needs_review");
   const blockedGeneratedSections = sections.filter((section) => section.generatedImage && getSectionQualityStatus(section) === "blocked");
   const qualityRetrySections = sections.filter((section) => section.generatedImage && getSectionQualityStatus(section) !== "ready");
+  const storylineApproved = workflowReview.storylineStatus === "approved";
+  const imagePlanApproved = workflowReview.imagePlanStatus === "approved";
+  const finalReviewApproved = workflowReview.finalReviewStatus === "approved";
+  const canGenerateImages = storylineApproved && imagePlanApproved;
+  const hasGeneratedAllSections = Boolean(sections.length && generatedCount === sections.length);
+  const canDownloadDeliveryAssets = finalReviewApproved && Boolean(generatedCount);
   const isGenerationBusy = isGeneratingImage || Boolean(batchGenerationMode);
   const analysisFallbackUsed = hasAnalysisFallback(initialResult);
   const deliveryGateLabel = blockedGeneratedSections.length
@@ -408,9 +461,9 @@ export function PdpEditor({
         sections,
         overlaysBySection,
         aspectRatio,
-        existingDocument: initialDraftState?.layeredDocumentV2 ?? initialResult.layeredDocumentV2 ?? null
+        existingDocument: initialLayeredDocumentRef.current
       }),
-    [aspectRatio, initialDraftState?.layeredDocumentV2, initialResult, overlaysBySection, sections]
+    [aspectRatio, initialResult, overlaysBySection, sections]
   );
   const layeredDocumentSummary = useMemo(() => summarizeLayeredDocument(layeredDocumentV2), [layeredDocumentV2]);
   const figmaPayload = useMemo(() => exportFigmaDocument(layeredDocumentV2), [layeredDocumentV2]);
@@ -536,7 +589,11 @@ export function PdpEditor({
   }, [safeCurrentSectionIndex, currentSection?.generatedImage]);
 
   useEffect(() => {
-    onDraftStateChange?.({
+    if (!onDraftStateChange) {
+      return;
+    }
+
+    const nextDraftState: PdpEditorDraftState = {
       currentSectionIndex: safeCurrentSectionIndex,
       sections,
       sectionOptions,
@@ -545,9 +602,29 @@ export function PdpEditor({
       defaultCopyLanguage,
       notice,
       workbenchTab,
-      workbenchState
-    });
-  }, [defaultCopyLanguage, layeredDocumentV2, notice, onDraftStateChange, overlaysBySection, safeCurrentSectionIndex, sectionOptions, sections, workbenchState, workbenchTab]);
+      workbenchState,
+      workflowReview
+    };
+    const nextSignature = JSON.stringify(nextDraftState);
+    if (nextSignature === lastDraftStateSignatureRef.current) {
+      return;
+    }
+
+    lastDraftStateSignatureRef.current = nextSignature;
+    onDraftStateChange(nextDraftState);
+  }, [
+    defaultCopyLanguage,
+    layeredDocumentV2,
+    notice,
+    onDraftStateChange,
+    overlaysBySection,
+    safeCurrentSectionIndex,
+    sectionOptions,
+    sections,
+    workbenchState,
+    workbenchTab,
+    workflowReview
+  ]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -625,9 +702,113 @@ export function PdpEditor({
         ...updates
       }
     }));
+    invalidateImagePlanReview("이미지 옵션을 수정해 이미지 계획 재승인이 필요합니다.");
+  };
+
+  const updateWorkflowReview = (updates: Partial<PdpWorkflowReviewState>) => {
+    setWorkflowReview((current) => normalizeWorkflowReviewState({ ...current, ...updates }));
+  };
+
+  const approveStorylineReview = () => {
+    updateWorkflowReview({ storylineStatus: "approved" });
+    setNotice("스토리라인을 승인했습니다. 이제 섹션별 이미지 계획을 검수하세요.");
+  };
+
+  const requestStorylineRevision = () => {
+    updateWorkflowReview({ storylineStatus: "needs_revision", imagePlanStatus: "pending", finalReviewStatus: "pending" });
+    setNotice("스토리라인을 수정 요청 상태로 표시했습니다. 섹션 카피와 전환 흐름을 보강한 뒤 다시 승인하세요.");
+  };
+
+  const approveImagePlanReview = () => {
+    if (!storylineApproved) {
+      setNotice("스토리라인 승인 후 이미지 계획을 승인할 수 있습니다.");
+      return;
+    }
+
+    updateWorkflowReview({ imagePlanStatus: "approved" });
+    setNotice("이미지 계획을 승인했습니다. 이제 섹션별 시각 에셋을 생성할 수 있습니다.");
+  };
+
+  const requestImagePlanRevision = () => {
+    updateWorkflowReview({ imagePlanStatus: "needs_revision", finalReviewStatus: "pending" });
+    setNotice("이미지 계획을 수정 요청 상태로 표시했습니다. 섹션 가이드와 이미지 옵션을 보강한 뒤 다시 승인하세요.");
+  };
+
+  const approveFinalReview = () => {
+    if (!generatedCount) {
+      setNotice("이미지 생성 후 최종 검수를 승인할 수 있습니다.");
+      return;
+    }
+    if (!hasGeneratedAllSections) {
+      setNotice("모든 섹션 이미지를 생성한 뒤 최종 검수를 승인할 수 있습니다.");
+      return;
+    }
+
+    updateWorkflowReview({ finalReviewStatus: "approved" });
+    setNotice("최종 검수를 승인했습니다. 이제 납품용 다운로드를 진행할 수 있습니다.");
+  };
+
+  const requestFinalRevision = () => {
+    updateWorkflowReview({ finalReviewStatus: "needs_revision" });
+    setNotice("최종 생성물을 수정 요청 상태로 표시했습니다. 이미지 보정, 재생성, 레이어 편집 후 다시 승인하세요.");
+  };
+
+  const invalidateStorylineReview = (message: string) => {
+    setWorkflowReview((current) => {
+      if (current.storylineStatus !== "approved" && current.imagePlanStatus !== "approved" && current.finalReviewStatus !== "approved") {
+        return current;
+      }
+
+      return normalizeWorkflowReviewState({
+        ...current,
+        storylineStatus: current.storylineStatus === "approved" ? "needs_revision" : current.storylineStatus,
+        imagePlanStatus: current.imagePlanStatus === "approved" ? "needs_revision" : current.imagePlanStatus,
+        finalReviewStatus: current.finalReviewStatus === "approved" ? "needs_revision" : current.finalReviewStatus
+      });
+    });
+    setNotice(message);
+  };
+
+  const invalidateImagePlanReview = (message: string) => {
+    setWorkflowReview((current) => {
+      if (current.imagePlanStatus !== "approved" && current.finalReviewStatus !== "approved") {
+        return current;
+      }
+
+      return normalizeWorkflowReviewState({
+        ...current,
+        imagePlanStatus: current.imagePlanStatus === "approved" ? "needs_revision" : current.imagePlanStatus,
+        finalReviewStatus: current.finalReviewStatus === "approved" ? "needs_revision" : current.finalReviewStatus
+      });
+    });
+    setNotice(message);
+  };
+
+  const invalidateFinalReview = (message: string) => {
+    setWorkflowReview((current) => {
+      if (current.finalReviewStatus !== "approved") {
+        return current;
+      }
+
+      return normalizeWorkflowReviewState({
+        ...current,
+        finalReviewStatus: "needs_revision"
+      });
+    });
+    setNotice(message);
   };
 
   const updateCurrentSection = (updates: Partial<SectionBlueprint>) => {
+    const updateKeys = Object.keys(updates) as Array<keyof SectionBlueprint>;
+    const changesStoryline = updateKeys.some((key) => STORYLINE_REVIEW_FIELDS.has(key));
+    const changesImagePlan = updateKeys.some((key) => IMAGE_PLAN_REVIEW_FIELDS.has(key));
+
+    if (changesStoryline) {
+      invalidateStorylineReview("스토리라인/카피를 수정했습니다. 이미지 생성 전 스토리라인을 다시 승인하세요.");
+    } else if (changesImagePlan) {
+      invalidateImagePlanReview("이미지 계획을 수정했습니다. 이미지 생성 전 계획을 다시 승인하세요.");
+    }
+
     setSections((current) =>
       current.map((section, index) =>
         index === safeCurrentSectionIndex ? normalizeSectionTemplate(normalizeSectionCopyFields({ ...section, ...updates }), index) : section
@@ -1212,7 +1393,7 @@ export function PdpEditor({
               )}
             </div>
 
-            <button className={styles.primaryButtonWide} disabled={isGenerationBusy} onClick={handleGenerateImage} type="button">
+            <button className={styles.primaryButtonWide} disabled={!canGenerateImages || isGenerationBusy} onClick={handleGenerateImage} type="button">
               {isGenerationBusy ? <Loader2 className={styles.spinIcon} size={16} /> : currentSection.generatedImage ? <RefreshCw size={16} /> : <ImageIcon size={16} />}
               {batchGenerationMode
                 ? batchGenerationMode === "missing"
@@ -1230,11 +1411,13 @@ export function PdpEditor({
               type="button"
             >
               <ImageIcon size={16} />
-              Filerobot으로 배경 보정
+              Filerobot으로 시각 에셋 보정
             </button>
 
             <p className={styles.inspectorHelper}>
-              {usesReferenceModel
+              {!canGenerateImages
+                ? "스토리라인과 이미지 계획을 승인해야 현재 섹션 시각 에셋을 생성할 수 있습니다."
+                : usesReferenceModel
                 ? "업로드한 모델 이미지를 참조하면서 현재 섹션 컷만 다시 생성합니다."
                 : "섹션 헤드라인과 지금 선택한 모델 조건을 반영해 현재 컷만 다시 생성합니다."}
             </p>
@@ -2013,9 +2196,17 @@ export function PdpEditor({
     imageSrc: string;
     layers: CanvasLayer[];
     section: SectionBlueprint;
+    document: PdpLayeredDocumentV2;
+    sectionIndex: number;
     backgroundQualityReport?: SectionImageQualityReport;
   }): Promise<SectionImageQualityReport> => {
-    const blob = await captureCompositeBlob(input.imageSrc, input.layers);
+    const blob = await captureCompositeBlob({
+      imageSrc: input.imageSrc,
+      layers: input.layers,
+      document: input.document,
+      sectionId: input.section.section_id,
+      sectionIndex: input.sectionIndex
+    });
     const payload = await blobToBase64Payload(blob);
     const response = await apiJson<PdpFinalQualityResponse>("/pdp/final-quality", {
       method: "POST",
@@ -2049,6 +2240,16 @@ export function PdpEditor({
     setIsImageAdjusterOpen(false);
 
     const layers = overlaysBySection[safeCurrentSectionIndex] ?? [];
+    const adjustedSections = sections.map((section, index) =>
+      index === safeCurrentSectionIndex ? { ...section, generatedImage: imageDataUrl } : section
+    );
+    const adjustedDocument = buildEditorLayeredDocumentV2({
+      initialResult,
+      sections: adjustedSections,
+      overlaysBySection,
+      aspectRatio,
+      existingDocument: layeredDocumentV2
+    });
     let finalQualityReport = currentSection.imageQualityReport ?? buildFinalQualityFallbackReport(currentSection, null);
 
     try {
@@ -2056,6 +2257,8 @@ export function PdpEditor({
         imageSrc: imageDataUrl,
         layers,
         section: currentSection,
+        document: adjustedDocument,
+        sectionIndex: safeCurrentSectionIndex,
         backgroundQualityReport: currentSection.imageQualityReport
       });
     } catch (error) {
@@ -2073,7 +2276,8 @@ export function PdpEditor({
           : section
       )
     );
-    setNotice("Filerobot 보정 이미지를 현재 섹션 배경에 적용했습니다.");
+    updateWorkflowReview({ finalReviewStatus: "needs_revision" });
+    setNotice("Filerobot 보정 이미지를 현재 섹션 시각 에셋에 적용했습니다.");
   };
 
   const generateSectionImageForIndex = async (sectionIndex: number) => {
@@ -2103,6 +2307,20 @@ export function PdpEditor({
       aspectRatio
     });
     let nextLayers = buildGeneratedSectionLayers(existingLayers, generatedCopyOverlays);
+    const nextSectionsForQuality = sections.map((section, index) =>
+      index === sectionIndex ? { ...section, generatedImage } : section
+    );
+    const nextOverlaysForQuality = {
+      ...overlaysBySection,
+      [sectionIndex]: nextLayers
+    };
+    const nextDocumentForQuality = buildEditorLayeredDocumentV2({
+      initialResult,
+      sections: nextSectionsForQuality,
+      overlaysBySection: nextOverlaysForQuality,
+      aspectRatio,
+      existingDocument: layeredDocumentV2
+    });
     let finalQualityReport = response.imageQualityReport ?? buildFinalQualityFallbackReport(targetSection, null);
 
     try {
@@ -2110,6 +2328,8 @@ export function PdpEditor({
         imageSrc: generatedImage,
         layers: nextLayers,
         section: targetSection,
+        document: nextDocumentForQuality,
+        sectionIndex,
         backgroundQualityReport: response.imageQualityReport
       });
     } catch (error) {
@@ -2135,6 +2355,12 @@ export function PdpEditor({
         [sectionIndex]: nextLayers
       };
     });
+    setWorkflowReview((current) =>
+      normalizeWorkflowReviewState({
+        ...current,
+        finalReviewStatus: current.finalReviewStatus === "approved" ? "needs_revision" : "pending"
+      })
+    );
 
     return {
       section: targetSection,
@@ -2145,6 +2371,11 @@ export function PdpEditor({
   };
 
   const handleGenerateImage = async () => {
+    if (!canGenerateImages) {
+      setNotice(buildGenerationGateMessage(workflowReview));
+      return;
+    }
+
     commitEditorHistory();
     setIsGeneratingImage(true);
     setErrorMessage("");
@@ -2160,6 +2391,11 @@ export function PdpEditor({
   };
 
   const handleBatchGenerateMissing = async () => {
+    if (!canGenerateImages) {
+      setNotice(buildGenerationGateMessage(workflowReview));
+      return;
+    }
+
     const targetIndices = sections
       .map((section, index) => ({ section, index }))
       .filter(({ section }) => !section.generatedImage)
@@ -2169,6 +2405,11 @@ export function PdpEditor({
   };
 
   const handleBatchRegenerateQuality = async () => {
+    if (!canGenerateImages) {
+      setNotice(buildGenerationGateMessage(workflowReview));
+      return;
+    }
+
     const targetIndices = sections
       .map((section, index) => ({ section, index }))
       .filter(({ section }) => section.generatedImage && getSectionQualityStatus(section) !== "ready")
@@ -2258,6 +2499,7 @@ export function PdpEditor({
       ...current,
       isOpen: true
     }));
+    invalidateFinalReview("텍스트 레이어를 추가했습니다. 최종 검수는 다시 확인하세요.");
     setNotice("텍스트를 추가했습니다. 위치와 크기를 직접 조절해 레이아웃을 완성해 보세요.");
   };
 
@@ -2286,11 +2528,13 @@ export function PdpEditor({
       ...current,
       isOpen: true
     }));
+    invalidateFinalReview("도형 레이어를 추가했습니다. 최종 검수는 다시 확인하세요.");
     setNotice("배경 사각형을 추가했습니다. 기존 카피를 덮고 새 텍스트를 올리거나, 드래그와 리사이즈로 레이아웃을 보정할 수 있습니다.");
   };
 
   const updateOverlay = (overlayId: string, updates: Partial<CanvasLayer>) => {
     commitEditorHistory();
+    invalidateFinalReview("레이어를 수정했습니다. 최종 검수는 다시 확인하세요.");
     setOverlaysBySection((current) => ({
       ...current,
       [safeCurrentSectionIndex]: (current[safeCurrentSectionIndex] ?? []).map((overlay) =>
@@ -2301,6 +2545,7 @@ export function PdpEditor({
 
   const deleteOverlay = (overlayId: string) => {
     commitEditorHistory();
+    invalidateFinalReview("레이어를 삭제했습니다. 최종 검수는 다시 확인하세요.");
     setOverlaysBySection((current) => ({
       ...current,
       [safeCurrentSectionIndex]: (current[safeCurrentSectionIndex] ?? []).filter((overlay) => overlay.id !== overlayId)
@@ -2316,6 +2561,7 @@ export function PdpEditor({
     if (!source) return;
 
     commitEditorHistory();
+    invalidateFinalReview("레이어를 복제했습니다. 최종 검수는 다시 확인하세요.");
     const duplicate = normalizeCanvasLayer({
       ...source,
       id: crypto.randomUUID(),
@@ -2338,6 +2584,7 @@ export function PdpEditor({
     if (currentIndex < 0) return;
 
     commitEditorHistory();
+    invalidateFinalReview("레이어 순서를 바꿨습니다. 최종 검수는 다시 확인하세요.");
     setOverlaysBySection((current) => {
       const layers = [...(current[safeCurrentSectionIndex] ?? [])];
       const index = layers.findIndex((layer) => layer.id === overlayId);
@@ -2400,11 +2647,22 @@ export function PdpEditor({
 
     const width = OVERLAY_CANVAS_WIDTH;
     const layers = overlaysBySection[sectionIndex] ?? [];
-    return captureCompositeBlob(section.generatedImage, layers, width);
+    return captureCompositeBlob({
+      imageSrc: section.generatedImage,
+      layers,
+      width,
+      document: layeredDocumentV2,
+      sectionId: section.section_id,
+      sectionIndex
+    });
   };
 
   const handleDownload = async () => {
     if (!currentSection.generatedImage) {
+      return;
+    }
+    if (!finalReviewApproved) {
+      setErrorMessage("최종 검수 승인 후 납품용 이미지를 다운로드할 수 있습니다.");
       return;
     }
     if (isSectionDeliveryBlocked(currentSection)) {
@@ -2425,6 +2683,11 @@ export function PdpEditor({
   };
 
   const handleDownloadAll = async () => {
+    if (!finalReviewApproved) {
+      setErrorMessage("최종 검수 승인 후 전체 납품 파일을 다운로드할 수 있습니다.");
+      return;
+    }
+
     const downloadableSections = sections
       .map((section, index) => ({ section, index }))
       .filter((entry) => Boolean(entry.section.generatedImage));
@@ -2477,6 +2740,11 @@ export function PdpEditor({
   };
 
   const handleDownloadLongPage = async () => {
+    if (!finalReviewApproved) {
+      setErrorMessage("최종 검수 승인 후 긴 상세페이지 JPG를 다운로드할 수 있습니다.");
+      return;
+    }
+
     const downloadableSections = sections
       .map((section, index) => ({ section, index }))
       .filter((entry) => Boolean(entry.section.generatedImage));
@@ -2542,6 +2810,46 @@ export function PdpEditor({
     }
   };
 
+  const workflowSteps = [
+    {
+      label: "1. 데이터 입력",
+      status: "approved" as PdpReviewApprovalStatus,
+      detail: "업로드 자료와 요청사항 기반"
+    },
+    {
+      label: "2. 스토리라인 검수",
+      status: workflowReview.storylineStatus,
+      detail: storylineApproved ? "승인됨" : "승인 필요"
+    },
+    {
+      label: "3. 이미지 계획 검수",
+      status: workflowReview.imagePlanStatus,
+      detail: imagePlanApproved ? "승인됨" : "스토리 승인 후 검수"
+    },
+    {
+      label: "4. 이미지 생성",
+      status: generatedCount ? "approved" as const : "pending" as const,
+      detail: `${generatedCount}/${sections.length}개 생성`
+    },
+    {
+      label: "5. 최종 검수",
+      status: workflowReview.finalReviewStatus,
+      detail: finalReviewApproved ? "다운로드 가능" : "승인 필요"
+    }
+  ];
+  const storyArcSummary = sections
+    .map((section, index) => `${index + 1}. ${getStoryRoleLabel(section.story_role || getSectionStoryRole(section))} · ${getDisplaySectionName(section)}`)
+    .join(" → ");
+  const finalReviewBlockedReason = !generatedCount
+    ? "생성된 이미지가 아직 없습니다."
+    : blockedGeneratedSections.length
+      ? `품질 게이트 차단 ${blockedGeneratedSections.length}개`
+      : !hasGeneratedAllSections
+        ? `미생성 섹션 ${sections.length - generatedCount}개`
+        : reviewGeneratedSections.length
+          ? `수동 확인 필요 ${reviewGeneratedSections.length}개`
+          : "모든 섹션 생성 완료";
+
   return (
     <main className={styles.page} data-theme={theme}>
       <section className={styles.editorShell} onClick={clearLayerSelection}>
@@ -2594,7 +2902,7 @@ export function PdpEditor({
             ) : null}
             <button
               className={`${styles.secondaryButton} ${styles.headerActionButton}`}
-              disabled={!missingGeneratedSections.length || isGenerationBusy}
+              disabled={!canGenerateImages || !missingGeneratedSections.length || isGenerationBusy}
               onClick={handleBatchGenerateMissing}
               type="button"
             >
@@ -2603,7 +2911,7 @@ export function PdpEditor({
             </button>
             <button
               className={`${styles.secondaryButton} ${styles.headerActionButton}`}
-              disabled={!qualityRetrySections.length || isGenerationBusy}
+              disabled={!canGenerateImages || !qualityRetrySections.length || isGenerationBusy}
               onClick={handleBatchRegenerateQuality}
               type="button"
             >
@@ -2620,7 +2928,7 @@ export function PdpEditor({
             </button>
             <button
               className={`${styles.secondaryButton} ${styles.headerActionButton} ${styles.zipDownloadButton}`}
-              disabled={!generatedCount || isDownloadingAll || isGenerationBusy}
+              disabled={!canDownloadDeliveryAssets || isDownloadingAll || isGenerationBusy}
               onClick={handleDownloadAll}
               type="button"
             >
@@ -2629,14 +2937,14 @@ export function PdpEditor({
             </button>
             <button
               className={`${styles.secondaryButton} ${styles.headerActionButton}`}
-              disabled={!generatedCount || isDownloadingLongPage || isGenerationBusy}
+              disabled={!canDownloadDeliveryAssets || isDownloadingLongPage || isGenerationBusy}
               onClick={handleDownloadLongPage}
               type="button"
             >
               {isDownloadingLongPage ? <Loader2 className={styles.spinIcon} size={16} /> : <Download size={16} />}
               긴 상세페이지 JPG
             </button>
-            <button className={styles.primaryButton} onClick={handleDownload} type="button" disabled={!currentSection.generatedImage || isGenerationBusy}>
+            <button className={styles.primaryButton} onClick={handleDownload} type="button" disabled={!currentSection.generatedImage || !finalReviewApproved || isGenerationBusy}>
               <Download size={16} />
               현재 섹션 다운로드
             </button>
@@ -2659,7 +2967,7 @@ export function PdpEditor({
             <AlertCircle size={18} />
             <div>
               <strong>검수 후 납품 권장</strong>
-              <p>{reviewGeneratedSections.length}개 섹션은 품질 게이트에서 수동 확인이 필요하다고 판단했습니다. 다운로드 전 이미지 선명도와 텍스트 영역을 확인하세요.</p>
+              <p>{reviewGeneratedSections.length}개 섹션은 품질 게이트에서 수동 확인이 필요하다고 판단했습니다. 다운로드 전 이미지 선명도와 카피 레이어 대비를 확인하세요.</p>
             </div>
           </div>
         ) : null}
@@ -2685,6 +2993,187 @@ export function PdpEditor({
             </div>
           ) : null}
         </div>
+
+        <section className={styles.workflowReviewPanel} onClick={stopShellClick}>
+          <div className={styles.workflowReviewHeader}>
+            <div>
+              <p className={styles.panelLabel}>검수 플로우</p>
+              <h2 className={styles.panelTitle}>스토리라인 승인 후 이미지 계획과 생성물을 검수합니다.</h2>
+              <p className={styles.panelDescription}>
+                이미지 모델은 시각 에셋만 만들고, 카피와 CTA는 에디터 레이어로 관리합니다. 각 단계 승인 전에는 다음 산출물 생성과 납품 다운로드가 제한됩니다.
+              </p>
+            </div>
+            <span className={finalReviewApproved ? styles.deliveryReadyPill : canGenerateImages ? styles.deliveryReviewPill : styles.deliveryBlockedPill}>
+              {finalReviewApproved ? "최종 승인" : canGenerateImages ? "생성 가능" : "검수 필요"}
+            </span>
+          </div>
+
+          <div className={styles.workflowStepGrid}>
+            {workflowSteps.map((step) => (
+              <div className={styles.workflowStepCard} key={step.label}>
+                <span className={getWorkflowStatusClassName(styles, step.status)}>{getWorkflowStatusLabel(step.status)}</span>
+                <strong>{step.label}</strong>
+                <small>{step.detail}</small>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.workflowReviewGrid}>
+            <article className={styles.workflowReviewCard}>
+              <div className={styles.workflowCardHeader}>
+                <div>
+                  <span className={styles.optionSectionEyebrow}>Storyline Review</span>
+                  <strong>상세페이지 스토리라인</strong>
+                </div>
+                <span className={getWorkflowStatusClassName(styles, workflowReview.storylineStatus)}>
+                  {getWorkflowStatusLabel(workflowReview.storylineStatus)}
+                </span>
+              </div>
+              <p className={styles.summaryText}>{storyArcSummary}</p>
+              <div className={styles.workflowSectionList}>
+                {sections.map((section, index) => (
+                  <div className={styles.workflowSectionItem} key={`story-${section.section_id}`}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <div>
+                      <strong>
+                        {getStoryRoleLabel(section.story_role || getSectionStoryRole(section))} · {getDisplaySectionName(section)}
+                      </strong>
+                      <p>{section.headline || getDisplaySectionGoal(section)}</p>
+                      {section.bullets.length ? <small>{section.bullets.slice(0, 2).join(" / ")}</small> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <label className={styles.workflowFeedbackField}>
+                <span className={styles.optionMiniLabel}>스토리라인 수정 요청</span>
+                <textarea
+                  className={styles.textarea}
+                  onChange={(event) => updateWorkflowReview({ storylineFeedback: event.target.value })}
+                  placeholder="예: S2 문제 공감을 더 강하게, S5는 실제 증빙 중심으로 변경"
+                  rows={3}
+                  value={workflowReview.storylineFeedback}
+                />
+              </label>
+              <div className={styles.workflowActionRow}>
+                <button className={styles.primaryButtonWide} onClick={approveStorylineReview} type="button">
+                  <CheckCircle2 size={16} />
+                  스토리라인 승인
+                </button>
+                <button className={styles.secondaryButtonWide} onClick={requestStorylineRevision} type="button">
+                  <AlertCircle size={16} />
+                  수정 필요
+                </button>
+              </div>
+            </article>
+
+            <article className={styles.workflowReviewCard}>
+              <div className={styles.workflowCardHeader}>
+                <div>
+                  <span className={styles.optionSectionEyebrow}>Image Plan Review</span>
+                  <strong>섹션별 이미지 계획</strong>
+                </div>
+                <span className={getWorkflowStatusClassName(styles, workflowReview.imagePlanStatus)}>
+                  {getWorkflowStatusLabel(workflowReview.imagePlanStatus)}
+                </span>
+              </div>
+              {!storylineApproved ? (
+                <div className={styles.inlineWarning}>
+                  <AlertCircle size={16} />
+                  스토리라인 승인 후 이미지 계획을 승인할 수 있습니다.
+                </div>
+              ) : null}
+              <div className={styles.workflowSectionList}>
+                {sections.map((section, index) => {
+                  const template = resolveSectionDesignTemplate(section, index);
+                  const options = normalizeImageOptions(sectionOptions[index], referenceModelAppliesToSection(index));
+                  return (
+                    <div className={styles.workflowSectionItem} key={`image-plan-${section.section_id}`}>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <div>
+                        <strong>
+                          {template.shortLabel} · {getStoryRoleLabel(section.story_role || getSectionStoryRole(section))}
+                        </strong>
+                        <p>{buildImagePlanSummary(section, options)}</p>
+                        <small>{section.image_prompt_override ? "수동 최종 프롬프트 사용" : section.prompt_ko || "자동 이미지 프롬프트"}</small>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <label className={styles.workflowFeedbackField}>
+                <span className={styles.optionMiniLabel}>이미지 계획 수정 요청</span>
+                <textarea
+                  className={styles.textarea}
+                  onChange={(event) => updateWorkflowReview({ imagePlanFeedback: event.target.value })}
+                  placeholder="예: S1은 로고가 아니라 실제 OBS 브라우저 소스 적용 장면, S3는 후원 HUD 전후 비교"
+                  rows={3}
+                  value={workflowReview.imagePlanFeedback}
+                />
+              </label>
+              <div className={styles.workflowActionRow}>
+                <button className={styles.primaryButtonWide} disabled={!storylineApproved} onClick={approveImagePlanReview} type="button">
+                  <CheckCircle2 size={16} />
+                  이미지 계획 승인
+                </button>
+                <button className={styles.secondaryButtonWide} onClick={requestImagePlanRevision} type="button">
+                  <AlertCircle size={16} />
+                  수정 필요
+                </button>
+              </div>
+            </article>
+
+            <article className={styles.workflowReviewCard}>
+              <div className={styles.workflowCardHeader}>
+                <div>
+                  <span className={styles.optionSectionEyebrow}>Final Review</span>
+                  <strong>생성물 최종 검수</strong>
+                </div>
+                <span className={getWorkflowStatusClassName(styles, workflowReview.finalReviewStatus)}>
+                  {getWorkflowStatusLabel(workflowReview.finalReviewStatus)}
+                </span>
+              </div>
+              <div className={styles.metricGrid}>
+                <div className={styles.metricCard}>
+                  <span>생성</span>
+                  <strong>{generatedCount}/{sections.length}</strong>
+                </div>
+                <div className={styles.metricCard}>
+                  <span>통과</span>
+                  <strong>{readyGeneratedCount}</strong>
+                </div>
+                <div className={styles.metricCard}>
+                  <span>검수</span>
+                  <strong>{reviewGeneratedSections.length}</strong>
+                </div>
+                <div className={styles.metricCard}>
+                  <span>차단</span>
+                  <strong>{blockedGeneratedSections.length}</strong>
+                </div>
+              </div>
+              <p className={styles.summaryText}>{finalReviewBlockedReason}</p>
+              <label className={styles.workflowFeedbackField}>
+                <span className={styles.optionMiniLabel}>최종 수정 요청</span>
+                <textarea
+                  className={styles.textarea}
+                  onChange={(event) => updateWorkflowReview({ finalReviewFeedback: event.target.value })}
+                  placeholder="예: S2 시각 에셋을 다시 생성, S4 CTA 대비 강화, S6 화면 캡처를 더 크게"
+                  rows={3}
+                  value={workflowReview.finalReviewFeedback}
+                />
+              </label>
+              <div className={styles.workflowActionRow}>
+                <button className={styles.primaryButtonWide} disabled={!hasGeneratedAllSections || Boolean(blockedGeneratedSections.length)} onClick={approveFinalReview} type="button">
+                  <CheckCircle2 size={16} />
+                  최종 검수 승인
+                </button>
+                <button className={styles.secondaryButtonWide} disabled={!generatedCount} onClick={requestFinalRevision} type="button">
+                  <AlertCircle size={16} />
+                  수정 필요
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
 
         <div className={styles.editorLayout}>
           <aside className={styles.sectionRail} onClick={stopShellClick}>
@@ -3080,7 +3569,7 @@ export function PdpEditor({
                   {!currentSection.generatedImage ? (
                     <div className={styles.canvasStatusBadge}>
                       {isGenerationBusy ? <Loader2 className={styles.spinIcon} size={14} /> : <LayoutTemplate size={14} />}
-                      {isGenerationBusy ? "배경 plate 생성 중" : "템플릿 문서 먼저 편집 중"}
+                      {isGenerationBusy ? "시각 에셋 생성 중" : "템플릿 문서 먼저 편집 중"}
                     </div>
                   ) : null}
                 </div>
@@ -3245,14 +3734,62 @@ function buildOverlayBackgroundStyle(overlay: TextOverlay): CSSProperties {
   };
 }
 
+type ExportDocumentImageLayer = {
+  id: string;
+  src: string;
+  fit: NonNullable<PdpLayerNode["imageFit"]>;
+  opacity: number;
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+};
+
+type ExportDocumentShapeLayer = {
+  id: string;
+  fill: string;
+  opacity: number;
+  cornerRadius: number;
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+};
+
 async function buildExportNode(input: {
   imageSrc: string;
   width: number;
   layers: CanvasLayer[];
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
 }) {
-  const image = await loadImage(input.imageSrc);
   const width = Math.max(1, Math.round(input.width));
-  const height = Math.max(1, Math.round((image.naturalHeight / Math.max(image.naturalWidth, 1)) * width));
+  const hasGeneratedVisualAsset = hasExportDocumentGeneratedVisualAsset(input);
+  const shouldDrawFullCanvasImage = Boolean(input.imageSrc && !hasGeneratedVisualAsset);
+  const image = shouldDrawFullCanvasImage ? await loadImage(input.imageSrc) : null;
+  const height = image
+    ? Math.max(1, Math.round((image.naturalHeight / Math.max(image.naturalWidth, 1)) * width))
+    : Math.max(1, Math.round(((input.document?.canvas.height ?? getOverlayCanvasHeight("9:16")) / Math.max(input.document?.canvas.width ?? width, 1)) * width));
+  const documentShapeLayers = getExportDocumentShapeLayers({
+    document: input.document,
+    sectionId: input.sectionId,
+    sectionIndex: input.sectionIndex,
+    width,
+    height
+  });
+  const documentImageLayers = getExportDocumentImageLayers({
+    document: input.document,
+    sectionId: input.sectionId,
+    sectionIndex: input.sectionIndex,
+    width,
+    height,
+    skipGeneratedBackground: shouldDrawFullCanvasImage
+  });
 
   const container = document.createElement("div");
   container.style.position = "fixed";
@@ -3260,22 +3797,28 @@ async function buildExportNode(input: {
   container.style.top = "0";
   container.style.width = `${width}px`;
   container.style.height = `${height}px`;
-  container.style.background = "transparent";
+  container.style.background = "#f6f2ea";
   container.style.overflow = "hidden";
   container.style.pointerEvents = "none";
   container.style.zIndex = "-1";
 
-  const imageEl = document.createElement("img");
-  imageEl.src = input.imageSrc;
-  imageEl.alt = "";
-  imageEl.draggable = false;
-  imageEl.style.display = "block";
-  imageEl.style.width = "100%";
-  imageEl.style.height = "100%";
-  imageEl.style.objectFit = "cover";
-  container.appendChild(imageEl);
+  if (shouldDrawFullCanvasImage && input.imageSrc) {
+    const imageEl = document.createElement("img");
+    imageEl.src = input.imageSrc;
+    imageEl.alt = "";
+    imageEl.draggable = false;
+    imageEl.style.display = "block";
+    imageEl.style.width = "100%";
+    imageEl.style.height = "100%";
+    imageEl.style.objectFit = "cover";
+    container.appendChild(imageEl);
+  }
 
-  for (const layer of input.layers.filter((layer) => isShapeLayer(layer) || isTextLayer(layer))) {
+  for (const layer of documentShapeLayers) {
+    container.appendChild(buildExportShapeElement(layer));
+  }
+
+  for (const layer of input.layers.filter(isShapeLayer)) {
     const layerEl = document.createElement("div");
     layerEl.style.position = "absolute";
     layerEl.style.left = `${layer.x}px`;
@@ -3283,51 +3826,218 @@ async function buildExportNode(input: {
     layerEl.style.width = `${toNumericSize(layer.width, width)}px`;
     layerEl.style.height = `${toNumericSize(layer.height, height)}px`;
 
-    if (isShapeLayer(layer)) {
-      const shapeSurface = document.createElement("div");
-      shapeSurface.style.width = "100%";
-      shapeSurface.style.height = "100%";
-      shapeSurface.style.backgroundColor = toRgba(layer.fillColor, layer.fillOpacity);
-      shapeSurface.style.borderRadius = `${layer.borderRadius}px`;
-      shapeSurface.style.border = "1px solid rgba(255, 255, 255, 0.18)";
-      shapeSurface.style.boxShadow = "inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 28px rgba(8, 16, 28, 0.18)";
-      layerEl.appendChild(shapeSurface);
-    } else {
-      const shell = document.createElement("div");
-      const shellStyle = buildOverlayShellStyle(layer);
-      applyInlineStyle(shell, shellStyle);
-      shell.style.overflow = "hidden";
+    const shapeSurface = document.createElement("div");
+    shapeSurface.style.width = "100%";
+    shapeSurface.style.height = "100%";
+    shapeSurface.style.backgroundColor = toRgba(layer.fillColor, layer.fillOpacity);
+    shapeSurface.style.borderRadius = `${layer.borderRadius}px`;
+    shapeSurface.style.border = "1px solid rgba(255, 255, 255, 0.18)";
+    shapeSurface.style.boxShadow = "inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 28px rgba(8, 16, 28, 0.18)";
+    layerEl.appendChild(shapeSurface);
 
-      if (layer.backgroundEnabled) {
-        const backdrop = document.createElement("div");
-        backdrop.style.position = "absolute";
-        backdrop.style.inset = "0";
-        const backdropStyle = buildOverlayBackgroundStyle(layer);
-        applyInlineStyle(backdrop, backdropStyle);
-        shell.appendChild(backdrop);
-      }
+    container.appendChild(layerEl);
+  }
 
-      const textEl = document.createElement("div");
-      textEl.textContent = layer.text;
-      const textStyle = buildOverlayTextStyle(layer);
-      applyInlineStyle(textEl, textStyle);
-      textEl.style.position = "relative";
-      textEl.style.zIndex = "1";
-      shell.appendChild(textEl);
-      layerEl.appendChild(shell);
+  for (const layer of documentImageLayers) {
+    container.appendChild(buildExportImageElement(layer));
+  }
+
+  for (const layer of input.layers.filter(isTextLayer)) {
+    const layerEl = document.createElement("div");
+    layerEl.style.position = "absolute";
+    layerEl.style.left = `${layer.x}px`;
+    layerEl.style.top = `${layer.y}px`;
+    layerEl.style.width = `${toNumericSize(layer.width, width)}px`;
+    layerEl.style.height = `${toNumericSize(layer.height, height)}px`;
+
+    const shell = document.createElement("div");
+    const shellStyle = buildOverlayShellStyle(layer);
+    applyInlineStyle(shell, shellStyle);
+    shell.style.overflow = "hidden";
+
+    if (layer.backgroundEnabled) {
+      const backdrop = document.createElement("div");
+      backdrop.style.position = "absolute";
+      backdrop.style.inset = "0";
+      const backdropStyle = buildOverlayBackgroundStyle(layer);
+      applyInlineStyle(backdrop, backdropStyle);
+      shell.appendChild(backdrop);
     }
 
+    const textEl = document.createElement("div");
+    textEl.textContent = layer.text;
+    const textStyle = buildOverlayTextStyle(layer);
+    applyInlineStyle(textEl, textStyle);
+    textEl.style.position = "relative";
+    textEl.style.zIndex = "1";
+    shell.appendChild(textEl);
+    layerEl.appendChild(shell);
     container.appendChild(layerEl);
   }
 
   return container;
 }
 
-async function captureCompositeBlob(imageSrc: string, layers: CanvasLayer[], width = OVERLAY_CANVAS_WIDTH) {
+function buildExportShapeElement(layer: ExportDocumentShapeLayer) {
+  const layerEl = document.createElement("div");
+  layerEl.style.position = "absolute";
+  layerEl.style.left = `${layer.bounds.x}px`;
+  layerEl.style.top = `${layer.bounds.y}px`;
+  layerEl.style.width = `${layer.bounds.width}px`;
+  layerEl.style.height = `${layer.bounds.height}px`;
+  layerEl.style.backgroundColor = layer.fill;
+  layerEl.style.opacity = String(layer.opacity);
+  layerEl.style.borderRadius = `${layer.cornerRadius}px`;
+  return layerEl;
+}
+
+function buildExportImageElement(layer: ExportDocumentImageLayer) {
+  const imageEl = document.createElement("img");
+  imageEl.src = layer.src;
+  imageEl.alt = "";
+  imageEl.draggable = false;
+  imageEl.style.position = "absolute";
+  imageEl.style.left = `${layer.bounds.x}px`;
+  imageEl.style.top = `${layer.bounds.y}px`;
+  imageEl.style.width = `${layer.bounds.width}px`;
+  imageEl.style.height = `${layer.bounds.height}px`;
+  imageEl.style.objectFit = layer.fit;
+  imageEl.style.objectPosition = "center";
+  imageEl.style.opacity = String(layer.opacity);
+  return imageEl;
+}
+
+function hasExportDocumentGeneratedVisualAsset(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+}) {
+  const section = resolveExportDocumentSection(input);
+  if (!section) return false;
+  return section.nodes
+    .flatMap(flattenExportLayerNode)
+    .some((node) => node.visible && (node.type === "image" || node.type === "product") && node.role === "visual-asset");
+}
+
+function getExportDocumentShapeLayers(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+  width: number;
+  height: number;
+}): ExportDocumentShapeLayer[] {
+  const document = input.document;
+  const section = resolveExportDocumentSection(input);
+  if (!document || !section) return [];
+
+  return section.nodes
+    .flatMap(flattenExportLayerNode)
+    .filter((node) => node.visible && node.type === "shape" && (!node.editable || node.locked))
+    .sort((left, right) => left.zIndex - right.zIndex)
+    .map((node) => {
+      const fill = node.fills?.find((candidate) => candidate.color);
+      if (!fill?.color) return null;
+      return {
+        id: node.id,
+        fill: fill.color,
+        opacity: fill.opacity ?? node.opacity ?? 1,
+        cornerRadius: node.cornerRadius ?? 0,
+        bounds: boundsToExportPixels(node.bounds, document.canvas, input.width, input.height)
+      } satisfies ExportDocumentShapeLayer;
+    })
+    .filter((layer): layer is ExportDocumentShapeLayer => Boolean(layer));
+}
+
+function getExportDocumentImageLayers(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+  width: number;
+  height: number;
+  skipGeneratedBackground: boolean;
+}): ExportDocumentImageLayer[] {
+  const document = input.document;
+  const section = resolveExportDocumentSection(input);
+  if (!document || !section) return [];
+
+  const assetById = new Map(document.assets.images.map((asset) => [asset.id, asset]));
+  return section.nodes
+    .flatMap(flattenExportLayerNode)
+    .filter((node) => node.visible && (node.type === "image" || node.type === "product"))
+    .filter((node) => !(input.skipGeneratedBackground && node.role === "background"))
+    .sort((left, right) => left.zIndex - right.zIndex)
+    .map((node) => {
+      const asset = node.assetId ? assetById.get(node.assetId) : null;
+      if (!asset?.dataUrl) return null;
+      return {
+        id: node.id,
+        src: asset.dataUrl,
+        fit: node.imageFit ?? (node.role === "background" ? "cover" : "contain"),
+        opacity: node.opacity ?? 1,
+        bounds: boundsToExportPixels(node.bounds, document.canvas, input.width, input.height)
+      } satisfies ExportDocumentImageLayer;
+    })
+    .filter((layer): layer is ExportDocumentImageLayer => Boolean(layer));
+}
+
+function resolveExportDocumentSection(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+}) {
+  const document = input.document;
+  if (!document?.sections.length) return null;
+  return (
+    (input.sectionId ? document.sections.find((candidate) => candidate.sectionId === input.sectionId) : null) ??
+    document.sections[input.sectionIndex ?? 0] ??
+    null
+  );
+}
+
+function flattenExportLayerNode(node: PdpLayerNode): PdpLayerNode[] {
+  return [node, ...(node.children ?? []).flatMap(flattenExportLayerNode)];
+}
+
+function boundsToExportPixels(
+  bounds: PdpLayerNode["bounds"],
+  sourceCanvas: PdpLayeredDocumentV2["canvas"],
+  width: number,
+  height: number
+) {
+  if (bounds.unit === "percent") {
+    return {
+      x: Math.round((bounds.x / 100) * width),
+      y: Math.round((bounds.y / 100) * height),
+      width: Math.round((bounds.width / 100) * width),
+      height: Math.round((bounds.height / 100) * height)
+    };
+  }
+
+  const scaleX = width / Math.max(1, sourceCanvas.width);
+  const scaleY = height / Math.max(1, sourceCanvas.height);
+  return {
+    x: Math.round(bounds.x * scaleX),
+    y: Math.round(bounds.y * scaleY),
+    width: Math.max(1, Math.round(bounds.width * scaleX)),
+    height: Math.max(1, Math.round(bounds.height * scaleY))
+  };
+}
+
+async function captureCompositeBlob(input: {
+  imageSrc: string;
+  layers: CanvasLayer[];
+  width?: number;
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+}) {
   const exportNode = await buildExportNode({
-    imageSrc,
-    width,
-    layers
+    imageSrc: input.imageSrc,
+    width: input.width ?? OVERLAY_CANVAS_WIDTH,
+    layers: input.layers,
+    document: input.document,
+    sectionId: input.sectionId,
+    sectionIndex: input.sectionIndex
   });
 
   document.body.appendChild(exportNode);
@@ -3428,6 +4138,74 @@ function buildGeneratedImageNotice(input: {
   return input.hadExistingTextLayers || input.generatedCopyOverlays.length
     ? `${getDisplaySectionName(input.section)} 이미지를 만들고 편집 가능한 카피 레이어를 유지했습니다.`
     : "이미지는 만들었지만 제품 관련 카피를 만들 정보가 부족해 자동 텍스트 레이어는 올리지 않았습니다. 카피 탭에서 직접 입력하거나 자료를 보강해 재분석하세요.";
+}
+
+function normalizeWorkflowReviewState(state: Partial<PdpWorkflowReviewState> | null | undefined): PdpWorkflowReviewState {
+  return {
+    ...DEFAULT_WORKFLOW_REVIEW_STATE,
+    storylineStatus: normalizeReviewApprovalStatus(state?.storylineStatus),
+    storylineFeedback: state?.storylineFeedback ?? "",
+    imagePlanStatus: normalizeReviewApprovalStatus(state?.imagePlanStatus),
+    imagePlanFeedback: state?.imagePlanFeedback ?? "",
+    finalReviewStatus: normalizeReviewApprovalStatus(state?.finalReviewStatus),
+    finalReviewFeedback: state?.finalReviewFeedback ?? ""
+  };
+}
+
+function normalizeReviewApprovalStatus(status: unknown): PdpReviewApprovalStatus {
+  return status === "approved" || status === "needs_revision" ? status : "pending";
+}
+
+function getWorkflowStatusLabel(status: PdpReviewApprovalStatus) {
+  if (status === "approved") return "승인";
+  if (status === "needs_revision") return "수정 필요";
+  return "대기";
+}
+
+function getWorkflowStatusClassName(styleMap: typeof styles, status: PdpReviewApprovalStatus) {
+  if (status === "approved") return styleMap.workflowStatusApproved;
+  if (status === "needs_revision") return styleMap.workflowStatusRevision;
+  return styleMap.workflowStatusPending;
+}
+
+function buildGenerationGateMessage(review: PdpWorkflowReviewState) {
+  if (review.storylineStatus !== "approved") {
+    return "스토리라인 검수 승인 후 이미지 계획을 확정하고 이미지를 생성할 수 있습니다.";
+  }
+  if (review.imagePlanStatus !== "approved") {
+    return "이미지 계획 검수 승인 후 시각 에셋을 생성할 수 있습니다.";
+  }
+  return "이미지를 생성할 수 있습니다.";
+}
+
+function getStoryRoleLabel(role: string | undefined) {
+  switch (normalizeCopyToken(role ?? "")) {
+    case "hook":
+      return "후킹";
+    case "problem":
+      return "문제 공감";
+    case "benefit":
+      return "핵심 베네핏";
+    case "reason":
+      return "선택 이유";
+    case "proof":
+      return "근거/신뢰";
+    case "demo":
+      return "사용 데모";
+    case "usecase":
+      return "사용 사례";
+    case "cta":
+      return "전환 CTA";
+    default:
+      return "스토리";
+  }
+}
+
+function buildImagePlanSummary(section: SectionBlueprint, options: ImageGenOptions) {
+  const styleLabel = STYLE_OPTIONS.find((option) => option.value === options.style)?.label ?? "AI 자동";
+  const modelLabel = options.withModel ? "모델컷 포함" : "제품/화면 중심";
+  const target = section.reference_usage || section.layout_notes || section.style_guide || section.goal || section.purpose;
+  return `${styleLabel} · ${modelLabel} · ${target || "섹션 목적에 맞는 시각 에셋"}`;
 }
 
 function buildDeliveryReport(input: {
@@ -4138,7 +4916,7 @@ function buildFinalQualityFallbackReport(
   const base = backgroundReport ?? {
     score: 70,
     status: "needs_review" as const,
-    summary: "배경 이미지는 생성됐지만 최종 합성본 검수 결과가 없습니다.",
+    summary: "시각 에셋은 생성됐지만 최종 합성본 검수 결과가 없습니다.",
     checks: [],
     issues: [],
     nextActions: []
@@ -4160,7 +4938,7 @@ function buildFinalQualityFallbackReport(
     checks: Array.from(new Set([...base.checks, "최종 합성본 검수 미완료"])).slice(0, 8),
     issues: [...base.issues, finalIssue].slice(0, 8),
     nextActions: Array.from(
-      new Set(["최종 합성 카피의 위치와 대비를 확인하세요.", "문제가 있으면 배경 사각형 또는 텍스트 레이어를 조정하세요.", ...base.nextActions])
+      new Set(["최종 합성 카피의 위치와 대비를 확인하세요.", "문제가 있으면 템플릿 도형, 시각 에셋, 텍스트 레이어를 조정하세요.", ...base.nextActions])
     ).slice(0, 4)
   };
 }
@@ -4194,7 +4972,7 @@ function buildAutoCopyOverlays(section: SectionBlueprint, aspectRatio: AspectRat
         textColor: headlineSlot.textColor ?? theme.textOnDark,
         backgroundColor: headlineSlot.backgroundColor ?? theme.darkPanel,
         shadowColor: theme.shadow,
-        backgroundEnabled: true,
+        backgroundEnabled: false,
         backgroundOpacity: headlineSlot.backgroundOpacity ?? 0.88,
         backgroundRadius: headlineSlot.backgroundRadius ?? 18,
         textAlign: headlineSlot.textAlign,
@@ -4216,7 +4994,7 @@ function buildAutoCopyOverlays(section: SectionBlueprint, aspectRatio: AspectRat
         textColor: subheadlineSlot.textColor ?? theme.textOnDark,
         backgroundColor: subheadlineSlot.backgroundColor ?? theme.darkPanel,
         shadowColor: theme.shadow,
-        backgroundEnabled: true,
+        backgroundEnabled: false,
         backgroundOpacity: subheadlineSlot.backgroundOpacity ?? 0.76,
         backgroundRadius: subheadlineSlot.backgroundRadius ?? 16,
         textAlign: subheadlineSlot.textAlign,
@@ -4240,7 +5018,7 @@ function buildAutoCopyOverlays(section: SectionBlueprint, aspectRatio: AspectRat
         textColor: slot.textColor ?? theme.textOnLight,
         backgroundColor: slot.backgroundColor ?? theme.lightPanel,
         shadowColor: theme.shadow,
-        backgroundEnabled: true,
+        backgroundEnabled: false,
         backgroundOpacity: slot.backgroundOpacity ?? 0.86,
         backgroundRadius: slot.backgroundRadius ?? 14,
         textAlign: slot.textAlign,

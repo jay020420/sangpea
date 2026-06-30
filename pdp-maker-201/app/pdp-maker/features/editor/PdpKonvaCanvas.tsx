@@ -62,13 +62,36 @@ export const PdpKonvaCanvas = forwardRef<HTMLDivElement, PdpKonvaCanvasProps>(fu
     () => layers.filter((layer) => isShapeLayer(layer) || isTextLayer(layer)),
     [layers]
   );
+  const shapeLayers = useMemo(() => sortedLayers.filter(isShapeLayer), [sortedLayers]);
+  const textLayers = useMemo(() => sortedLayers.filter(isTextLayer), [sortedLayers]);
   const selectedLayer = sortedLayers.find((layer) => layer.id === selectedLayerId) ?? null;
   const editingTextLayer =
     selectedLayer && isTextLayer(selectedLayer) && selectedLayer.id === editingLayerId ? selectedLayer : null;
+  const hasGeneratedVisualAsset = useMemo(
+    () =>
+      hasDocumentGeneratedVisualAsset({
+        document: layeredDocument,
+        sectionId,
+        sectionIndex
+      }),
+    [layeredDocument, sectionId, sectionIndex]
+  );
+  const shouldDrawFullCanvasImage = Boolean(imageSrc && !hasGeneratedVisualAsset);
   const canvasHeight = useMemo(() => {
-    if (!image?.naturalWidth || !image.naturalHeight) return fallbackCanvasHeight;
+    if (!shouldDrawFullCanvasImage || !image?.naturalWidth || !image.naturalHeight) return fallbackCanvasHeight;
     return Math.max(1, Math.round((image.naturalHeight / image.naturalWidth) * canvasWidth));
-  }, [canvasWidth, fallbackCanvasHeight, image?.naturalHeight, image?.naturalWidth]);
+  }, [canvasWidth, fallbackCanvasHeight, image?.naturalHeight, image?.naturalWidth, shouldDrawFullCanvasImage]);
+  const documentShapeLayers = useMemo(
+    () =>
+      getDocumentShapeLayers({
+        document: layeredDocument,
+        sectionId,
+        sectionIndex,
+        canvasWidth,
+        canvasHeight
+      }),
+    [canvasHeight, canvasWidth, layeredDocument, sectionId, sectionIndex]
+  );
   const documentImageLayers = useMemo(
     () =>
       getDocumentImageLayers({
@@ -77,9 +100,9 @@ export const PdpKonvaCanvas = forwardRef<HTMLDivElement, PdpKonvaCanvasProps>(fu
         sectionIndex,
         canvasWidth,
         canvasHeight,
-        skipGeneratedBackground: Boolean(imageSrc)
+        skipGeneratedBackground: shouldDrawFullCanvasImage
       }),
-    [canvasHeight, canvasWidth, imageSrc, layeredDocument, sectionId, sectionIndex]
+    [canvasHeight, canvasWidth, layeredDocument, sectionId, sectionIndex, shouldDrawFullCanvasImage]
   );
 
   useEffect(() => {
@@ -195,7 +218,7 @@ export const PdpKonvaCanvas = forwardRef<HTMLDivElement, PdpKonvaCanvasProps>(fu
         width={canvasWidth}
       >
         <Layer>
-          {image ? (
+          {shouldDrawFullCanvasImage && image ? (
             <KonvaImage
               height={canvasHeight}
               image={image}
@@ -209,41 +232,45 @@ export const PdpKonvaCanvas = forwardRef<HTMLDivElement, PdpKonvaCanvasProps>(fu
             <Rect fill={backgroundFill} height={canvasHeight} name="template-background" width={canvasWidth} />
           )}
 
+          {documentShapeLayers.map((documentLayer) => (
+            <DocumentShapeNode key={documentLayer.id} layer={documentLayer} />
+          ))}
+
+          {shapeLayers.map((layer) => (
+            <EditableShape
+              canvasHeight={canvasHeight}
+              canvasWidth={canvasWidth}
+              key={layer.id}
+              layer={layer}
+              onChangeLayer={onChangeLayer}
+              onSelectLayer={onSelectLayer}
+              ref={(node) => {
+                layerNodeRefs.current[layer.id] = node;
+              }}
+              selected={selectedLayerId === layer.id}
+            />
+          ))}
+
           {documentImageLayers.map((documentLayer) => (
             <DocumentImageNode key={documentLayer.id} layer={documentLayer} />
           ))}
 
-          {sortedLayers.map((layer) =>
-            isShapeLayer(layer) ? (
-              <EditableShape
-                canvasHeight={canvasHeight}
-                canvasWidth={canvasWidth}
-                key={layer.id}
-                layer={layer}
-                onChangeLayer={onChangeLayer}
-                onSelectLayer={onSelectLayer}
-                ref={(node) => {
-                  layerNodeRefs.current[layer.id] = node;
-                }}
-                selected={selectedLayerId === layer.id}
-              />
-            ) : (
-              <EditableText
-                canvasHeight={canvasHeight}
-                canvasWidth={canvasWidth}
-                editing={editingLayerId === layer.id}
-                key={layer.id}
-                layer={layer}
-                onChangeLayer={onChangeLayer}
-                onSelectLayer={onSelectLayer}
-                onStartTextEdit={onStartTextEdit}
-                ref={(node) => {
-                  layerNodeRefs.current[layer.id] = node;
-                }}
-                selected={selectedLayerId === layer.id}
-              />
-            )
-          )}
+          {textLayers.map((layer) => (
+            <EditableText
+              canvasHeight={canvasHeight}
+              canvasWidth={canvasWidth}
+              editing={editingLayerId === layer.id}
+              key={layer.id}
+              layer={layer}
+              onChangeLayer={onChangeLayer}
+              onSelectLayer={onSelectLayer}
+              onStartTextEdit={onStartTextEdit}
+              ref={(node) => {
+                layerNodeRefs.current[layer.id] = node;
+              }}
+              selected={selectedLayerId === layer.id}
+            />
+          ))}
 
           <Transformer
             anchorFill="#62e9c5"
@@ -309,6 +336,34 @@ type DocumentImageRenderLayer = {
     height: number;
   };
 };
+
+type DocumentShapeRenderLayer = {
+  id: string;
+  fill: string;
+  opacity: number;
+  cornerRadius: number;
+  bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+};
+
+function DocumentShapeNode({ layer }: { layer: DocumentShapeRenderLayer }) {
+  return (
+    <Rect
+      cornerRadius={layer.cornerRadius}
+      fill={layer.fill}
+      height={layer.bounds.height}
+      listening={false}
+      opacity={layer.opacity}
+      width={layer.bounds.width}
+      x={layer.bounds.x}
+      y={layer.bounds.y}
+    />
+  );
+}
 
 function DocumentImageNode({ layer }: { layer: DocumentImageRenderLayer }) {
   const image = useLoadedImage(layer.src);
@@ -379,6 +434,47 @@ function useLoadedImage(src: string) {
   return image;
 }
 
+function hasDocumentGeneratedVisualAsset(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+}) {
+  const section = resolveDocumentSection(input);
+  if (!section) return false;
+  return section.nodes
+    .flatMap(flattenLayerNode)
+    .some((node) => node.visible && (node.type === "image" || node.type === "product") && node.role === "visual-asset");
+}
+
+function getDocumentShapeLayers(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}): DocumentShapeRenderLayer[] {
+  const document = input.document;
+  const section = resolveDocumentSection(input);
+  if (!document || !section) return [];
+
+  return section.nodes
+    .flatMap(flattenLayerNode)
+    .filter((node) => node.visible && node.type === "shape" && (!node.editable || node.locked))
+    .sort((left, right) => left.zIndex - right.zIndex)
+    .map((node) => {
+      const fill = node.fills?.find((candidate) => candidate.color);
+      if (!fill?.color) return null;
+      return {
+        id: node.id,
+        fill: fill.color,
+        opacity: fill.opacity ?? node.opacity ?? 1,
+        cornerRadius: node.cornerRadius ?? 0,
+        bounds: boundsToCanvasPixels(node.bounds, document.canvas, input.canvasWidth, input.canvasHeight)
+      } satisfies DocumentShapeRenderLayer;
+    })
+    .filter((layer): layer is DocumentShapeRenderLayer => Boolean(layer));
+}
+
 function getDocumentImageLayers(input: {
   document?: PdpLayeredDocumentV2;
   sectionId?: string;
@@ -388,12 +484,8 @@ function getDocumentImageLayers(input: {
   skipGeneratedBackground: boolean;
 }): DocumentImageRenderLayer[] {
   const document = input.document;
-  if (!document?.sections.length) return [];
-
-  const section =
-    (input.sectionId ? document.sections.find((candidate) => candidate.sectionId === input.sectionId) : null) ??
-    document.sections[input.sectionIndex ?? 0];
-  if (!section) return [];
+  const section = resolveDocumentSection(input);
+  if (!document || !section) return [];
 
   const assetById = new Map(document.assets.images.map((asset) => [asset.id, asset]));
   return section.nodes
@@ -414,6 +506,20 @@ function getDocumentImageLayers(input: {
       } satisfies DocumentImageRenderLayer;
     })
     .filter((layer): layer is DocumentImageRenderLayer => Boolean(layer));
+}
+
+function resolveDocumentSection(input: {
+  document?: PdpLayeredDocumentV2;
+  sectionId?: string;
+  sectionIndex?: number;
+}) {
+  const document = input.document;
+  if (!document?.sections.length) return null;
+  return (
+    (input.sectionId ? document.sections.find((candidate) => candidate.sectionId === input.sectionId) : null) ??
+    document.sections[input.sectionIndex ?? 0] ??
+    null
+  );
 }
 
 function flattenLayerNode(node: PdpLayerNode): PdpLayerNode[] {

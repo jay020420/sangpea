@@ -207,6 +207,9 @@ const RefinedCopySectionSchema = z.object({
   CTA: z.string().default(""),
   CTA_en: z.string().default(""),
   story_role: z.string().default(""),
+  buyer_question: z.string().default(""),
+  copy_angle: z.string().default(""),
+  evidence_refs: StringArraySchema,
   copy_reason: z.string().default("")
 });
 
@@ -643,17 +646,17 @@ async function buildStageKnowledgeBundle(input: {
       base
     ].join("\n"),
     copy: [
-      "한국어 상세페이지 카피 짧은 헤드라인 구매 이유 신뢰 실사용감 과장광고 방지",
-      "상품명 카테고리 사용상황 연결 카피라이팅 스마트스토어 쿠팡 모바일",
+      "한국어 상세페이지 카피 구매자 질문 섹션별 설득 근거 연결 CTA 과장광고 방지",
+      "상품명 카테고리 사용상황 핵심 기능 증빙 불안 해소 고객 언어 스마트스토어 쿠팡 모바일",
       base
     ].join("\n"),
     image: [
-      "한국 상세페이지 섹션 이미지 생성 제품 보존 앱 합성 텍스트 고대비 영역 포스터 금지",
-      "Hero Problem Benefit Proof Spec Demo FAQ 모바일 세로 구도 SW 스크린샷 목업",
+      "한국 상세페이지 시각 에셋 생성 제품 보존 픽셀 텍스트 금지 포스터 금지 레이어 문서",
+      "Hero Problem Benefit Proof Spec Demo FAQ 모바일 세로 구도 SW 스크린샷 목업 제품 사용 장면",
       base
     ].join("\n"),
     compliance: [
-      "상세페이지 제품 기능 과장 방지 의약 건기식 효능 가격 공식 로고 금지 리뷰 인증 수치형 신뢰 카피 허용",
+      "상세페이지 제품 기능 과장 방지 의약 건기식 효능 가격 공식 로고 금지 리뷰 인증 수치 허위 주장 금지",
       base
     ].join("\n")
   };
@@ -944,7 +947,7 @@ function buildSchemaRepairPrompt(input: { schemaName: string; rawText: string; r
   return [
     `Convert the following ${input.schemaName} response into one strict JSON object only.`,
     "Do not add explanations, markdown fences, comments, single-quoted strings, or trailing commas.",
-    "Keep user-provided product facts. You may create marketing social-proof copy such as reviews, certifications, and numeric claims, but do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, or dashboard data.",
+    "Keep user-provided product facts. Use reviews, certifications, rankings, percentages, or numeric claims only if the source response or user facts explicitly support them. Do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, reviews, certifications, rankings, percentages, or dashboard data.",
     "If a string field is unknown, use an empty string. If an array field is unknown, use an empty array.",
     `For layout_template, use exactly one of: ${ALLOWED_LAYOUT_TEMPLATE_TEXT}. Map close variants such as feature-benefit or selection_reason to benefit, proof-spec to proof, demo-steps to demo, faq/final-cta/objection_handling to faq-cta.`,
     "If optional story_role or overlay_layout_hint fields exist, keep them concise. story_role should be one of hook, problem, benefit, reason, proof, demo, usecase, cta.",
@@ -1001,14 +1004,14 @@ function buildCombinedAnalyzePrompt(input: {
     `ASSET INVENTORY:\n${buildAssetInventory(input.references)}`,
     input.knowledgeText ? `RAG GUIDANCE:\n${input.knowledgeText.slice(0, 32000)}` : "",
     "The result must be a real Korean ecommerce/product detail page, not a poster or social ad.",
-    "Create 6 to 8 sections with a deliberate conversion architecture in this order: source fact extraction -> customer problem -> choice reason -> proof/numeric/review-style trust -> usage flow -> anxiety handling -> final CTA. Avoid repeating the same persuasion role twice.",
+    "Create 6 to 8 sections with a deliberate conversion architecture in this order: source fact extraction -> customer problem -> choice reason -> verified proof/spec/trust -> usage flow -> anxiety handling -> final CTA. Avoid repeating the same persuasion role twice.",
     `For every blueprint.sections[].layout_template, use exactly one of: ${ALLOWED_LAYOUT_TEMPLATE_TEXT}. Do not invent variants like feature-benefit, proof-spec, demo-steps, selection_reason, objection_handling, or final-cta.`,
     "For software/SaaS/app/web service, set productBrief.isSoftware true, productBrief.needsHumanModel false, and use screenshots, dashboard frames, workflows, onboarding, support/security, and practical adoption reasons.",
     "For physical products, preserve product shape, color, package, material, components, proof/detail assets, and realistic use scenes.",
     "Every headline must connect to productName, category, targetBuyer, useCases, coreFeatures, proofPoints, support/AS, workflow, or a user-provided constraint. Prefer concrete Korean conversion copy over abstract brand slogans.",
     "Copy must be rewritten and tightened for final app-composited text: headline 8-22 Korean characters when possible, subheadline 24-44 characters, each bullet 8-18 characters, CTA 4-10 characters. One idea per line.",
     "Never use section names or placeholders as customer-facing copy: 히어로, 베네핏, 문제 공감, CTA, 한국어 헤드라인, 불릿 1 are invalid copy.",
-    "Reviews, certifications, badges, and numeric proof-style copy may be drafted as marketing copy when useful. Do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, or dashboard data.",
+    "Reviews, certifications, badges, and numeric proof-style copy may be used only when the user input or uploaded assets support them. Otherwise write conservative proof framing such as 확인 가능한 자료 기준. Do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, customer reviews, certifications, rankings, percentages, or dashboard data.",
     "Image prompts must explicitly ask for sharp section artwork with calm high-contrast areas where the app will composite the final Korean copy. Do not ask the image model to render readable Korean marketing text.",
     "Return only one strict JSON object. No markdown fences, no prose, no comments, no trailing commas.",
     "Required JSON shape:",
@@ -1086,15 +1089,15 @@ function buildCopyPromptPackPrompt(input: {
 }) {
   return [
     "Create the final section copy and image prompt pack for a Korean mobile PDP.",
-    "This is stage 4. The output powers final app-composited copy layers and image generation that reserves space for them.",
+    "This is stage 4. The output powers final app-composited copy layers and visual-asset generation. The image model must not reserve copy space; the layered document template handles copy surfaces.",
     "Visible copy must be product-specific. Do not use section names as customer copy.",
     "Treat USER DIRECTION as strategy notes only. Never paste it verbatim into visible copy. Rewrite it into concise buyer-facing Korean.",
     "Each headline must connect to product name, category, target buyer, concrete use case, feature, workflow, support/AS, price reason, or user constraint.",
-    "You may create review/certification/numeric proof-style copy for conversion. Do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, or dashboard data.",
+    "Use review, certification, ranking, percentage, or numeric proof copy only when the source material supports it. If proof is weak, write a check-point or objection-handling line instead of pretending proof exists. Do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, reviews, certifications, rankings, percentages, or dashboard data.",
     "Write concise Korean conversion copy. One section should communicate one main idea with a clear customer situation, selection reason, and trust cue when supported by source facts.",
     "App-composited copy readability limits: headline 8-22 Korean characters when possible, subheadline 24-44 characters, each bullet 8-18 characters, CTA 4-10 characters. Avoid long explanatory sentences.",
     "Avoid generic words like 프리미엄, 혁신, 완벽, 차원이 다른 unless the uploaded source or user facts make them concrete.",
-    "Image prompts must ask for Korean PDP section composition with sharp high-contrast app-composited copy zones, realistic product/screen preservation, and varied section layout. Do not ask the image model to render readable marketing copy.",
+    "Image prompts must ask for source-faithful product/screen/use-scene visual assets with realistic preservation and varied section role support. Do not ask the image model to create copy zones or render readable marketing copy.",
     `Aspect ratio: ${input.aspectRatio}`,
     input.desiredTone ? `Desired tone: ${input.desiredTone}` : "",
     `PRODUCT BRIEF:\n${JSON.stringify(input.productBrief, null, 2)}`,
@@ -1124,9 +1127,12 @@ function buildStoryCopyRefinementPrompt(input: {
     "Rewrite the visible Korean PDP story and copy in one strict JSON object.",
     "This is a dedicated copy refinement stage after structure planning. Treat USER PRODUCT DESCRIPTION and USER CREATIVE DIRECTION as raw fact notes, not final copy.",
     "Rewrite every visible field from scratch: headline, subheadline, bullets, trust_or_objection_line, and CTA. Do not paste any exact user-written sentence or any exact clause longer than 12 Korean characters.",
-    "Keep product functionality and service capabilities grounded in PRODUCT BRIEF, ASSET SUMMARY, source_fact_refs, or raw user facts. Reviews, certifications, and numeric proof-style copy may be newly written for conversion, but do not invent product functions, software integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, dashboard data, or performance features.",
-    "Make the page read like one conversion story: S1 hook/value, S2 customer problem, S3 concrete benefit, S4 choice reason, S5 proof/spec/trust including review/certification/numeric proof-style copy when useful, S6 usage/demo, S7 use case, S8 final objection and CTA. If there are fewer sections, keep the same order without duplicating roles.",
+    "Keep product functionality and service capabilities grounded in PRODUCT BRIEF, ASSET SUMMARY, source_fact_refs, or raw user facts. Reviews, certifications, rankings, percentages, and numeric proof copy are allowed only when source facts support them. If proof is weak, write a conservative check-point or objection-handling line instead of pretending proof exists.",
+    "For every section, explicitly decide buyer_question, copy_angle, evidence_refs, and copy_reason. Visible copy should answer the buyer question; quality_notes will store these strategy notes for user review.",
+    "Make the page read like one conversion story: S1 hook/value, S2 customer problem, S3 concrete benefit, S4 choice reason, S5 proof/spec/trust using only supported review/certification/numeric evidence, S6 usage/demo, S7 use case, S8 final objection and CTA. If there are fewer sections, keep the same order without duplicating roles.",
     "One section = one argument. Do not repeat the same headline idea. Each section should answer the natural next question raised by the previous section.",
+    "Use a buyer-question ladder: What is it? Why does this matter to me? What changes after I use it? Why this one? Can I trust it? How do I use it? Is it right for my situation? What should I do next?",
+    `RECOMMENDED COPY STRATEGY LADDER:\n${buildCopyStrategyLadder(input.productBrief, input.assetSummary)}`,
     "Write as final composited PDP copy, not editor notes. The app will place this text onto the generated section image, so every line must be worth showing to a paying customer.",
     "Apply the epoko77-ai/im-not-ai Korean humanizing principles: preserve meaning and facts, remove translationese such as '~를 통해/~에 대해/~에 있어서', avoid mechanical connectors like '또한/따라서/결론적으로', avoid AI-style hype such as '혁신적인/압도적인/차원이 다른', and keep natural Korean rhythm.",
     "Korean copy length limits for final app-composited text: headline 8-22 characters when possible and never over 28, subheadline 24-44 and never over 58, each bullet 8-18 and never over 24, trust line never over 34, CTA 4-10 and never over 14.",
@@ -1155,13 +1161,34 @@ function buildStoryCopyRefinementPrompt(input: {
       null,
       2
     )}`,
-    "Return exactly the same section_id values in the same order where possible. Fill story_role for each section with hook, problem, benefit, reason, proof, demo, usecase, or cta.",
+    "Return exactly the same section_id values in the same order where possible. Fill story_role for each section with hook, problem, benefit, reason, proof, demo, usecase, or cta. Fill evidence_refs with productBrief fields, source_fact_refs, or uploaded asset observations that justify the copy.",
     "Return only one strict JSON object. No markdown fences, no prose, no comments, no trailing commas.",
     "Required JSON shape:",
     JSON.stringify(STORY_COPY_REFINEMENT_REPAIR_SHAPE, null, 2)
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+function buildCopyStrategyLadder(brief: ProductBrief, assetSummary: AssetSummary) {
+  const subject = compactSubject(brief.productName || assetSummary.likelyProductName || brief.category || "이 상품");
+  const buyer = compactAudiencePhrase(brief.targetBuyer, brief.isSoftware ? "도입 검토자" : "구매 고객");
+  const category = compactFactPhrase(brief.category || assetSummary.likelyCategory, brief.isSoftware ? "서비스" : "상품");
+  const feature = compactFactPhrase(brief.coreFeatures[0] || assetSummary.visibleProductFacts[0], brief.isSoftware ? "핵심 기능" : "핵심 장점");
+  const useCase = compactFactPhrase(brief.useCases[0], brief.isSoftware ? "업무 흐름" : "사용 상황");
+  const proof = compactFactPhrase(brief.proofPoints[0] || assetSummary.visibleProductFacts.find((fact) => /증빙|화면|구성|소재|스펙|인증|후기|리뷰|수치|결과/.test(fact)), "제공 자료");
+  const support = compactFactPhrase(brief.constraints[0] || brief.proofPoints[1], brief.isSoftware ? "지원 범위" : "구매 조건");
+
+  return [
+    `S1 hook | buyer_question: "${subject}가 무엇이고 왜 봐야 하나?" | copy_angle: "${category} 정체성과 ${feature} 가치" | evidence_refs: productName, category, primary asset`,
+    `S2 problem | buyer_question: "${buyer}가 지금 무엇 때문에 망설이나?" | copy_angle: "${useCase}에서 생기는 불편 또는 확인 부담" | evidence_refs: targetBuyer, useCases, constraints`,
+    `S3 benefit | buyer_question: "쓰면 무엇이 좋아지나?" | copy_angle: "${feature}가 만드는 실제 변화" | evidence_refs: coreFeatures, visibleProductFacts`,
+    `S4 reason | buyer_question: "왜 이 선택이 맞나?" | copy_angle: "선택 기준과 ${support}" | evidence_refs: coreFeatures, constraints, source_fact_refs`,
+    `S5 proof | buyer_question: "믿을 근거가 있나?" | copy_angle: "${proof}처럼 확인 가능한 자료만 제시" | evidence_refs: proofPoints, detail/proof assets`,
+    `S6 demo | buyer_question: "어떻게 쓰나?" | copy_angle: "${brief.isSoftware ? "설정-실행-결과 확인" : "준비-사용-관리"} 흐름" | evidence_refs: useCases, real screen/product assets`,
+    `S7 usecase | buyer_question: "내 상황에도 맞나?" | copy_angle: "${buyer}의 상황별 활용 판단" | evidence_refs: targetBuyer, useCases`,
+    `S8 cta | buyer_question: "마지막으로 무엇을 확인하고 행동할까?" | copy_angle: "${support}와 다음 행동" | evidence_refs: constraints, policy/support facts`
+  ].join("\n");
 }
 
 async function buildSectionImagePromptBundle(request: PdpGenerateImageRequest): Promise<{
@@ -1290,18 +1317,16 @@ function buildLayerPlanPromptConstraints(layerPlan: PdpLayerPlanContext, section
     const bounds = layerBoundsToPixels(node.bounds, layerPlan.canvas);
     const role = node.role || node.type;
     const instruction =
-      role === "product"
-        ? "place or preserve the main product/screen here when possible; do not cover reserved text zones"
-        : role === "safe-zone"
-          ? "keep this whole area calm, high-contrast, and free of readable generated text"
-          : "leave this rectangle visually clean for app-composited editable copy; do not render readable text inside it";
+      role === "product" || role === "visual-asset" || role === "visual-frame"
+        ? "compose the generated product/screen/use-scene asset for this visual frame; do not create full-section copy layout"
+        : "support the generated visual asset without adding readable text or marketing copy";
     return `${index + 1}. ${node.id} role=${role} px(x:${bounds.x}, y:${bounds.y}, w:${bounds.width}, h:${bounds.height}) - ${instruction}`;
   });
 
   return [
-    "LAYERED DOCUMENT COORDINATE CONSTRAINTS (authoritative):",
+    "LAYERED DOCUMENT VISUAL-ASSET PLACEMENT (authoritative):",
     `Canvas: ${layerPlan.canvas.width}x${layerPlan.canvas.height}px. Coordinates are section-local pixels.`,
-    "Generated pixels must respect these planned editable layer bounds:",
+    "The app template owns copy, CTA, cards, and section layout. Generated pixels should focus on the visual asset frame below:",
     ...lines
   ].join("\n");
 }
@@ -1321,10 +1346,8 @@ function flattenLayerNode(node: PdpLayerNode): PdpLayerNode[] {
 
 function isPromptConstraintNode(node: PdpLayerNode) {
   const role = node.role || "";
-  if (role === "safe-zone") return true;
-  if (role === "product") return true;
-  if (role === "headline" || role === "subheadline" || role === "bullet" || role === "trust" || role === "cta") return true;
-  return node.type === "cta" || node.type === "proof";
+  if (role === "product" || role === "visual-asset" || role === "visual-frame") return true;
+  return false;
 }
 
 function layerBoundsToPixels(bounds: PdpLayerNode["bounds"], canvas: PdpLayerPlanContext["canvas"]) {
@@ -1375,26 +1398,29 @@ function buildImagePrompt(input: {
   };
   const storyRole = normalizeStoryRole(section.story_role || inferStoryRole(section, 0));
   const roleLayoutDirection = buildRoleVisualDirection(storyRole, template);
+  const designTemplateDirection = buildDesignTemplateProductionDirection(section.design_template_id, storyRole, template);
+  const sectionVariationDirection = buildSectionVariationDirection(section, storyRole);
 
   return [
-    "Create one Korean mobile detail-page section image, not a poster, not a social ad, and not a generic landing-page hero.",
-    "OUTPUT CONTRACT: generate BACKGROUND PLATE artwork only. The app will add all marketing copy, CTA, proof text, labels, and final typography as editable layers after generation.",
+    "Create one source-faithful visual asset for a Korean mobile PDP editor, not a finished poster, social ad, generic landing-page hero, or full section background plate.",
+    "OUTPUT CONTRACT: generate only the product/screen/use-scene/proof/demo visual asset. The app template owns the section background, cards, copy, CTA, proof text, labels, and final typography as editable layers.",
     "ABSOLUTE TEXT BAN: do not render any new readable Korean, English, numbers, app names, brand slogans, CTA words, speech bubbles, badges, prices, review text, certification text, labels, paragraphs, or dashboard values as pixels.",
     "Allowed text exception: text already visible inside an uploaded product package or uploaded software screenshot may remain only if it is part of that exact source image. Do not invent or rewrite it.",
-    "Use blank cards, blank panels, empty buttons, abstract bars, neutral icons, and clean placeholder geometry where text will be composited later.",
-    "Design around the planned copy without drawing it: reserve 30-45% of the canvas as calm high-contrast editable safe zones for headline, subcopy, bullets, proof, and CTA layers.",
+    "Do not create reserved text layouts, headline panels, CTA buttons, testimonial cards, FAQ cards, or placeholder text geometry. Those are separate editable document layers.",
+    "Do not reserve 30-45% of the canvas for copy. Use the canvas to make the visual asset sharp, useful, and source-faithful.",
     input.layerPlanPrompt,
-    "For a 9:16 mobile section, compose it like a production PDP module: one clear main product/screen area, one integrated headline/subcopy area, two or three bullet/feature surfaces, and one CTA/proof surface. These surfaces must be visually obvious, high-contrast, and connected to the product visual, but contain no readable text yet.",
-    "Do not make a detached empty block at the bottom. Text-composition areas should look like intentional PDP panels, cards, or calm negative space inside the section hierarchy.",
-    "Visual direction: premium but practical Korean commerce art direction, consistent product lighting/color, source-faithful UI/product details, varied composition per section, and clear mobile scanning paths.",
+    "The image may be generated at the requested aspect ratio, but it will be placed into a visual-asset frame inside a layered document. Do not solve the entire section layout inside the pixels.",
+    "Visual direction: premium but practical Korean commerce art direction, consistent product lighting/color, source-faithful UI/product details, and a visual crop that explains this product or service.",
     "Sharpness requirement: the main product, package, software widget, browser frame, dashboard, or app screen must be crisp and in focus. Do not blur, smear, fog, glass-blur, frosted-glass, motion blur, or depth-of-field blur the main subject or its important UI geometry.",
-    "If the source is software or a UI widget, make interface panels clean, vector-like, and sharply edged. Replace text with crisp abstract bars, neutral UI blocks, and blank cards; never use fuzzy fake text, blurred dashboard rows, fake chart numbers, or soft unreadable labels as the main visual.",
-    "If no real software screenshot or UI reference is provided, do not invent a detailed fake dashboard. Use neutral device/browser frames with empty panels and source-faithful product context instead.",
+    "If the source is software or a UI widget, keep real screenshots, browser frames, OBS/browser-source context, HUD previews, or workflow views crisp and source-faithful. Do not invent a detailed fake dashboard.",
+    "If no real software screenshot or UI reference is provided, use neutral device/browser framing and source-faithful product context instead of fictional UI.",
     "Do not introduce decorative icons, skulls, crosshairs, combat/game symbols, target reticles, badges, notification pills, chat bubbles, or fictional controls unless they are clearly present in the uploaded source. Software PDP visuals should feel like a product workflow, not a game poster.",
     `Layout template: ${template}.`,
     section.design_template_id ? `Design template: ${section.design_template_id}.` : "",
     `Story role: ${storyRole}.`,
     `Role-specific visual layout: ${roleLayoutDirection}`,
+    `Template production direction: ${designTemplateDirection}`,
+    `Section variation direction: ${sectionVariationDirection}`,
     `Product brief:\n${briefToPromptText(input.productBrief)}`,
     input.productDescription ? `User-provided facts to preserve:\n${input.productDescription}` : "",
     `Final Korean copy the app will composite, design around it but do not render it yourself:\n${JSON.stringify(copy, null, 2)}`,
@@ -1402,9 +1428,9 @@ function buildImagePrompt(input: {
     "Use attached product photos, app screenshots, dashboard screenshots, proof images, or PDF page references as source of truth. Preserve physical product identity or software UI structure, colors, package shape, product color, and visible source text.",
     input.productBrief.isSoftware
       ? "This is software/SaaS/app/web service. Do not force a human model. Prefer real screenshot framing, browser/mobile mockups, workflow cards, feature callouts, onboarding, support, privacy/security anxiety handling, and dashboard context."
-      : "This is a physical or non-software product. Keep the product recognizable and use detail/spec/proof references plus editable proof/review/certification zones when useful.",
-    "Reviews, certifications, badges, and numeric proof-style copy are allowed as editable marketing elements. Do not invent product functions, software features, integrations, pricing, medical effects, brand marks, official logos, customer logos, security/compliance capabilities, or dashboard data.",
-    "Make this section visually different from other sections. Avoid repeating a centered product cut plus the same top headline. Use different depth, crop, panel geometry, support visuals, and CTA/proof-zone placement by section role.",
+      : "This is a physical or non-software product. Keep the product recognizable and use source-supported detail, spec, proof, component, or usage references as visual assets.",
+    "Reviews, certifications, badges, rankings, and numeric proof copy must be source-supported and belong to editable document layers, not generated pixels. Do not invent product functions, software features, integrations, pricing, medical effects, brand marks, official logos, customer logos, security/compliance capabilities, reviews, certifications, rankings, percentages, or dashboard data.",
+    "Make this visual asset different from other sections through source crop, product angle, screen state, usage context, or proof/detail focus. Do not repeat a centered logo or generic decorative dashboard.",
     `Aspect ratio: ${input.aspectRatio}.`,
     `Section: ${section.section_id} ${section.section_name}.`,
     `Goal: ${section.goal || section.purpose}.`,
@@ -1415,10 +1441,13 @@ function buildImagePrompt(input: {
     referenceInventory ? `Reference inventory:\n${referenceInventory}` : "",
     input.knowledgeText ? `Korean commerce RAG guidance:\n${input.knowledgeText.slice(0, 12000)}` : "",
     "For Korean buyers, prefer trust, realistic use cases, clear purchase reasons, onboarding clarity, support/security anxiety reduction, and practical CTAs over aggressive hype.",
-    "Final quality check: the output must be recognizable as a Korean mobile detail-page section that will look complete after app-composited copy is placed on it, while readable copy remains absent from model-generated pixels.",
-    "Reject-worthy mistakes to avoid: text-filled pill overlays, Korean headline bubbles, fake app brand words, fake dashboard metrics, tiny unreadable glyph rows, oversized decorative UI, poster-only composition, and no usable text safe zone.",
+    "Sophistication bar: make it look like a paid Korean commerce visual asset with believable material/light, crisp source-preserving product or UI geometry, and no stock-template feel.",
+    "Depth and rhythm: use subtle depth, masked crops, device or package framing, product detail, proof imagery, and foreground/background separation only when they support the visual asset role.",
+    "Do not over-polish into a generic premium poster. The asset must explain this specific product/service without relying on generated text.",
+    "Final quality check: the output must work as one image layer inside an editable PDP document, while readable marketing copy remains absent from model-generated pixels.",
+    "Reject-worthy mistakes to avoid: text-filled pill overlays, Korean headline bubbles, fake app brand words, fake dashboard metrics, tiny unreadable glyph rows, oversized decorative UI, poster-only composition, logo-only composition, and reserved-text layout.",
     section.negative_prompt ? `Avoid: ${section.negative_prompt}.` : "",
-    "Avoid blur, motion blur, defocused cards, frosted-glass cards, smeared UI text, unreadable fake dashboard data, low contrast overlays, tiny dense labels, and cropped-off safe zones.",
+    "Avoid blur, motion blur, defocused cards, frosted-glass cards, smeared UI text, unreadable fake dashboard data, low contrast overlays, tiny dense labels, and empty text-slot panels.",
     "Avoid skull icons, combat/game decoration, target reticles, fake app controls, unrelated symbols, and source-inconsistent UI elements.",
     input.options?.referenceModelImageBase64
       ? "A second reference image may show a person. If using a model, preserve the same person and do not swap identity."
@@ -1479,7 +1508,7 @@ function buildImageRepairPrompt(input: {
     ? input.failedReport.issues
         .map((issue, index) => `${index + 1}. ${issue.severity}/${issue.category}: ${issue.message} Fix: ${issue.fix}`)
         .join("\n")
-    : "No structured issues were returned. Improve source fidelity, sharpness, PDP section structure, and app-composited copy areas.";
+    : "No structured issues were returned. Improve source fidelity, sharpness, and usefulness as a visual asset inside the layered PDP document.";
   const actionLines = input.failedReport.nextActions.length
     ? input.failedReport.nextActions.map((action, index) => `${index + 1}. ${action}`).join("\n")
     : "";
@@ -1497,12 +1526,11 @@ function buildImageRepairPrompt(input: {
     "- Stay closer to the uploaded source product, UI, dashboard, package, or screenshot. Do not replace it with a generic abstract illustration.",
     "- If this is software, use one crisp, source-faithful UI/screen composition as the main subject. Avoid game-like icons, fictional controls, neon fog, and fake dashboard clutter.",
     "- Remove decorative skulls, target reticles, combat/game symbols, and fictional UI controls unless they are in the uploaded source.",
-    "- If blur or low fidelity was mentioned, use sharp edges, clean panels, clear geometry, and crisp blank placeholder bars instead of smeared text.",
-    "- Remove all newly generated readable text: no Korean headline bubbles, no English app names, no CTA words, no dashboard numbers, no badge labels, no review/certification text. Use blank panels and abstract bars only.",
+    "- If blur or low fidelity was mentioned, use sharp edges, clean source-faithful UI/product geometry, and no smeared pseudo-text.",
+    "- Remove all newly generated readable text: no Korean headline bubbles, no English app names, no CTA words, no dashboard numbers, no badge labels, no review/certification text.",
     "- Do not invent a new SaaS dashboard, fake product brand, fake app screen, fake metric card, or fake integration. Preserve only source-visible UI/product identity.",
-    "- Keep large, calm high-contrast areas where the app can composite headline, subcopy, bullets, and CTA. Do not render readable marketing copy into the model-generated pixels.",
-    "- Make the app-composited text areas explicit and integrated: headline panel, bullet surfaces, and CTA/proof surface should be visible as designed PDP areas, not as an unrelated blank rectangle.",
-    "- Simplify the layout if the previous image was too poster-like or busy. A paid customer must see a usable detail-page section after app-composited text is added, not a decorative ad."
+    "- Do not create headline panels, bullet surfaces, FAQ cards, CTA buttons, or reserved text layouts. The app template supplies those as editable document layers.",
+    "- Simplify the layout if the previous image was too poster-like or busy. A paid customer must see a useful product/screen/use-scene asset, not a decorative ad."
   ]
     .filter(Boolean)
     .join("\n");
@@ -1566,6 +1594,8 @@ function shouldAutoRegenerateImage(report: PdpImageQualityReport) {
     report.score < IMAGE_AUTO_REGEN_SCORE_THRESHOLD ||
     (checks.layerEditability?.score ?? 100) < 74 ||
     (checks.textReadability?.score ?? 100) < 70 ||
+    (checks.ctaVisibility?.score ?? 100) < 70 ||
+    (checks.mobileReadability?.score ?? 100) < 72 ||
     (checks.productExposure?.score ?? 100) < 66 ||
     (checks.whitespaceBalance?.score ?? 100) < 62
   );
@@ -1579,7 +1609,7 @@ async function evaluateGeneratedSectionImage(input: {
   productBrief: ProductBrief;
   desiredTone?: string;
   layerPlanPrompt?: string;
-  mode?: "background" | "final-composite";
+  mode?: "visual-asset" | "final-composite";
   backgroundQualityReport?: PdpImageQualityReport;
 }): Promise<PdpImageQualityReport> {
   const runId = crypto.randomUUID();
@@ -1602,12 +1632,12 @@ async function evaluateGeneratedSectionImage(input: {
         runId,
         section: input.section.section_id,
         aspectRatio: input.aspectRatio,
-        mode: input.mode ?? "background"
+        mode: input.mode ?? "visual-asset"
       }
     });
     return normalizeImageQualityReport(parsed);
   } catch (error) {
-    const mode = input.mode ?? "background";
+    const mode = input.mode ?? "visual-asset";
     await writeRunDebug(`${runId}-${mode}-image-quality-gate-failed`, {
       runId,
       section: input.section.section_id,
@@ -1632,13 +1662,13 @@ async function evaluateGeneratedSectionImage(input: {
           fix:
             mode === "final-composite"
               ? "최종 JPG에서 카피 가독성, 캔버스 밖 이탈, 제품/화면 가림, 이미지 선명도를 직접 확인하세요."
-              : "이미지 선명도, 원본 보존, 텍스트 안전영역, 픽셀 텍스트 유무를 직접 확인하세요."
+              : "시각 에셋의 선명도, 원본 보존, 가짜 UI, 픽셀 텍스트 유무를 직접 확인하세요."
         }
       ],
       nextActions:
         mode === "final-composite"
-          ? ["최종 합성 카피의 위치와 대비를 확인한 뒤 필요하면 배경 사각형 또는 텍스트 레이어를 조정하세요."]
-          : ["이미지 선명도와 텍스트 안전영역을 확인한 뒤 필요하면 다시 생성하세요."]
+          ? ["최종 합성 카피의 위치와 대비를 확인한 뒤 필요하면 도형 또는 텍스트 레이어를 조정하세요."]
+          : ["시각 에셋의 선명도, 원본 보존, 가짜 UI, 픽셀 텍스트 유무를 확인한 뒤 필요하면 다시 생성하세요."]
     };
   }
 }
@@ -1649,14 +1679,14 @@ function buildImageQualityPrompt(input: {
   productBrief: ProductBrief;
   desiredTone?: string;
   layerPlanPrompt?: string;
-  mode?: "background" | "final-composite";
+  mode?: "visual-asset" | "final-composite";
   backgroundQualityReport?: PdpImageQualityReport;
 }) {
-  const mode = input.mode ?? "background";
+  const mode = input.mode ?? "visual-asset";
   if (mode === "final-composite") {
     return [
       "Evaluate this FINAL exported Korean mobile PDP section image for paid-service delivery readiness.",
-      "The image already includes app-composited Korean copy layers. Judge the final customer-visible JPG, not only the raw generated background.",
+      "The image already includes app-composited Korean copy layers and document template surfaces. Judge the final customer-visible JPG, not only the raw generated visual asset.",
       "Return only one strict JSON object. Do not include markdown, prose, comments, or trailing commas.",
       "Score harshly. A paid customer should not receive text that is clipped, outside the canvas, too small, low contrast, floating randomly, or covering the key product/software screen.",
       "Check these criteria:",
@@ -1667,6 +1697,8 @@ function buildImageQualityPrompt(input: {
       "5. Main product, software screen, UI frame, dashboard, or package remains crisp and recognizable. Penalize blur, fog, glass blur, motion blur, smeared UI, or defocused main subjects.",
       "6. App-composited Korean marketing copy is allowed. However, penalize garbled model-rendered pixel text, fake logos, unsupported dashboard data, unsupported product functions, unsupported integrations, unsupported effects, or invented pricing.",
       "7. Reviews, certifications, and numerical trust claims may appear as marketing copy, but they must not imply unsupported product functionality.",
+      "8. The final section must satisfy its template role. A proof section should look evidence/spec-led, a demo section should show sequence, a problem section should show checklist/anxiety structure, and a final CTA section should show objection/CTA hierarchy.",
+      "9. Penalize generic Canva-like card layouts when the product/service identity is weak, the module could apply to any product, or adjacent sections would look repetitive.",
       "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability.",
       `Aspect ratio: ${input.aspectRatio}`,
       input.desiredTone ? `Desired tone: ${input.desiredTone}` : "",
@@ -1674,6 +1706,7 @@ function buildImageQualityPrompt(input: {
         {
           section_id: input.section.section_id,
           section_name: input.section.section_name,
+          design_template_id: input.section.design_template_id,
           story_role: input.section.story_role,
           layout_template: input.section.layout_template,
           goal: input.section.goal,
@@ -1688,7 +1721,7 @@ function buildImageQualityPrompt(input: {
       )}`,
       `Product brief:\n${briefToPromptText(input.productBrief)}`,
       input.backgroundQualityReport
-        ? `Raw background quality report before app text compositing:\n${JSON.stringify(
+        ? `Raw visual-asset quality report before app text compositing:\n${JSON.stringify(
             {
               score: input.backgroundQualityReport.score,
               status: input.backgroundQualityReport.status,
@@ -1700,7 +1733,8 @@ function buildImageQualityPrompt(input: {
           )}`
         : "",
       "If final text is clipped, outside the image, illegible, or covers a key product/software area, status must be blocked.",
-      "If the final image is usable with minor manual text/background-layer edits, status should be needs_review.",
+      "Use ready only when textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability are all at least 76.",
+      "If the final image is usable with minor manual text, shape, or visual-asset edits, status should be needs_review.",
       "Use ready only when the final composited section could be shown to a paying customer as part of a stitched long PDP.",
       "Required JSON shape:",
       JSON.stringify(IMAGE_QUALITY_REPORT_REPAIR_SHAPE, null, 2)
@@ -1710,22 +1744,24 @@ function buildImageQualityPrompt(input: {
   }
 
   return [
-    "Evaluate this generated Korean mobile PDP section image for paid-service delivery readiness.",
+    "Evaluate this generated Korean mobile PDP visual asset for paid-service delivery readiness.",
     "Return only one strict JSON object. Do not include markdown, prose, comments, or trailing commas.",
-    "Score harshly. A paid customer should not receive blurry, poster-like, unreadable, or misleading images.",
-    "This is a RAW BACKGROUND PLATE. The app has not added editable text layers yet. New readable marketing text inside the generated pixels is a failure, not a feature.",
+    "Score harshly. A paid customer should not receive blurry, poster-like, logo-only, fake-UI-heavy, or misleading visual assets.",
+    "This is a RAW VISUAL ASSET. The app supplies section background, cards, copy, CTA, and final typography as separate editable layers. New readable marketing text inside generated pixels is a failure, not a feature.",
     "Check these criteria:",
     "1. Main product, software screen, UI frame, dashboard, or package is crisp and recognizable. Penalize blur, fog, glass blur, motion blur, smeared UI, or defocused main subjects.",
-    "2. The image is a mobile detail-page section, not a one-off poster, social ad, or decorative hero only.",
-    "3. There are clean high-contrast composition areas where the app can composite headline, subcopy, bullets, and CTA so the final exported image reads as one integrated PDP section.",
+    "2. The image is useful as a product/screen/use-scene/proof/demo asset inside a layered PDP document, not a one-off poster, social ad, decorative hero, or full-page layout.",
+    "3. The asset does not waste pixels on reserved text layouts, headline panels, CTA button surfaces, FAQ cards, or placeholder text geometry that should be document layers.",
     "4. The model-generated image itself does not render readable marketing copy, prices, review/certification text, badges, customer logos, unsupported dashboard data, product-function claims, speech bubbles, CTA buttons with words, fake app names, or dashboard numbers as pixels.",
     "5. The visual preserves the source product/service identity and does not invent unsupported features.",
     "6. For software, no decorative skulls, crosshairs, combat/game symbols, target reticles, fictional controls, or unrelated icons unless clearly present in the uploaded source.",
-    "7. Composition should be usable on mobile: no critical subject cropped off, enough contrast behind overlay zones, and no clutter where text must sit.",
+    "7. Composition should be usable as an image layer: no critical subject cropped off, no over-busy fake UI, and no logo-only or generic abstract filler.",
+    "8. The raw asset should support the intended section role: hero identity, problem context, benefit detail, proof/spec detail, demo workflow, use-case scene, or final-support visual. If it ignores the role, status should not be ready.",
+    "9. Penalize outputs that are attractive but too generic, too stock-like, too poster-like, or too similar to a previous hero-style layout.",
     input.layerPlanPrompt
-      ? "8. For layerEditability, inspect the exact LayeredDocument px coordinates below. These zones must remain visually calm enough for app-composited editable layers and must not contain baked marketing text."
+      ? "10. For layerEditability, inspect the exact LayeredDocument visual-asset coordinates below. The generated asset should be suitable for that frame and must not contain baked marketing text."
       : "",
-    "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw backgrounds, score text/CTA based on whether there is a safe editable zone.",
+    "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw visual assets, textReadability/ctaVisibility should measure whether the asset avoids interfering with separate document text layers, not whether it reserves text space.",
     `Aspect ratio: ${input.aspectRatio}`,
     input.desiredTone ? `Desired tone: ${input.desiredTone}` : "",
     input.layerPlanPrompt ? `LayeredDocument coordinate plan:\n${input.layerPlanPrompt}` : "",
@@ -1733,6 +1769,8 @@ function buildImageQualityPrompt(input: {
       {
         section_id: input.section.section_id,
         section_name: input.section.section_name,
+        design_template_id: input.section.design_template_id,
+        story_role: input.section.story_role,
         layout_template: input.section.layout_template,
         goal: input.section.goal,
         headline: input.section.headline,
@@ -1746,8 +1784,9 @@ function buildImageQualityPrompt(input: {
     )}`,
     `Product brief:\n${briefToPromptText(input.productBrief)}`,
     "If the image contains newly generated readable Korean/English copy, headline bubbles, CTA text, fake dashboard metrics, or fake app brand words, status must be blocked and score must be 48 or lower.",
-    "If the image cannot plausibly become a complete PDP section after app-composited headline/subcopy/bullets/CTA are added, status must be blocked even if it is visually attractive.",
-    "If the image is usable with minor manual edits, status should be needs_review. Use blocked for blurry, misleading, text-baked, badly cropped, poster-like, low-contrast, fake-UI-heavy, or no-composition-area results.",
+    "If the image cannot plausibly work as a useful visual layer inside the editable PDP document, status must be blocked even if it is visually attractive.",
+    "Use ready only when textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability are all at least 76. Otherwise use needs_review or blocked.",
+    "If the image is usable with minor manual edits, status should be needs_review. Use blocked for blurry, misleading, text-baked, badly cropped, poster-like, logo-only, fake-UI-heavy, or reserved-text-layout results.",
     "Required JSON shape:",
     JSON.stringify(IMAGE_QUALITY_REPORT_REPAIR_SHAPE, null, 2)
   ]
@@ -1794,6 +1833,8 @@ function buildMetricQualityIssues(checks: Partial<Record<PdpQualityMetricKey, Pd
   const issues: PdpQualityIssue[] = [];
   const layerEditabilityScore = checks?.layerEditability?.score;
   const textReadabilityScore = checks?.textReadability?.score;
+  const ctaVisibilityScore = checks?.ctaVisibility?.score;
+  const mobileReadabilityScore = checks?.mobileReadability?.score;
   const productExposureScore = checks?.productExposure?.score;
   const whitespaceScore = checks?.whitespaceBalance?.score;
 
@@ -1801,16 +1842,32 @@ function buildMetricQualityIssues(checks: Partial<Record<PdpQualityMetricKey, Pd
     issues.push({
       category: "composition",
       severity: layerEditabilityScore < 58 ? "critical" : "major",
-      message: "텍스트/CTA를 레이어로 올릴 안전영역이 부족합니다.",
-      fix: "배경 이미지는 카피가 들어갈 빈 패널과 여백을 먼저 확보해야 합니다."
+      message: "생성 이미지가 문서 레이어와 분리된 시각 에셋으로 쓰이기 어렵습니다.",
+      fix: "픽셀 텍스트, 포스터형 완성 레이아웃, 가짜 UI, 빈 카피 슬롯을 제거하고 실제 제품/화면/사용 장면 에셋으로 다시 생성하세요."
     });
   }
   if (typeof textReadabilityScore === "number" && textReadabilityScore < 70) {
     issues.push({
       category: "readability",
       severity: textReadabilityScore < 55 ? "critical" : "major",
-      message: "최종 합성 카피가 모바일에서 읽히기 어려운 배경입니다.",
-      fix: "복잡한 배경과 작은 픽셀 텍스트를 제거하고 고대비 빈 영역을 확보하세요."
+      message: "생성 이미지가 최종 문서 카피와 충돌할 가능성이 큽니다.",
+      fix: "작은 픽셀 텍스트, 가짜 대시보드 정보, 과도한 장식 요소를 제거하고 핵심 제품/화면 에셋을 선명하게 유지하세요."
+    });
+  }
+  if (typeof ctaVisibilityScore === "number" && ctaVisibilityScore < 70) {
+    issues.push({
+      category: "cta",
+      severity: ctaVisibilityScore < 55 ? "critical" : "major",
+      message: "생성 이미지가 문서의 CTA 레이어와 함께 쓰였을 때 전환 흐름을 약하게 만들 수 있습니다.",
+      fix: "CTA 표면을 이미지에 굽지 말고, 제품/화면 에셋이 문서 CTA를 방해하지 않도록 단순화하세요."
+    });
+  }
+  if (typeof mobileReadabilityScore === "number" && mobileReadabilityScore < 72) {
+    issues.push({
+      category: "readability",
+      severity: mobileReadabilityScore < 58 ? "critical" : "major",
+      message: "모바일 상세페이지 모듈로 보기에는 시선 흐름과 정보 밀도가 불안정합니다.",
+      fix: "상하 스캔 흐름을 단순화하고 카드/패널/여백을 모바일 한 화면 기준으로 재정렬하세요."
     });
   }
   if (typeof productExposureScore === "number" && productExposureScore < 66) {
@@ -1986,8 +2043,8 @@ function buildDeterministicBlueprintFromSectionPlan(
       source_fact_refs: normalized.source_fact_refs ?? [],
       story_role: normalized.story_role ?? normalizeStoryRole(plan.layout_template),
       overlay_layout_hint: normalized.overlay_layout_hint ?? buildOverlayLayoutHint(normalized, index),
-      prompt_ko: `${normalized.prompt_ko} ${compactSubject(productBrief.productName || productBrief.category || "업로드 자료")}의 실제 자료와 화면 흐름을 보존하고, 카피는 앱 합성 레이어가 얹힐 고대비 패널 중심으로 설계한다.`,
-      prompt_en: `${normalized.prompt_en} Preserve the actual product or screen flow and reserve integrated high-contrast panels for app-composited copy.`,
+      prompt_ko: `${normalized.prompt_ko} ${compactSubject(productBrief.productName || productBrief.category || "업로드 자료")}의 실제 자료와 화면 흐름을 보존하고, 생성 이미지는 제품/화면/사용 장면 시각 에셋에만 집중한다.`,
+      prompt_en: `${normalized.prompt_en} Preserve the actual product or screen flow and generate only a source-faithful visual asset without copy panels or readable marketing text.`,
       quality_notes: "AI 카피/프롬프트 팩 응답 실패로 상품 브리프 기반 결정형 카피를 적용했습니다.",
       image_prompt_override: normalized.image_prompt_override ?? ""
     };
@@ -2165,10 +2222,22 @@ function mergeRefinedCopyIntoBlueprint(
         CTA_en: chooseRefinedCopy(refined?.CTA_en, fallback.CTA_en, "cta", rawInputs),
         story_role: normalizeStoryRole(refined?.story_role || inferStoryRole(section, index)),
         overlay_layout_hint: section.overlay_layout_hint || buildOverlayLayoutHint(section, index),
-        quality_notes: refined?.copy_reason || section.quality_notes || ""
+        quality_notes: buildCopyQualityNotes(refined, section.quality_notes)
       };
     })
   };
+}
+
+function buildCopyQualityNotes(refined: StoryCopyRefinementJson["sections"][number] | undefined, fallbackNotes: string | undefined) {
+  if (!refined) return fallbackNotes || "";
+  const notes = cleanStringList([
+    refined.buyer_question ? `구매자 질문: ${refined.buyer_question}` : "",
+    refined.copy_angle ? `카피 각도: ${refined.copy_angle}` : "",
+    refined.evidence_refs?.length ? `근거: ${refined.evidence_refs.slice(0, 4).join(", ")}` : "",
+    refined.copy_reason ? `작성 이유: ${refined.copy_reason}` : "",
+    fallbackNotes || ""
+  ]);
+  return notes.join(" | ");
 }
 
 function refineBlueprintCopyDeterministically(
@@ -2570,6 +2639,51 @@ const FACT_PHRASE_STOPWORDS = new Set([
   "서비스"
 ]);
 
+const UNSUPPORTED_PROOF_CLAIM_PATTERN =
+  /(\d+(?:[.,]\d+)?\s*(?:%|퍼센트|점|명|건|개|배|위|년|개월)|No\.?\s*1|1위|업계\s*최초|국내\s*최초|유일|공식|인증|특허|KC|FDA|식약처|의사|전문가|임상|보장|무조건|무료|최저가|평점|별점|리뷰|후기|만족도|재구매|완치|치료|효능)/i;
+
+const WEAK_MARKETING_COPY_PATTERN =
+  /(프리미엄|혁신|완벽|압도|차원이 다른|놀라운|최고의|최상의|역대급|미친|강력한|특별한 경험|새로운 기준|한 번에 끝|끝판왕|필수템|인생템)/;
+
+const ABSOLUTE_COPY_PATTERN =
+  /(100\s*%|무조건|완전한|완벽한|보장|절대|영구|평생|즉시|단숨에|모든|누구나|반드시)/;
+
+const CLAIM_SUPPORT_TOKENS = new Set([
+  "인증",
+  "특허",
+  "kc",
+  "fda",
+  "식약처",
+  "공식",
+  "리뷰",
+  "후기",
+  "평점",
+  "별점",
+  "만족도",
+  "재구매",
+  "임상",
+  "보장",
+  "무료",
+  "최저가",
+  "1위",
+  "no1",
+  "수상",
+  "검증",
+  "인증서",
+  "테스트"
+]);
+
+const GENERIC_CTA_TOKENS = new Set([
+  "자세히보기",
+  "더보기",
+  "클릭",
+  "go",
+  "cta",
+  "확인",
+  "보기",
+  "바로가기"
+]);
+
 const COPY_TOKEN_STOPWORDS = new Set([
   "그리고",
   "또는",
@@ -2599,17 +2713,18 @@ const COPY_TOKEN_STOPWORDS = new Set([
 function validateAndSanitizeCopy(blueprint: LandingPageBlueprint, brief: ProductBrief, rawInputs?: RawCopyInputs) {
   const warnings: CopyWarning[] = [];
   const factTerms = buildFactTerms(brief);
+  const rawCopyInputs = rawInputs ?? { productDescription: "", additionalInfo: "" };
   const seenHeadlines = new Set<string>();
   const sections = blueprint.sections.map((section, index) => {
     const next = { ...section };
-    const fallback = buildDeterministicSectionCopy(section, index, brief, undefined, rawInputs ?? { productDescription: "", additionalInfo: "" });
+    const fallback = buildDeterministicSectionCopy(section, index, brief, undefined, rawCopyInputs);
 
     for (const field of ["headline", "subheadline", "trust_or_objection_line", "CTA"] as const) {
       const kind: CopyFieldKind =
         field === "headline" ? "headline" : field === "subheadline" ? "subheadline" : field === "CTA" ? "cta" : "trust";
       const fallbackValue = field === "trust_or_objection_line" ? fallback.trust_or_objection_line : fallback[field];
       const originalValue = next[field];
-      next[field] = chooseRefinedCopy(originalValue, fallbackValue, kind, rawInputs ?? { productDescription: "", additionalInfo: "" });
+      next[field] = chooseRefinedCopy(originalValue, fallbackValue, kind, rawCopyInputs);
       if (field === "headline" && index === 0 && shouldForceHeroProductName(next[field], brief.productName)) {
         const brandedHeadline = buildBrandedHeroHeadline(brief, fallback.headline);
         if (brandedHeadline) {
@@ -2656,12 +2771,36 @@ function validateAndSanitizeCopy(blueprint: LandingPageBlueprint, brief: Product
           message: "헤드라인이 상품 브리프의 제품명/카테고리/사용상황/기능과 직접 연결되지 않을 수 있습니다."
         });
       }
+      if (next[field] && hasUnsupportedProofClaim(next[field], brief, rawCopyInputs)) {
+        warnings.push({
+          sectionId: next.section_id,
+          field,
+          severity: "error",
+          message: "인증, 순위, 수치, 후기처럼 보이는 표현이 원본 근거 없이 포함되어 안전한 카피로 교체했습니다."
+        });
+        next[field] = fallbackValue;
+      } else if (next[field] && containsWeakMarketingLanguage(next[field])) {
+        warnings.push({
+          sectionId: next.section_id,
+          field,
+          severity: "warning",
+          message: "추상적이거나 과장처럼 읽힐 수 있는 표현이 있어 고객 검수에서 근거 확인이 필요합니다."
+        });
+      }
+      if (field === "CTA" && next[field] && !isActionableCta(next[field])) {
+        warnings.push({
+          sectionId: next.section_id,
+          field,
+          severity: "warning",
+          message: "CTA가 다음 행동을 충분히 구체적으로 말하지 않습니다."
+        });
+      }
       if (field === "headline" && next[field]) {
         seenHeadlines.add(normalizeCopyToken(next[field]));
       }
     }
 
-    next.bullets = sanitizeRefinedBullets(next.bullets, fallback.bullets, rawInputs ?? { productDescription: "", additionalInfo: "" }).filter((bullet) => {
+    next.bullets = sanitizeRefinedBullets(next.bullets, fallback.bullets, rawCopyInputs).filter((bullet) => {
       if (!isGenericCopy(bullet)) return true;
       warnings.push({
         sectionId: next.section_id,
@@ -2671,7 +2810,26 @@ function validateAndSanitizeCopy(blueprint: LandingPageBlueprint, brief: Product
       });
       return false;
     });
-    next.bullets_en = sanitizeRefinedBullets(next.bullets_en, fallback.bullets_en, rawInputs ?? { productDescription: "", additionalInfo: "" });
+    next.bullets = sanitizeRiskyBullets(next.bullets, fallback.bullets, brief, rawCopyInputs, next.section_id, warnings);
+    next.bullets_en = sanitizeRefinedBullets(next.bullets_en, fallback.bullets_en, rawCopyInputs);
+
+    if (hasDuplicateCopyIdeas([next.headline, next.subheadline, ...next.bullets, next.trust_or_objection_line])) {
+      warnings.push({
+        sectionId: next.section_id,
+        field: "copy",
+        severity: "warning",
+        message: "한 섹션 안에서 비슷한 주장이나 표현이 반복됩니다. 헤드라인, 서브카피, 불릿의 역할을 더 분리하세요."
+      });
+    }
+
+    if (factTerms.length && !sectionCopyConnectsToFacts(next, brief)) {
+      warnings.push({
+        sectionId: next.section_id,
+        field: "copy",
+        severity: "warning",
+        message: "섹션 카피가 상품명, 사용상황, 핵심 기능, 증빙 중 하나와 직접 연결되는 정도가 약합니다."
+      });
+    }
 
     if (!next.source_fact_refs?.length) {
       next.source_fact_refs = buildDefaultSourceFactRefs(brief);
@@ -2688,6 +2846,119 @@ function validateAndSanitizeCopy(blueprint: LandingPageBlueprint, brief: Product
     },
     warnings
   };
+}
+
+function sanitizeRiskyBullets(
+  bullets: string[],
+  fallbackBullets: string[],
+  brief: ProductBrief,
+  rawInputs: RawCopyInputs,
+  sectionId: string,
+  warnings: CopyWarning[]
+) {
+  const safeFallbacks = fallbackBullets.map((bullet) => cleanVisibleCopy(bullet, "bullet")).filter(Boolean);
+  const safeBullets = bullets.filter((bullet) => {
+    if (hasUnsupportedProofClaim(bullet, brief, rawInputs)) {
+      warnings.push({
+        sectionId,
+        field: "bullets",
+        severity: "error",
+        message: `"${bullet}"는 원본 근거 없는 수치/인증/후기성 표현이라 불릿에서 제외했습니다.`
+      });
+      return false;
+    }
+    if (containsWeakMarketingLanguage(bullet)) {
+      warnings.push({
+        sectionId,
+        field: "bullets",
+        severity: "warning",
+        message: `"${bullet}"는 추상적이거나 과장처럼 읽힐 수 있어 근거 확인이 필요합니다.`
+      });
+    }
+    return true;
+  });
+
+  return cleanStringList([...safeBullets, ...safeFallbacks]).slice(0, 3);
+}
+
+function hasUnsupportedProofClaim(value: string, brief: ProductBrief, rawInputs: RawCopyInputs) {
+  if (!UNSUPPORTED_PROOF_CLAIM_PATTERN.test(value)) return false;
+  return !sourceSupportsClaim(value, brief, rawInputs);
+}
+
+function sourceSupportsClaim(value: string, brief: ProductBrief, rawInputs: RawCopyInputs) {
+  const sourceText = normalizeLooseCopy(
+    [
+      brief.productName,
+      brief.category,
+      ...brief.proofPoints,
+      ...brief.constraints,
+      rawInputs.productDescription,
+      rawInputs.additionalInfo
+    ]
+      .filter(Boolean)
+      .join("\n")
+  );
+  if (!sourceText) return false;
+
+  const numbers = value.match(/\d+(?:[.,]\d+)?/g) ?? [];
+  if (numbers.length && !numbers.every((number) => sourceText.includes(normalizeLooseCopy(number)))) return false;
+
+  const claimTokens = meaningfulCopyTokens(value).filter((token) => CLAIM_SUPPORT_TOKENS.has(normalizeCopyToken(token)));
+  if (!claimTokens.length) return numbers.length > 0;
+  return claimTokens.some((token) => sourceText.includes(normalizeLooseCopy(token)));
+}
+
+function containsWeakMarketingLanguage(value: string) {
+  return WEAK_MARKETING_COPY_PATTERN.test(value) || ABSOLUTE_COPY_PATTERN.test(value);
+}
+
+function isActionableCta(value: string) {
+  const normalized = normalizeCopyToken(value);
+  if (!normalized || normalized.length < 2) return false;
+  if (GENERIC_CTA_TOKENS.has(normalized)) return false;
+  return /(보기|확인|시작|문의|상담|구매|신청|체험|받기|열기|비교|선택|둘러보기|살펴보기|검토|연결|예약|다운로드)$/.test(value);
+}
+
+function hasDuplicateCopyIdeas(values: string[]) {
+  const seen = new Set<string>();
+  let duplicates = 0;
+  values
+    .map((value) =>
+      meaningfulCopyTokens(value)
+        .filter((token) => !COPY_TOKEN_STOPWORDS.has(normalizeCopyToken(token)))
+        .slice(0, 3)
+        .join("")
+    )
+    .filter((token) => token.length >= 5)
+    .forEach((token) => {
+      if (seen.has(token)) {
+        duplicates += 1;
+        return;
+      }
+      seen.add(token);
+    });
+  return duplicates > 0;
+}
+
+function sectionCopyConnectsToFacts(section: SectionBlueprint, brief: ProductBrief) {
+  const visibleCopy = [section.headline, section.subheadline, ...section.bullets, section.trust_or_objection_line, section.CTA].join(" ");
+  return copyConnectsToFacts(visibleCopy, buildSectionFactTerms(section, brief));
+}
+
+function buildSectionFactTerms(section: SectionBlueprint, brief: ProductBrief) {
+  return cleanStringList([
+    brief.productName,
+    brief.category,
+    brief.targetBuyer,
+    ...brief.useCases,
+    ...brief.coreFeatures,
+    ...brief.proofPoints,
+    ...(section.source_fact_refs ?? [])
+  ])
+    .flatMap((item) => item.split(/[\s,/·|]+/))
+    .map((item) => normalizeCopyToken(item))
+    .filter((item) => item.length >= 2 && !GENERIC_COPY_TOKENS.has(item) && !COPY_TOKEN_STOPWORDS.has(item));
 }
 
 const CONVERSION_LAYOUT_SEQUENCE: PdpLayoutTemplate[] = ["hero", "problem", "benefit", "spec", "proof", "demo", "use-case", "faq-cta"];
@@ -2747,14 +3018,14 @@ function conversionRoleGoal(layout: PdpLayoutTemplate) {
 
 function ensureTextSafeLayoutNotes(value: string) {
   const note = value?.trim() || "";
-  if (/app-composited|composite|합성|editable|카피|텍스트|safe/i.test(note)) return note;
-  return `${note ? `${note} ` : ""}앱이 헤드라인, 불릿, CTA를 합성해도 읽히는 고대비 여백과 패널을 남깁니다.`.trim();
+  if (/app-composited|composite|합성|editable|카피|텍스트|safe|시각 에셋|visual asset|레이어/i.test(note)) return note;
+  return `${note ? `${note} ` : ""}템플릿 레이어가 헤드라인, 불릿, CTA, 카드를 담당하고 생성 이미지는 제품/화면/사용 장면 시각 에셋으로만 배치합니다.`.trim();
 }
 
 function ensureTextSafePrompt(value: string) {
   const prompt = value?.trim() || "";
-  if (/app-composited|composite|합성|editable|카피|텍스트|safe/i.test(prompt)) return prompt;
-  return `${prompt ? `${prompt} ` : ""}한글 문구는 이미지 모델이 직접 그리지 않고 앱이 합성하므로, 선명한 상세페이지 모듈과 고대비 텍스트 영역을 만든다.`.trim();
+  if (/app-composited|composite|합성|editable|카피|텍스트|safe|시각 에셋|visual asset|레이어/i.test(prompt)) return prompt;
+  return `${prompt ? `${prompt} ` : ""}한글 문구와 CTA는 이미지 모델이 직접 그리지 않고 앱 레이어가 합성한다. 생성 이미지는 선명한 제품/화면/사용 장면 시각 에셋에 집중한다.`.trim();
 }
 
 function buildPdpQualityReport(input: {
@@ -2906,7 +3177,7 @@ function evaluateSectionQuality(
     });
   }
 
-  if (section.source_fact_refs?.length || copyConnectsToFacts([section.headline, section.subheadline, ...section.bullets].join(" "), buildFactTerms(input.productBrief))) {
+  if (sectionCopyConnectsToFacts(section, input.productBrief)) {
     checks.push("상품 사실 연결");
   } else {
     score -= 12;
@@ -2941,16 +3212,42 @@ function evaluateSectionQuality(
     });
   }
 
-  if (/app-composited|composite|합성|editable|카피|텍스트|safe|고대비/i.test([section.prompt_ko, section.prompt_en, section.layout_notes, section.overlay_layout_hint ?? ""].join(" "))) {
-    checks.push("합성 텍스트 영역 지시");
+  if (/visual asset|시각 에셋|레이어|layered|editable|합성|픽셀 텍스트|문구는 이미지 모델이 직접 그리지/i.test([section.prompt_ko, section.prompt_en, section.layout_notes, section.overlay_layout_hint ?? ""].join(" "))) {
+    checks.push("문서 레이어 분리 지시");
   } else {
     score -= 8;
     issues.push({
       sectionId: section.section_id,
       category: "visual",
       severity: "minor",
-      message: "이미지 프롬프트에 앱 합성 카피가 들어갈 고대비 영역 지시가 약합니다.",
-      fix: "이미지 모델은 문구를 직접 그리지 않고, 앱이 헤드라인/불릿/CTA를 합성할 패널과 여백을 명시하세요."
+      message: "이미지 프롬프트가 시각 에셋과 문서 레이어의 책임 분리를 충분히 말하지 않습니다.",
+      fix: "이미지 모델은 제품/화면/사용 장면 에셋만 만들고, 헤드라인/불릿/CTA/카드는 편집 가능한 문서 레이어가 담당한다고 명시하세요."
+    });
+  }
+
+  const riskyVisibleCopies = [section.headline, section.subheadline, ...section.bullets, section.trust_or_objection_line].filter((copy) =>
+    hasUnsupportedProofClaim(copy, input.productBrief, rawInputs)
+  );
+  if (riskyVisibleCopies.length) {
+    score -= 18;
+    issues.push({
+      sectionId: section.section_id,
+      category: "risk",
+      severity: "major",
+      message: "원본 근거 없는 수치, 인증, 후기, 순위형 카피가 포함되어 있습니다.",
+      fix: "지원 자료에 있는 수치와 인증만 쓰고, 없으면 확인 포인트나 보수적인 신뢰 문장으로 바꾸세요."
+    });
+  }
+
+  const weakVisibleCopies = [section.headline, section.subheadline, ...section.bullets].filter(containsWeakMarketingLanguage);
+  if (weakVisibleCopies.length) {
+    score -= Math.min(10, weakVisibleCopies.length * 4);
+    issues.push({
+      sectionId: section.section_id,
+      category: "copy",
+      severity: weakVisibleCopies.length >= 2 ? "major" : "minor",
+      message: "추상적이거나 과장처럼 읽히는 카피 표현이 남아 있습니다.",
+      fix: "프리미엄/혁신/완벽 같은 말보다 고객 상황, 기능, 결과, 확인 가능한 근거를 직접 쓰세요."
     });
   }
 
@@ -3054,25 +3351,100 @@ function buildOverlayLayoutHint(section: SectionBlueprint, index: number) {
 }
 
 function buildRoleVisualDirection(role: PdpStoryRole, template: PdpLayoutTemplate) {
-  const base = `Use the ${template} section rhythm and reserve high-contrast surfaces for app-composited Korean text.`;
+  const base = `Support the ${template} section with a source-faithful visual asset. The app template supplies Korean text, cards, and CTA layers.`;
   switch (role) {
     case "hook":
-      return `${base} First-screen hook: strong source-faithful product/screen focus, large top-left copy panel, small proof/CTA area near the bottom.`;
+      return `${base} First-screen hook: strong product/service identity, crisp source screen or product crop, no logo-only poster.`;
     case "problem":
-      return `${base} Problem recognition: checklist or pain-point cards, restrained product/screen support visual, no decorative poster mood.`;
+      return `${base} Problem recognition: restrained user-context or product/screen support visual, no checklist cards or decorative poster mood.`;
     case "reason":
-      return `${base} Choice reason: decision criteria cards or comparison-like panels, product/screen on the side, clear hierarchy for why-to-choose copy.`;
+      return `${base} Choice reason: product detail, screen state, or comparison-relevant visual evidence without drawing comparison cards.`;
     case "proof":
-      return `${base} Trust/proof: review, certification, numeric-proof style card surfaces are allowed as blank visual containers, but readable text is app-composited later.`;
+      return `${base} Trust/proof: source-faithful detail crop, certificate/proof photo, spec close-up, or real screen evidence only. Do not invent proof cards.`;
     case "demo":
-      return `${base} Usage/demo: 2-3 step workflow, crisp software/browser/mobile frames or practical product usage stages, with step label surfaces.`;
+      return `${base} Usage/demo: crisp software/browser/mobile frame, OBS/browser-source context, HUD preview, or practical product usage stage. Do not draw step label surfaces.`;
     case "usecase":
-      return `${base} Use case: role/situation cards with varied crops and practical context, not another centered hero composition.`;
+      return `${base} Use case: practical context, role/situation scene, or varied crop that shows fit. Do not draw situation cards.`;
     case "cta":
-      return `${base} Final CTA: FAQ-like question cards and a strong bottom CTA surface that will receive app-composited text.`;
+      return `${base} Final CTA: calm supporting visual or trust context. Do not draw FAQ cards or CTA surfaces.`;
     default:
-      return `${base} Benefit: clear benefit cards, product/screen preserved, compact text surfaces for bullets and CTA.`;
+      return `${base} Benefit: product detail or screen state that makes the benefit credible. Do not draw benefit cards or text surfaces.`;
   }
+}
+
+function buildDesignTemplateProductionDirection(
+  templateId: PdpDesignTemplateId | undefined,
+  role: PdpStoryRole,
+  layoutTemplate: PdpLayoutTemplate
+) {
+  const fallback = `Generate a mature ${layoutTemplate} PDP visual asset, not a decorative poster or a complete section. Keep source identity crisp and leave document layout to the editor.`;
+  switch (templateId) {
+    case "hero-product-focus":
+      return [
+        "Hero visual asset: one dominant source-faithful product or software-screen anchor.",
+        "The asset should immediately communicate what the product/service is without relying on generated text.",
+        "Do not add headline panels, CTA buttons, or reserved text areas."
+      ].join(" ");
+    case "problem-checklist":
+      return [
+        "Problem visual asset: practical anxiety/context visual and restrained product or screen anchor.",
+        "The mood should feel diagnostic, not fear-based.",
+        "Do not add checklist cards, checkboxes, or blank text containers."
+      ].join(" ");
+    case "benefit-card-grid":
+      return [
+        "Benefit visual asset: crisp product detail, screen state, or usage crop that makes the benefit credible.",
+        "Vary crop and depth so it does not feel like a generic grid template.",
+        "Do not add benefit cards or title/description placeholder geometry."
+      ].join(" ");
+    case "proof-spec-panel":
+      return [
+        "Proof/spec visual asset: use source-faithful detail crops, real evidence imagery, product close-ups, or screen details.",
+        "Do not invent certification badges, review stars, customer logos, official seals, metric values, or numbers.",
+        "Do not create spec-row placeholders or proof cards; the editor inserts verified proof copy."
+      ].join(" ");
+    case "demo-step-flow":
+      return [
+        "Demo visual asset: show the real product/screen workflow, OBS/browser-source context, HUD state, or practical use stage.",
+        "For software, prefer real screenshot framing and neutral device/browser panels.",
+        "Do not create step-card placeholders, labels, arrows, or fake workflow text."
+      ].join(" ");
+    case "usecase-split-scene":
+      return [
+        "Use-case visual asset: show a practical situation, varied crop, or contextual surface with the product/screen still recognizable.",
+        "Avoid repeating a centered hero.",
+        "People or lifestyle scenery are optional and should not overpower the product/service."
+      ].join(" ");
+    case "faq-final-cta":
+      return [
+        "FAQ/CTA support visual asset: calm trust or support context that reduces last-mile purchase anxiety.",
+        "Do not create FAQ cards, objection cards, CTA buttons, or policy surfaces.",
+        "Do not render CTA words, price, shipping, refund, AS, security, or guarantee claims as pixels."
+      ].join(" ");
+    default:
+      return `${fallback} Role fallback: ${buildRoleVisualDirection(role, layoutTemplate)}`;
+  }
+}
+
+function buildSectionVariationDirection(section: SectionBlueprint, role: PdpStoryRole) {
+  const normalized = normalizeCopyToken([section.section_id, section.section_name, section.goal, section.purpose].filter(Boolean).join(" "));
+  const isEarly = /(^|[^0-9])s?0?1([^0-9]|$)|hero|hook|첫|히어로/.test(normalized);
+  const isProof = role === "proof" || /(proof|spec|근거|스펙|증빙|신뢰)/.test(normalized);
+  const isFlow = role === "demo" || /(demo|step|flow|사용|흐름|단계)/.test(normalized);
+
+  if (isEarly) {
+    return "Do not use a bottom-heavy explainer layout. Make the main product/service identity visible and avoid logo-only decorative posters.";
+  }
+  if (isProof) {
+    return "Avoid hero-like product glamour. Prioritize source-faithful evidence imagery, detail crops, real proof photos, or actual screen details.";
+  }
+  if (isFlow) {
+    return "Avoid static product showcase. Prioritize real workflow state, before-to-after context, input-to-result visual rhythm, or screen transition evidence.";
+  }
+  if (role === "cta") {
+    return "Avoid introducing new feature explanations. Focus on calm trust/support context without drawing FAQ or CTA UI.";
+  }
+  return "Avoid repeating the same hero composition used by other sections. Change crop, camera angle, screen state, detail focus, and context according to this section's role.";
 }
 
 function evaluateRoleSpecificCopy(section: SectionBlueprint, role: PdpStoryRole): PdpQualityIssue | null {
@@ -3168,7 +3540,7 @@ function clampScore(value: number) {
 
 function buildImageKnowledgeQuery(section: SectionBlueprint, brief: ProductBrief, productDescription?: string, desiredTone?: string) {
   return [
-    "한국 상세페이지 섹션 이미지 생성 앱 합성 텍스트 고대비 영역 제품 보존",
+    "한국 상세페이지 시각 에셋 생성 앱 레이어 합성 픽셀 텍스트 금지 제품 보존",
     section.layout_template || section.section_name,
     section.goal,
     section.prompt_ko,
@@ -3435,11 +3807,11 @@ function fallbackSections(aspectRatio: AspectRatio): SectionBlueprint[] {
     CTA: "",
     CTA_en: "",
     layout_notes: `${aspectRatio} 비율에 맞춘 모바일 상세페이지 섹션. ${layout}`,
-    compliance_notes: "확인되지 않은 효능, 기능, 요금제, 공식 로고 금지. 리뷰, 인증, 수치형 신뢰 문구는 마케팅 카피로 사용 가능.",
+    compliance_notes: "확인되지 않은 효능, 기능, 요금제, 공식 로고, 후기, 인증, 수치형 신뢰 문구 금지. 근거가 없으면 확인 포인트로만 표현.",
     image_id: `section_${index + 1}`,
     purpose: goal,
-    prompt_ko: `${section_name} 섹션용 한국형 모바일 상세페이지 이미지. 포스터가 아니라 구매/도입 결정을 돕는 세로 섹션으로 구성하고, 한글 카피는 앱이 합성하므로 고대비 텍스트 패널과 여백을 둔다.`,
-    prompt_en: `Korean mobile PDP section image for ${section_name}. Use a source-faithful premium composition with high-contrast app-composited headline, bullet, and CTA surfaces.`,
+    prompt_ko: `${section_name} 섹션용 한국형 모바일 상세페이지 시각 에셋. 포스터가 아니라 구매/도입 판단을 돕는 제품, 화면, 사용 장면, 증빙 컷에 집중하고 한글 카피와 CTA는 앱 레이어가 합성한다.`,
+    prompt_en: `Korean mobile PDP visual asset for ${section_name}. Generate a source-faithful product, screen, use-scene, or proof visual only; the app adds headline, bullet, card, and CTA layers.`,
     negative_prompt: "fake logos, unsupported product functions, fake software features, fake pricing, tiny unreadable text, distorted product or UI, rendered Korean headline text",
     style_guide: "clean, trustworthy, conversion-focused, mobile-first",
     reference_usage: "제품 이미지 또는 서비스 스크린샷을 정확한 참조로 사용",
@@ -3589,7 +3961,7 @@ function buildFallbackProductBrief(
       constraints: cleanStringList([productDescription, additionalInfo, "AI 분석 실패로 이미지 세부 사실은 수동 확인 필요"]),
       prohibitedClaims: cleanStringList([
         ...userFacts.prohibitedClaims,
-        "원본에서 확인되지 않은 가격, 효능, 기능 추가 금지. 후기, 인증, 수치형 신뢰 문구는 마케팅 카피로 사용 가능."
+        "원본에서 확인되지 않은 가격, 효능, 기능, 후기, 인증, 수치형 신뢰 문구 추가 금지."
       ]),
       desiredTone: request.desiredTone || "",
       channel: "한국 모바일 커머스",
@@ -3742,8 +4114,8 @@ function buildFallbackCopySections(
     ...section,
     ...buildDeterministicSectionCopy(section, index, brief, undefined, rawInputs),
     source_fact_refs: sourceRefs,
-    prompt_ko: `${section.prompt_ko} ${subject}의 원본 시각 정보를 보존하고, 새 마케팅 문구는 앱이 합성하므로 고대비 카피 패널과 여백만 정돈한다.`,
-    prompt_en: `${section.prompt_en} Preserve the source product or UI visuals and reserve high-contrast app-composited copy areas without rendering readable text.`
+    prompt_ko: `${section.prompt_ko} ${subject}의 원본 시각 정보를 보존하고, 생성 이미지는 제품/화면/사용 장면 시각 에셋에만 집중한다.`,
+    prompt_en: `${section.prompt_en} Preserve the source product or UI visuals and generate only a product, screen, proof, or use-scene visual asset without readable marketing text or reserved text layout.`
   }));
 }
 
@@ -4120,6 +4492,9 @@ const STORY_COPY_REFINEMENT_REPAIR_SHAPE = {
       CTA: "",
       CTA_en: "",
       story_role: "",
+      buyer_question: "",
+      copy_angle: "",
+      evidence_refs: [],
       copy_reason: ""
     }
   ],

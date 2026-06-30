@@ -24,7 +24,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "첫 화면에서 제품/서비스 정체와 핵심 선택 이유를 크게 보여줍니다.",
     canvasIntent: "large product or screen, headline panel, trust cue, bottom CTA",
     imagePromptHint:
-      "Use a large source-faithful product or screen area with clean premium space for app-composited headline, subcopy, trust line, and CTA.",
+      "Generate only the source-faithful product, service screen, or use-scene visual asset. Do not create copy panels, headline space, CTA buttons, or finished section layout.",
     overlayLayoutHint:
       "상단 헤드라인, 이어지는 서브카피, 중앙 제품/화면, 하단 신뢰 문장과 CTA를 분리한다. 모든 문구는 편집기 레이어가 합성한다."
   },
@@ -37,7 +37,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "고객의 불편과 구매 전 의심을 체크카드 형태로 정리합니다.",
     canvasIntent: "problem cards, calm question area, product context",
     imagePromptHint:
-      "Create practical problem/question card surfaces and a restrained product context. Leave cards blank for app-composited copy.",
+      "Generate a restrained source-faithful product or user-context visual asset for the problem section. Do not create checklist cards, blank text surfaces, or readable labels.",
     overlayLayoutHint:
       "상단 문제 제기, 중단 체크리스트 2~3개, 하단 해소 문장을 둔다. 불안은 과장하지 않고 실제 자료 기준으로만 표현한다."
   },
@@ -50,7 +50,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "기능을 고객 이득으로 번역해 2~3개 카드로 보여줍니다.",
     canvasIntent: "two or three benefit cards, product detail, compact CTA",
     imagePromptHint:
-      "Use two or three blank benefit card surfaces connected to a clear product or screen detail. Avoid poster-only composition.",
+      "Generate a crisp product/detail/screen visual asset that supports benefit copy. The app template will create benefit cards separately; do not draw card placeholders.",
     overlayLayoutHint:
       "헤드라인 아래 카드형 불릿을 배치한다. 각 카드는 짧은 제목 하나와 한 줄 설명이 들어갈 수 있게 비운다."
   },
@@ -63,7 +63,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "구성, 스펙, 화면 일부, 증빙처럼 확인 가능한 정보를 패널화합니다.",
     canvasIntent: "proof area, spec rows, source-faithful detail crop",
     imagePromptHint:
-      "Show source-faithful proof/spec/detail visuals and blank spec rows. Do not invent badges, reviews, certifications, or numbers.",
+      "Generate source-faithful proof, spec, or detail-crop imagery only. Do not invent badges, reviews, certifications, numbers, spec rows, or text placeholders.",
     overlayLayoutHint:
       "근거가 있는 항목만 표/행/카드로 둔다. 인증, 후기, 수치 문구는 자료가 있을 때만 편집기 텍스트로 넣는다."
   },
@@ -76,7 +76,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "제품 사용법이나 SW 도입 흐름을 2~4단계로 보여줍니다.",
     canvasIntent: "step cards, workflow arrows, real screen/product anchor",
     imagePromptHint:
-      "Create two to four blank workflow step surfaces around the real product or screen. Use abstract bars instead of generated labels.",
+      "Generate a real product/screen workflow visual asset. The app template will add step cards and labels; do not draw blank workflow surfaces or fake UI text.",
     overlayLayoutHint:
       "단계 번호, 단계명, 짧은 설명을 각각 편집 가능한 텍스트 레이어로 둔다. 실제 화면에 없는 기능명은 만들지 않는다."
   },
@@ -89,7 +89,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "구매자가 자기 상황을 떠올릴 수 있게 장면과 카피를 나눕니다.",
     canvasIntent: "split scene, practical context, compact situation cards",
     imagePromptHint:
-      "Use a split practical scene with clear blank situation cards. Keep product identity or software UI source-faithful.",
+      "Generate a practical source-faithful use-case visual asset. Do not create split-copy cards, situation panels, or text slots.",
     overlayLayoutHint:
       "좌우 또는 상하 분할로 상황 카드와 제품/화면을 나눈다. 사람 모델은 필요할 때만 사용한다."
   },
@@ -102,7 +102,7 @@ export const PDP_DESIGN_TEMPLATES: PdpDesignTemplate[] = [
     description: "마지막 구매 저항을 짧게 해소하고 행동 버튼을 강조합니다.",
     canvasIntent: "FAQ cards, objection handling, strong bottom CTA",
     imagePromptHint:
-      "Create blank FAQ/objection card surfaces and a strong empty bottom CTA surface. Do not render CTA words.",
+      "Generate a calm source-faithful supporting visual asset for the final FAQ/CTA section. The app template supplies FAQ cards and CTA; do not draw CTA surfaces or words.",
     overlayLayoutHint:
       "질문형 카드와 하단 CTA를 크게 둔다. 배송, 가격, AS, 보안 조건은 확인된 자료가 있을 때만 확정한다."
   }

@@ -9,7 +9,7 @@ import type {
   SectionBlueprint
 } from "@runacademy/shared";
 import {
-  buildEditableSafeZoneNode,
+  buildGeneratedVisualAssetNode,
   createLayeredDocumentV2FromBlueprint,
   dataUrlMimeType,
   generatedAssetId,
@@ -17,6 +17,7 @@ import {
   hasImageAsset,
   mergeImageAssets,
   buildProductPlacementNode,
+  buildTemplateStructureNodes,
   primaryProductAssetId
 } from "../../../../lib/pdp-layered-document";
 import { PDP_EDITOR_CANVAS_WIDTH } from "../../../../lib/pdp-canvas-geometry";
@@ -108,7 +109,7 @@ export function buildEditorLayeredDocumentV2(input: {
     .filter((section) => section.generatedImage)
     .map((section, index) => ({
       id: generatedAssetId(section.section_id || `S${index + 1}`),
-      name: `${section.section_id || `S${index + 1}`} generated background`,
+      name: `${section.section_id || `S${index + 1}`} generated visual asset`,
       mimeType: dataUrlMimeType(section.generatedImage || ""),
       dataUrl: section.generatedImage || "",
       sourceRole: "generated" as const,
@@ -128,26 +129,13 @@ export function buildEditorLayeredDocumentV2(input: {
     sections: input.sections.map((section, index) => {
       const sectionId = section.section_id || `S${index + 1}`;
       const frameNodeId = `${sectionId}-frame`;
-      const children: PdpLayerNode[] = [];
+      const children: PdpLayerNode[] = buildTemplateStructureNodes(section, canvas);
       if (section.generatedImage) {
-        children.push({
-          id: `${sectionId}-background-image`,
-          name: "Generated background",
-          type: "image",
-          visible: true,
-          locked: false,
-          editable: false,
-          role: "background",
-          zIndex: 0,
-          bounds: fullBounds(canvas),
-          assetId: generatedAssetId(sectionId),
-          imageFit: "cover"
-        });
+        children.push(buildGeneratedVisualAssetNode(section, canvas, 6));
       }
-      if (hasProductSourceAsset) {
+      if (!section.generatedImage && hasProductSourceAsset) {
         children.push(buildProductPlacementNode(section, canvas, 2));
       }
-      children.push(buildEditableSafeZoneNode(section, canvas, 3));
       children.push(...(input.overlaysBySection[index] ?? []).map((layer, layerIndex) => canvasLayerToNode(layer, sectionId, layerIndex + 10)));
 
       return {

@@ -50,14 +50,14 @@ export async function POST(request: Request) {
     if (!requestText) return Response.json({ ok: false, error: "섹션 수정 요청사항을 입력해 주세요." }, { status: 400 });
 
     const prompt = [
-      "Edit/redesign the attached ecommerce or software promotional PDP section image.",
+      "Edit/redesign only the targeted visual asset inside the attached ecommerce or software PDP document.",
       targetPrompt,
       "Keep the same product, software UI, and factual constraints. Change only what is needed for the user's request.",
       "Korean-market style: trustworthy, mobile-readable, concrete, and not overhyped.",
-      "The edited result must stay sharp. Do not blur, smear, fog, crop off, or hide the main product, package, app screen, browser frame, dashboard, or important UI geometry.",
-      "Maintain integrated blank editable areas for headline, support copy, bullets/specs, and CTA; they should look like intentional PDP panels, not a disconnected empty block.",
+      "The edited visual asset must stay sharp. Do not blur, smear, fog, crop off, or hide the main product, package, app screen, browser frame, dashboard, or important UI geometry.",
+      "Do not create or preserve blank text panels, empty headline areas, CTA placeholders, poster banners, or copy slots inside the edited pixels. The app template owns copy surfaces, CTA, badges, and other editable document layers.",
       "Reviews, ratings, certifications, awards, and numeric proof-style copy are allowed as editable marketing elements. Do not invent product functions, software features, integrations, pricing, medical effects, official logos, customer logos, security/compliance capabilities, or dashboard data.",
-      "Do not add new readable marketing copy as pixels. If copy needs to change, leave clean blank editable text areas; the app editor will place editable text overlays.",
+      "Do not add new readable marketing copy as pixels. If copy needs to change, keep the visual asset clean and let the app editor place or update editable text overlays.",
       "If the request asks for a risky claim, soften it into a neutral expression.",
       `Project: ${project.title || "상세페이지 리디자인"}`,
       `Channel: ${project.channel || "스마트스토어"}`,

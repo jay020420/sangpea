@@ -182,7 +182,7 @@ export async function generateRedesignProject(input: {
           "참조 이미지 유지, 제품 형태 보존, 제품 색상 보존, 패키지 보존, 구성품 보존",
           "소프트웨어 화면, 앱 스크린샷, 웹 대시보드, UI 보존, 기능 콜아웃, 데모 화면, 워크플로우 카드, 브라우저 프레임",
           "모바일 가독성, 텍스트 오버레이, 편집기 텍스트 레이어, 섹션 구도, Hero Benefit Proof Spec FAQ",
-          "고급스러운 빈 카피 영역, 섹션별 다른 레이아웃 리듬, 일관된 제품 조명과 색감",
+          "소스 기반 시각 에셋, 섹션별 다른 레이아웃 리듬, 일관된 제품 조명과 색감",
           "금지 스타일, 제품 기능 왜곡 방지, 없는 기능/가격/효능 방지, 리뷰/인증/수치형 신뢰 카피 허용",
           "실사용감, 신뢰, 배송, 교환, AS, 구매 불안 해소",
           `판매 채널: ${input.channel}`,
@@ -368,10 +368,10 @@ export async function evaluateRedesignImageQuality(input: {
           category: "visual",
           severity: "major",
           message: "자동 이미지 품질 검수가 실패했습니다.",
-          fix: "이미지 선명도, 원본 보존, 텍스트 안전영역, 픽셀 텍스트 유무를 직접 확인하세요."
+          fix: "시각 에셋의 선명도, 원본 보존, 가짜 UI, 픽셀 텍스트 유무를 직접 확인하세요."
         }
       ],
-      nextActions: ["이미지 선명도와 텍스트 안전영역을 확인한 뒤 필요하면 다시 생성하세요."]
+      nextActions: ["시각 에셋의 선명도, 원본 보존, 가짜 UI, 픽셀 텍스트 유무를 확인한 뒤 필요하면 다시 생성하세요."]
     } satisfies PdpImageQualityReport;
   }
 }
@@ -420,14 +420,14 @@ function buildRedesignImageQualityPrompt(input: {
     "Evaluate this generated Korean PDP redesign section for paid-service delivery readiness.",
     "Return one strict JSON object only. No markdown, no prose, no comments.",
     "Score harshly. A paid redesign customer should not receive blurry, poster-like, misleading, generic, or text-baked images.",
-    "Check whether the generated image preserves the original product/service/source identity, feels like a mobile detail-page section, leaves blank editable copy zones, avoids fake product functions/prices/logos/dashboard data, and is sharp enough for mobile.",
+    "Check whether the generated image preserves the original product/service/source identity, works as a visual asset inside an editable mobile PDP document, avoids reserved text layouts, avoids fake product functions/prices/logos/dashboard data, and is sharp enough for mobile.",
     "Block the image if the main product, package, app screen, browser frame, dashboard, or important UI geometry is blurred, smeared, defocused, cropped off, or hidden behind decorative effects.",
     "Block the image if new readable marketing copy is baked into the pixels instead of being left for editable overlay layers.",
-    "Needs_review is not enough for severe blur, source identity damage, fake product-function proof, fake UI, or missing editable safe zones.",
+    "Needs_review is not enough for severe blur, source identity damage, fake product-function proof, fake UI, logo-only composition, poster-like layout, or reserved text layout.",
     "For software/SaaS/app sources, penalize fictional UI, generic game-like panels, fake dashboards, smeared text, and source-unfaithful screens.",
     "For physical product sources, penalize changed product shape, color, package, material, components, or unsupported product-function usage claims.",
     "Use blocked for images that should not be delivered to a paying customer. Use needs_review for usable images requiring human confirmation.",
-    "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw redesign backgrounds, score text/CTA based on whether there are safe editable zones.",
+    "Also fill pdpChecks with explicit 0-100 metrics for textReadability, ctaVisibility, mobileReadability, productExposure, whitespaceBalance, and layerEditability. For raw redesign visual assets, score text/CTA based on whether the asset avoids interfering with separate document text layers, not whether it reserves text space.",
     `Aspect ratio: ${input.aspectRatio}`,
     `Channel: ${input.channel || "한국 모바일 커머스"}`,
     `Section:\n${JSON.stringify(input.section, null, 2)}`,
@@ -462,7 +462,7 @@ function buildRedesignImageQualityPrompt(input: {
 function buildRedesignImageRepairPrompt(input: { basePrompt: string; failedReport: PdpImageQualityReport; attempt: number }) {
   const issueLines = input.failedReport.issues.length
     ? input.failedReport.issues.map((issue, index) => `${index + 1}. ${issue.severity}/${issue.category}: ${issue.message} Fix: ${issue.fix}`).join("\n")
-    : "Improve source fidelity, sharpness, PDP section structure, and blank overlay safe zones.";
+    : "Improve source fidelity, sharpness, and usefulness as a visual asset inside the layered PDP document.";
 
   return [
     input.basePrompt,
@@ -475,9 +475,9 @@ function buildRedesignImageRepairPrompt(input: { basePrompt: string; failedRepor
     "Hard repair requirements:",
     "- Stay closer to the uploaded source product, screen, package, layout, and visible factual identity.",
     "- Make the section look like a mobile PDP/detail-page module, not a decorative poster or social ad.",
-    "- Keep one clear main subject and calm blank editable copy zones.",
+    "- Keep one clear main subject as a source-faithful visual asset. Do not reserve text space inside the pixels.",
     "- Make the main product, package, app screen, or dashboard crisp and in focus; avoid glass blur, fog, motion blur, tiny fake text, and smeared UI.",
-    "- Integrate blank headline, support-copy, bullet, and CTA areas into the section layout. Do not leave a disconnected empty block at the bottom.",
+    "- Do not integrate blank headline, support-copy, bullet, FAQ, or CTA areas into the pixels. The app template supplies those as editable document layers.",
     "- Remove fake product functions, fake software capabilities, fake prices, logos, dashboard data, or unsupported service capabilities. Review/certification/numeric proof cards may remain as editable marketing zones.",
     "- If software UI is involved, use crisp source-faithful panels and blank abstract bars instead of fictional or smeared UI."
   ].join("\n");
@@ -538,7 +538,7 @@ async function analyzeSource(input: {
     "Design the conversion flow deliberately: first-screen hook, problem recognition, concrete benefit, reason to choose, proof/spec, usage/demo, objection handling, and final CTA. Do not repeat the same job in multiple sections.",
     "If the source is software/SaaS/app/web service, redesign around target user, workflow pain, demo flow, feature-to-benefit mapping, security/privacy, pricing/trial CTA, onboarding, and adoption FAQ.",
     "Write copy only from visible source facts and user request. Avoid generic slogans unrelated to the product. Each headline must mention the product category, target user, use case, selection reason, proof, support, or concrete result when it can be inferred from the source.",
-    "Reviews, certifications, ratings, awards, and numeric proof-style copy may be drafted for conversion. Do not invent brand names, logos, medical effects, product functions, software features, pricing plans, customer logos, security/compliance capabilities, integrations, or dashboard data that are not visible in the uploaded source.",
+    "Reviews, certifications, ratings, awards, rankings, and numeric proof copy may be used only when visible source facts or the user request support them. Do not invent brand names, logos, medical effects, product functions, software features, pricing plans, customer logos, security/compliance capabilities, integrations, reviews, certifications, rankings, percentages, or dashboard data that are not visible in the uploaded source.",
     "Use RAG as guidance for structure and tone only. The uploaded source and user request are the facts.",
     "Korean-market direction: trust before hype, mobile readability, realistic use cases, concrete purchase or adoption reasons, delivery/exchange/AS or onboarding/support/security anxiety handling, and cautious compliance language.",
     `Sales channel: ${input.channel}`,
@@ -561,7 +561,7 @@ async function analyzeSource(input: {
     return {
       diagnostic_summary: `AI 분석 호출에 실패해 기본 리디자인 구조를 사용합니다: ${error instanceof Error ? error.message : "unknown"}`,
       strategy: "원본 정보와 제품 형태를 보존하고, 섹션별 구매 불안 해소와 모바일 가독성을 우선합니다.",
-      compliance_notes: "확인되지 않은 효능, 기능, 가격, 공식 로고는 만들지 않습니다. 후기, 인증, 수치형 신뢰 문구는 마케팅 카피로 사용할 수 있습니다."
+      compliance_notes: "확인되지 않은 효능, 기능, 가격, 공식 로고, 후기, 인증, 수치형 신뢰 문구는 만들지 않습니다."
     };
   }
 }
@@ -581,15 +581,15 @@ function buildSections(input: {
       const sectionId = template.id;
       const copy = resolveSectionCopy(template, input.analysis);
       const promptText = [
-        "Create one Korean mobile PDP/detail-page section image from the attached original references. Do not make a standalone poster, ad banner, or generic landing page.",
-        "The section must have detail-page anatomy: blank editable headline area, source-based product/screen visual, blank support copy area, evidence/spec/CTA/FAQ element when relevant, and mobile-readable spacing.",
+        "Create one source-faithful visual asset for a Korean mobile PDP/detail-page editor from the attached original references. Do not make a standalone poster, ad banner, generic landing page, or full section background plate.",
+        "The app template supplies section background, copy cards, CTA, FAQ, labels, and final typography as editable layers. The generated image should focus on product/screen/use-scene/proof/demo imagery only.",
         "Visual direction: premium but practical Korean commerce design, source-faithful product/screen preservation, consistent lighting/color across the page, and a visibly different layout rhythm for each section.",
         "Sharpness requirement: the main product, package, app screen, browser frame, dashboard, or UI widget must be crisp and in focus. Do not use blur, glass blur, fog, motion blur, depth-of-field blur, smeared UI, or tiny unreadable fake labels on the main subject.",
-        "Editable area requirement: the blank headline, subcopy, bullet/spec, and CTA zones should look intentionally designed as calm panels, cards, or negative space inside the PDP section. They must not be a detached blank rectangle at the bottom.",
+        "Layered-document requirement: do not solve headline, subcopy, bullet/spec, FAQ, or CTA layout inside the generated pixels. The editor template will provide those document layers.",
         "Preserve actual product appearance, package, visible factual claims, brand facts, or software UI structure, screen colors, menus, visible text, and feature names from the source.",
         "For software/SaaS/app pages, do not force a human model. Use real screenshots, browser/mobile frames, demo steps, workflow cards, and feature callouts; keep important text editable whenever possible.",
         "Reviews, ratings, certifications, awards, and numeric proof-style copy are allowed as editable marketing elements. Do not invent product functions, software features, pricing, medical effects, official logos, customer logos, security/compliance capabilities, integrations, or dashboard data.",
-        "Do not render new readable marketing copy as pixels. Do not draw Korean or English headlines, CTA text, prices, reviews, certification text, labels, badges, or paragraphs. Leave polished blank panels where the app editor will place editable text overlays.",
+        "Do not render new readable marketing copy as pixels. Do not draw Korean or English headlines, CTA text, prices, reviews, certification text, labels, badges, paragraphs, headline panels, CTA buttons, or reserved text layouts.",
         "Existing text that is already part of an uploaded product package or software screenshot may remain. Do not add new text.",
         "Do not use Haneerum, Hanirum, HANEERUM, HR, or this tool name as the product brand unless it is visibly the product brand in the uploaded source.",
         "The eight sections should feel like one coherent mobile detail page, but each section must use a visibly different layout rhythm.",
@@ -608,7 +608,7 @@ function buildSections(input: {
         `User request: ${input.requestText || "conversion-focused redesign"}`,
         input.rolloutRequest ? `Hero review rollout request: ${input.rolloutRequest}` : "Hero review rollout request: none",
         `Analysis summary: ${JSON.stringify(input.analysis).slice(0, 3200)}`,
-        "Use blank copy areas instead of baked text. If factual support is unclear, use a neutral visual structure instead of a claim."
+        "Use source-faithful visual evidence instead of baked text or reserved text space. If factual support is unclear, use a neutral product/screen/use-scene visual instead of a claim."
       ].join("\n");
 
       return {
@@ -953,7 +953,7 @@ function sectionTemplates(): SectionTemplate[] {
       name: "히어로",
       purpose: "3초 안에 대상 고객과 핵심 구매/도입 이유, 첫 신뢰 단서를 전달합니다.",
       source: "제품 컷, 패키지, 앱 화면, 웹 대시보드, 핵심 USP",
-      layout: "상단 넓은 헤드라인 빈 영역, 중앙은 가장 선명한 제품 컷 또는 실제 화면, 하단은 신뢰 단서와 CTA 빈 영역.",
+      layout: "가장 선명한 제품 컷 또는 실제 화면을 시각 에셋으로 배치하고, 헤드라인/신뢰 단서/CTA는 편집 가능한 문서 레이어로 분리합니다.",
       headline: "첫 화면에서 선택 이유가 보이게",
       subheadline: "제품/서비스 정체와 고객이 얻는 변화를 먼저 보여줍니다.",
       bullets: ["대상 고객", "핵심 선택 이유", "첫 신뢰 단서"],

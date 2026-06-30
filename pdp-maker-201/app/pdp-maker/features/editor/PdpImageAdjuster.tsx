@@ -25,7 +25,7 @@ export function PdpImageAdjuster({ imageSrc, sectionName, onApply, onClose }: Pd
         <div className={styles.imageEditorHeader}>
           <div>
             <span className={styles.optionMiniLabel}>Filerobot Image Editor</span>
-            <strong>{sectionName} 배경 이미지 보정</strong>
+            <strong>{sectionName} 시각 에셋 보정</strong>
           </div>
           <button className={styles.inlineButton} onClick={onClose} type="button">
             닫기

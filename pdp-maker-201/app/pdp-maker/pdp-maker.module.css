@@ -1699,6 +1699,159 @@
   margin-top: 18px;
 }
 
+.workflowReviewPanel {
+  display: grid;
+  gap: 18px;
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.workflowReviewHeader,
+.workflowCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.workflowReviewHeader > div,
+.workflowCardHeader > div {
+  min-width: 0;
+}
+
+.workflowStepGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workflowStepCard,
+.workflowReviewCard,
+.workflowSectionItem {
+  border: 1px solid rgba(18, 33, 47, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.workflowStepCard {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 18px;
+}
+
+.workflowStepCard strong,
+.workflowReviewCard strong,
+.workflowSectionItem strong {
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.workflowStepCard small,
+.workflowSectionItem small {
+  color: var(--muted);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.workflowReviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.workflowReviewCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 22px;
+}
+
+.workflowSectionList {
+  display: grid;
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.workflowSectionItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px;
+  border-radius: 16px;
+}
+
+.workflowSectionItem > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(20, 115, 108, 0.1);
+  color: var(--teal-deep);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.workflowSectionItem p {
+  margin: 4px 0;
+  color: var(--muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.workflowFeedbackField {
+  display: grid;
+  gap: 8px;
+}
+
+.workflowActionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+  gap: 10px;
+}
+
+.workflowStatusApproved,
+.workflowStatusPending,
+.workflowStatusRevision {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.workflowStatusApproved {
+  background: rgba(20, 115, 108, 0.13);
+  color: var(--teal-deep);
+}
+
+.workflowStatusPending {
+  background: rgba(18, 33, 47, 0.07);
+  color: var(--muted);
+}
+
+.workflowStatusRevision {
+  background: rgba(174, 108, 99, 0.14);
+  color: #8b4138;
+}
+
 .noticeBanner,
 .errorBanner {
   display: flex;
@@ -4272,9 +4425,24 @@
   white-space: nowrap;
 }
 
+.page[data-theme="dark"] .workflowStepCard,
+.page[data-theme="dark"] .workflowReviewCard,
+.page[data-theme="dark"] .workflowSectionItem {
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
 @media (max-width: 1220px) {
   .uploadStage {
     grid-template-columns: 160px minmax(0, 1fr);
+  }
+
+  .workflowStepGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workflowReviewGrid {
+    grid-template-columns: 1fr;
   }
 
   .uploadStage .controlRail {
@@ -4303,6 +4471,10 @@
   .workflowStepList {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .workflowStepGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 620px) {
@@ -4321,8 +4493,21 @@
   }
 
   .workflowStepList,
+  .workflowStepGrid,
   .uploadStage .controlRail,
   .modelUsageGrid {
     grid-template-columns: 1fr;
+  }
+
+  .workflowReviewPanel {
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .workflowReviewHeader,
+  .workflowCardHeader,
+  .workflowActionRow {
+    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
